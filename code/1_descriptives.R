@@ -15,6 +15,35 @@ plot_usmap(regions = "states", include = surr_states,
   
 ggsave(filename = glue("{outfigs}/slides/treatmentmap.png"), width = 8, height = 5) 
 
+## US MAPS
+# county wide
+countywide <- countysumm %>% select(c(fips, share_mar_fem_Teacher, YEAR)) %>%
+  pivot_wider(id_cols = fips, names_from = YEAR, values_from = share_mar_fem_Teacher, values_fill = NA) 
+
+#full sample
+plot_usmap(data = filter(countysumm) %>% select(c(fips, share_mar_fem_Teacher, YEAR)),
+           values = "share_mar_fem_Teacher", color = NA) + 
+  scale_fill_gradient(low = "blue", high = "red", limits = c(0, 0.5)) + facet_wrap(~YEAR) + theme(legend.position = "right")
+
+plot_usmap(data = filter(countysumm, YEAR == 1930 | YEAR == 1940) %>% select(c(fips, share_mar_fem_Teacher, YEAR)),
+           values = "share_mar_fem_Teacher", color = NA, include = c("NC","SC")) +
+  scale_fill_gradient(low = "blue", high = "red", limits = c(0, 0.5)) + theme(legend.position = "right") + facet_wrap(~YEAR)
+
+plot_usmap(data = countysumm %>% group_by(fips) %>% select(c(fips, share_mar_fem_Teacher, YEAR)),
+           values = "share_mar_fem_Teacher", color = NA, include = c("VA","SC","TN")) +
+  scale_fill_gradient(low = "blue", high = "red", limits = c(0, 0.5)) + theme(legend.position = "right") + facet_wrap(~YEAR)
+
+#sample line
+plot_usmap(data = filter(countysumm_allyears) %>% select(c(FIPS, pct_teachers_mw, YEAR)) %>% rename(fips = FIPS),
+           values = "pct_teachers_mw", color = NA) + 
+  scale_fill_gradient(low = "blue", high = "red", limits = c(0, 1), oob = scales::squish) + facet_wrap(~YEAR)
+
+#sample line
+plot_usmap(data = filter(countysumm_allyears) %>% select(c(FIPS, pct_workers_mw, YEAR)) %>% rename(fips = FIPS),
+           values = "pct_workers_mw", color = NA) + 
+  scale_fill_gradient(low = "blue", high = "red", limits = c(0, 0.26), oob = scales::squish) + facet_wrap(~YEAR)
+
+
 
 #################################################################
 ##### FIGURE 1: DEMOG TRENDS FOR WORKERS/TEACHERS OVER TIME #####
