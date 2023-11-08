@@ -198,6 +198,9 @@ write_csv(countydist_byocc, glue("{outdata}/countydist_byocc.csv"))
 ##################################################################
 ##### DATASET 4: COUNTY-LEVEL SUMM STATS 1930-1940 ###############
 ##################################################################
+## icpsr to fips crosswalk
+fipscrosswalk <- read_xls(glue("{root}/StateFIPSicsprAB.xls"))
+
 ## collapsing to summary stats (NOTE: THESE ARE FROM SAMPLED DATA -- LESS RELIABLE THAN DATA FROM FULL SAMPLE)
 countysumm <- allyears_raw_samp %>% filter(YEAR <= 1940) %>%
   group_by(YEAR, STATEICP, COUNTYICP) %>% 
@@ -219,9 +222,24 @@ countysumm <- allyears_raw_samp %>% filter(YEAR <= 1940) %>%
             PCT_HS_GRAD = sum(ifelse(EDUC > 6 & AGE >= 25, PERWT, 0))/sum(ifelse(AGE >= 25, PERWT, 0)),
             AGEMARR = weighted.mean(ifelse(AGEMARR == 0, NA, AGEMARR), PERWT, na.rm=TRUE),
             INCWAGE = weighted.mean(ifelse(INCWAGE <= 5002 & INCWAGE > 0, INCWAGE, NA), PERWT, na.rm=TRUE)) %>%
-  full_join(countydist_wide) #joining with county-level teacher summ stats
+  full_join(countydist_wide) %>% #joining with county-level teacher summ stats
+  left_join(fipscrosswalk, by= c("STATEICP" = "STICPSR")) %>% 
+  mutate(FIPSRAW = paste0(str_pad(FIPS, 2, "left", pad = "0"),str_pad(COUNTYICP, 4, "left", pad = "0")),
+         fips = ifelse(substr(FIPSRAW,6,6) == "0", substr(FIPSRAW,1,5), NA)) %>% select(-c(FIPS, NAME, STNAME, FIPSRAW))
+
+
 
 write_csv(countysumm, glue("{outdata}/countysumm.csv"))
+
+countysumm_allyears <- allyears_raw_samp %>% left_join(fipscrosswalk, by= c("STATEICP" = "STICPSR")) %>% 
+  group_by(FIPS, YEAR) %>%
+  mutate(demgroup = case_when(SEX == 1 ~ "M",
+                              SEX == 2 & MARST == 6 ~ "SW",
+                              TRUE ~ "MW"),
+         worker = ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0),
+         teacher = ifelse(worker != 0 & OCC1950 == 93 & CLASSWKR == 2, PERWT, 0)) %>%
+  summarize(pct_workers_mw = sum(ifelse(worker != 0 & demgroup == "MW", PERWT, 0))/sum(ifelse(worker != 0, PERWT, 0)),
+            pct_teachers_mw = sum(ifelse(teacher != 0 & demgroup == "MW", PERWT, 0))/sum(ifelse(teacher != 0, PERWT, 0)))
 
 
 
