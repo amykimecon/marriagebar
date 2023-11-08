@@ -64,21 +64,25 @@ summ_mw_all <- bind_rows(list(summ_mw, summ_mw_lf, summ_mw_teach))
 ##################################################################
 # initializing empty list of dataframes
 filtereddata <- list()
+cleandata <- list()
+n_max = Inf #change only for testing
 
 # iterating through each census file
 i = 0
 for (year in seq(1910,1940,10)){
   print(year)
   i = i + 1
-  raw <- read_csv(glue("{rawdata}/census_{year}.csv")) #reading in file
+  raw <- read_csv(glue("{rawdata}/census_{year}.csv"), n_max = n_max) #reading in file
   clean <- raw %>% 
-    mutate(demgroup = case_when(SEX == 1 ~ "M",
+    mutate(YEAR = year,
+           demgroup = case_when(SEX == 1 ~ "M",
                                 SEX == 2 & MARST == 6 ~ "SW",
                                 TRUE ~ "MW"),
            teacher = ifelse(OCC1950 == 93 & CLASSWKR == 2 & AGE >= 18 & AGE <= 64,1,0),# & RACE == 1, 1, 0),
            secretary = ifelse(OCC1950 == 350 & CLASSWKR == 2 & AGE >= 18 & AGE <= 64,1,0),# & RACE == 1, 1, 0),
            worker = ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, 1, 0)) %>%
     group_by(SERIAL) 
+  cleandata[[i]] <- clean
   
   # filtering for only white teachers and secretaries
   filteredraw <- clean %>% ungroup() %>% 
@@ -100,8 +104,32 @@ for (year in seq(1910,1940,10)){
 
 # binding dataframes and saving
 filtered_bind <- bind_rows(filtereddata, .id = "column_label")
-write_csv(filtered_bind, glue("{outdata}/filtereddata.csv"))
+#write_csv(filtered_bind, glue("{outdata}/filtereddata.csv"))
 
+linkeddata <- list()
+j = 1
+# linking
+for (year in seq(1910,1930,10)){
+  links <- read_csv(glue("{rawdata}/{year}_{year+10}.csv"), n_max = n_max)
+  
+  #getting appropriate census years
+  rawbase <- cleandata[[j]]
+  rawlink <- cleandata[[j+1]]
+  
+  #joining base year with links: only keeping indiv. who are linked to link year (i.e. in links)
+  linkedbase <- rawbase %>% inner_join(links, by = c("HISTID"=glue("histid{year}"))) 
+  
+  #joining link year with links + base year: only keeping indiv. who are linked to base year (i.e. in links)
+  linked <- rawlink %>% inner_join(linkedbase, by = c("HISTID"=glue("histid{year+10}")), suffix = c("_link","_base")) #linking link year by HISTID, adding suffixes for duplicate variables
+  
+  linkeddata[[j]] <- linked
+  j = j + 1
+}
+
+linked_all <- bind_rows(linkeddata)
+write_csv(linked_all, glue("{outdata}/linkedall.csv"))
+linked_teach <- linked_all %>% filter(teacher_base == 1 | teacher_link == 1)
+write_csv(linked_teach, glue("{outdata}/linkedteach.csv"))
 
 #####################################################################
 ##### DATASET 3: TEACHER/SECRETARY COUNTY-LEVEL STATS 1910-1940 #####
