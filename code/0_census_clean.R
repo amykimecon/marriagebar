@@ -2,6 +2,16 @@
 ### AUTHOR: AMY KIM
 ### LAST EDITED: MAY 2023
 
+# HELPER FUNCTION: CREATE UNIQUE FIPS from STATEICP + COUNTYICP
+## icpsr to fips crosswalk
+fipscrosswalk <- read_xls(glue("{root}/StateFIPSicsprAB.xls"))
+mergefips <- function(dataset, crosswalk = fipscrosswalk){
+  outdata <- left_join(dataset, fipscrosswalk, by = c("STATEICP" = "STICPSR"))  %>% 
+    mutate(FIPSRAW = paste0(str_pad(FIPS, 2, "left", pad = "0"),str_pad(COUNTYICP, 4, "left", pad = "0")),
+           fips = ifelse(substr(FIPSRAW,6,6) == "0", substr(FIPSRAW,1,5), NA)) %>% select(-c(FIPS, NAME, STNAME, FIPSRAW))
+  return(outdata)
+}
+
 ###############################################
 ##### DATASET 1: 1% SAMPLE DATA 1900-2000 #####
 ###############################################
@@ -68,10 +78,9 @@ cleandata <- list()
 n_max = Inf #change only for testing
 
 # iterating through each census file
-i = 0
+i = 1
 for (year in seq(1910,1940,10)){
   print(year)
-  i = i + 1
   raw <- read_csv(glue("{rawdata}/census_{year}.csv"), n_max = n_max) #reading in file
   clean <- raw %>% 
     mutate(YEAR = year,
@@ -100,6 +109,8 @@ for (year in seq(1910,1940,10)){
   sum(which(filteredraw_spouse$SPLOC_SP != filteredraw_spouse$PERNUM))
   
   filtereddata[[i]] <- filteredraw_spouse
+  
+  i = i + 1
 }
 
 # binding dataframes and saving
@@ -130,6 +141,9 @@ linked_all <- bind_rows(linkeddata)
 write_csv(linked_all, glue("{outdata}/linkedall.csv"))
 linked_teach <- linked_all %>% filter(teacher_base == 1 | teacher_link == 1)
 write_csv(linked_teach, glue("{outdata}/linkedteach.csv"))
+
+# sample of college-educated women in 1940
+
 
 #####################################################################
 ##### DATASET 3: TEACHER/SECRETARY COUNTY-LEVEL STATS 1910-1940 #####
@@ -198,9 +212,6 @@ write_csv(countydist_byocc, glue("{outdata}/countydist_byocc.csv"))
 ##################################################################
 ##### DATASET 4: COUNTY-LEVEL SUMM STATS 1930-1940 ###############
 ##################################################################
-## icpsr to fips crosswalk
-fipscrosswalk <- read_xls(glue("{root}/StateFIPSicsprAB.xls"))
-
 ## collapsing to summary stats (NOTE: THESE ARE FROM SAMPLED DATA -- LESS RELIABLE THAN DATA FROM FULL SAMPLE)
 countysumm <- allyears_raw_samp %>% filter(YEAR <= 1940) %>%
   group_by(YEAR, STATEICP, COUNTYICP) %>% 

@@ -19,18 +19,16 @@ library(readxl)
 if (Sys.info()[["user"]]=="yk0581"){ #section laptop
   root = "C:\\Users\\yk0581\\Dropbox (Princeton)\\marriagebar"
   git = "C:\\Users\\yk0581\\Documents\\GitHub\\marriagebar"
-  rawdata = glue("{root}/ipums_raw")
-  outdata = glue("{root}/clean_data")
-  outfigs = glue("{git}/figures")
 }
 if (Sys.info()[["user"]]=="amykim"){ #amys macbook
   root = "~/Dropbox (Princeton)/marriagebar"
   git = "~/GitHub/marriagebar"
-  rawdata = glue("{root}/ipums_raw")
-  outdata = glue("{root}/clean_data")
-  outfigs = glue("{git}/figures")
-  
 }
+
+rawdata = glue("{root}/ipums_raw")
+outdata = glue("{root}/clean_data")
+outfigs = glue("{git}/figures")
+
 
 ### colors
 mw_col = "#8751A4"

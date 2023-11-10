@@ -7,7 +7,7 @@
 
 # helper function for event study graph
 es_graph_data <- function(depvar, controls = "", data = es_county_main, xvars = interact_vars, years = c(1910, 1920, 1940), yearomit = 1930){
-  es_reg <- lm(glue("{depvar} ~ factor(YEAR) + cluster + {glue_collapse(xvars, sep = '+')} {controls}"), data = data %>% mutate(cluster = as.character(STATEICP)))
+  es_reg <- lm(glue("{depvar} ~ factor(YEAR) + cluster + {glue_collapse(xvars, sep = '+')} {controls}"), data = data %>% mutate(cluster = as.character(fips)))
                #data = data %>% mutate(cluster = paste0(str_pad(STATEICP,2,"left","0"), str_pad(COUNTYICP,3,"left","0"))))
   print(summary(es_reg))
   
@@ -26,8 +26,7 @@ es_graph_data <- function(depvar, controls = "", data = es_county_main, xvars = 
 #################################################
 # COUNTY-LEVEL (FS) EVENT STUDY DATA
 es_county_matched <- countysumm_matched %>% filter(main_samp == 1)
-es_county_main <- countysumm %>% filter(main_samp == 1 & STATEGROUP != "Untreated (Non-Neighbor)") %>% 
-  filter(STATEICP %in% c(40, 48, 54, 47))
+es_county_main <- countysumm %>% filter(main_samp == 1 & STATEGROUP != "Untreated (Non-Neighbor)")
 es_county_all <- countysumm %>% filter(main_samp == 1)
 
 # INDIVIDUAL-LEVEL (FS) EVENT STUDY DATA -- maybe do later for appendix?

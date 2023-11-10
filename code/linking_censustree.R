@@ -3,12 +3,12 @@
 linked_sample <- linked_teach %>% 
   filter(STATEICP_base == STATEICP_link & COUNTYICP_base == COUNTYICP_link & SEX_base == SEX_link & RACE_base == RACE_link) %>%
   rename(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, SEX = SEX_base, RACE = RACE_base) %>% 
-  select(-c(STATEICP_link,COUNTYICP_link, SEX_link, RACE_link))
+  select(-c(STATEICP_link,COUNTYICP_link, SEX_link, RACE_link)) %>% mergefips()
 
 # grouping by county for ES
 linked_sample_county <- linked_sample %>%
   filter(teacher_base == 1 & demgroup_base == "SW") %>% #only keeping single women teachers (swt) in base year
-  group_by(STATEICP, COUNTYICP, YEAR_base) %>%
+  group_by(STATEICP, COUNTYICP, YEAR_base, YEAR_link) %>%
   summarize(pct_mw = sum(ifelse(demgroup_link == "MW", 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
             pct_mwt = sum(ifelse(demgroup_link == "MW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later mw teach
             pct_mwnt = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later mw non teach but in lf
@@ -21,7 +21,7 @@ linked_sample_county <- linked_sample %>%
 
 ## EVENT STUDY STUFF (copied from 2_firststage.R)
 # helper function for event study graph
-es_graph_data <- function(depvar, controls = "", data = es_county_linked_main, xvars = interact_vars, years = c(1910, 1920, 1940), yearomit = 1930){
+es_graph_data <- function(depvar, controls = "", data = es_county_linked_main, xvars = interact_vars, years = c(1920, 1940), yearomit = 1930){
   es_reg <- lm(glue("{depvar} ~ factor(YEAR) + cluster + {glue_collapse(xvars, sep = '+')} {controls}"), data = data %>% mutate(cluster = as.character(STATEICP)))
   #data = data %>% mutate(cluster = paste0(str_pad(STATEICP,2,"left","0"), str_pad(COUNTYICP,3,"left","0"))))
   print(summary(es_reg))
@@ -40,14 +40,14 @@ es_graph_data <- function(depvar, controls = "", data = es_county_linked_main, x
 ##### CLEANING DATA FOR FIRST STAGE ANALYSIS ####
 #################################################
 # COUNTY-LEVEL (FS) EVENT STUDY DATA
-es_county_linked_main <- countysumm %>% inner_join(linked_sample_county, by = c("STATEICP", "COUNTYICP", "YEAR_link" = "YEAR")) %>%
+es_county_linked_main <- countysumm %>% inner_join(linked_sample_county, by = c("STATEICP" = "STATEICP", "COUNTYICP" = "COUNTYICP", "YEAR" = "YEAR_link")) %>%
   filter(main_samp == 1 & STATEGROUP != "Untreated (Non-Neighbor)") 
 
 # ADDING TREAT x YEAR INTERACTIONS
 interact_vars <- c()
 for (YEAR in seq(1920,1940,10)){
   if (YEAR != 1930){
-    es_county_linked_main[[glue("TREATx{YEAR}")]] <- ifelse(es_county_main$YEAR == YEAR, 1, 0)*ifelse(es_county_main$TREAT == 1, 1, 0)
+    es_county_linked_main[[glue("TREATx{YEAR}")]] <- ifelse(es_county_linked_main$YEAR == YEAR, 1, 0)*ifelse(es_county_linked_main$TREAT == 1, 1, 0)
     interact_vars <- c(interact_vars, glue("TREATx{YEAR}"))
   }
 }
@@ -62,7 +62,7 @@ share_swt_byoutcome <- bind_rows(es_graph_data("pct_mwt"),
                            depvar == "pct_mwnt" ~ "MW Non-Teacher in LF",
                            depvar == "pct_mwnilf" ~ "MW Not in LF",
                            depvar == "pct_swt" ~ "SW Teacher",
-                           depvar == "pct_swnt" ~ "SW Non-Teacher in LF"
+                           depvar == "pct_swnt" ~ "SW Non-Teacher in LF",
                            TRUE ~ "SW Not in LF"),
          year = case_when(Group == "MW Teacher" ~ year - 1,
                           Group == "MW Non-Teacher in LF" ~ year - 0.6,
@@ -71,7 +71,7 @@ share_swt_byoutcome <- bind_rows(es_graph_data("pct_mwt"),
                           Group == "SW Non-Teacher in LF" ~ year + 0.6,
                           Group == "SW Not in LF" ~ year + 1))
 
-ggplot(share_swt_byoutcome, aes(x = year, y = y, color = factor(Group), shape = factor(Group)) + 
+ggplot(share_swt_byoutcome, aes(x = year, y = y, color = factor(Group), shape = factor(Group))) + 
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
   geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
   geom_point(size = 4) + labs(x = "Year", y = "Treat X Year", color = "", shape = "") + theme_minimal() + 
@@ -81,6 +81,8 @@ ggplot(share_swt_byoutcome, aes(x = year, y = y, color = factor(Group), shape = 
 
 ### EXPLORATORY STUFF
 # todo -- decompose base teachers in linked year, what pct leave LF vs what pct stay in teaching, etc. and by demgroup
+linking_summary <- linked_sample %>% filter(teacher_base == 1) %>% group_by(YEAR_link, YEAR_base, demgroup_base) %>%
+  summarize(pct_stay = )
 
 # looking at those who leave teaching
 leavers_sample <- linked_sample %>% filter(teacher_base == 1 & teacher_link == 0)
