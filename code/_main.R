@@ -1,6 +1,6 @@
 ### MAIN FILE FOR MARRIAGEBAR PROJECT -- RUN TO GENERATE ALL CLEANED DATA, FIGURES AND TABLES
 ### AUTHOR: AMY KIM
-### LAST EDITED: MAY 2023
+### LAST EDITED: NOV 2023
 
 # importing all packages
 library(tidyverse)
@@ -13,7 +13,7 @@ library(MatchIt)
 library(sandwich)
 library(lmtest)
 library(readxl)
-#library(lfe)
+library(duckdb)
 
 ### setting all filepaths 
 if (Sys.info()[["user"]]=="yk0581"){ #section laptop
@@ -38,12 +38,8 @@ men_col = "#C8ADD7"
 control_col = "#479F73"
 treat_col = "#8751A4"
 
-# mw_col_line = "#154783"
-# sw_col_line = "#709522"
-# men_col_line = "#B3474A"
-# 
-# treat_col_line = "#154783"
-# control_col_line = "#BC6E23"
+### helper function
+source(glue("{git}/code/helper.R"))
 
 ### cleaning data (or loading all cleaned datasets) -- comment out one of these
 ## code to clean data
