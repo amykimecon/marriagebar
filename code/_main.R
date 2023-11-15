@@ -26,7 +26,7 @@ if (Sys.info()[["user"]]=="amykim"){ #amys macbook
 }
 
 rawdata = glue("{root}/ipums_raw")
-outdata = glue("{root}/clean_data")
+cleandata = glue("{root}/clean_data")
 outfigs = glue("{git}/figures")
 
 
@@ -46,11 +46,11 @@ source(glue("{git}/code/helper.R"))
 # source(glue("{git}/code/0_census_clean.R"))
 
 # loading all cleaned datasets
-samp_byyear <- read_csv(glue("{outdata}/samp_byyear.csv"))
-filtered_bind <- read_csv(glue("{outdata}/filtereddata.csv"))
-countydist_byocc <- read_csv(glue("{outdata}/countydist_byocc.csv"))
-countysumm <- read_csv(glue("{outdata}/countysumm.csv"))
-countysumm_matched <- read_csv(glue("{outdata}/countysumm_matched.csv"))
+samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv"))
+filtered_bind <- read_csv(glue("{cleandata}/filtereddata.csv"))
+countydist_byocc <- read_csv(glue("{cleandata}/countydist_byocc.csv"))
+countysumm <- read_csv(glue("{cleandata}/countysumm.csv"))
+countysumm_matched <- read_csv(glue("{cleandata}/countysumm_matched.csv"))
 
 ### running scripts
 source(glue("{git}/code/1_descriptives.R"))

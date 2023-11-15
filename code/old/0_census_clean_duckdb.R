@@ -6,7 +6,6 @@ con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
 
 # reading in all ipums census data to create raw tables by year
 for (year in seq(1900,1940,10)){
-  #duckdb_read_csv(con, glue("censusraw{year}"), glue("{rawdata}/census_{year}.csv"))
   dbExecute(con, glue("CREATE OR REPLACE TABLE censusraw{year} AS FROM read_csv_auto ('{rawdata}/census_{year}.csv')"))
   dbExecute(con, glue("ALTER TABLE censusraw{year} ADD COLUMN YEAR INTEGER"))
   dbExecute(con, glue("UPDATE censusraw{year} SET YEAR = {year}"))
