@@ -3,27 +3,55 @@
 ##################
 ## DATA HELPERS ##
 ##################
-
 # Adds useful/common person-level variables, requires indiv-level dataset with variables OCC1950, SEX, AGE, MARST (with IPUMS codings)
 addvars_indiv <- function(dataset){
   outdata <- dataset %>% 
     mutate(demgroup = case_when(SEX == 1 ~ "M",
                                 SEX == 2 & MARST != 1 & MARST != 2 ~ "SW",
                                 TRUE ~ "MW"),
-           worker = ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, 1, 0),
-           teacher = ifelse(OCC1950 == 93 & CLASSWKR == 2 & worker == 1, 1, 0),
-           secretary = ifelse(OCC1950 == 350 & CLASSWKR == 2 & worker == 1, 1, 0)) 
+           worker = ifelse(YEAR == 1900, 
+                           ifelse(OCC1950 != 999 & AGE >= 18 & AGE <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
+                           ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), #otherwise, those in LABFORCE 
+           teacher = ifelse(YEAR == 1900,
+                            ifelse(OCC1950 == 93 & worker == 1, 1, 0), #in 1900, no CLASSWKR
+                            ifelse(OCC1950 == 93 & CLASSWKR == 2 & worker == 1, 1, 0)),
+           secretary = ifelse(YEAR == 1900,
+                              ifelse(OCC1950 == 350 & worker == 1, 1, 0), #in 1900, no CLASSWKR
+                              ifelse(OCC1950 == 350 & CLASSWKR == 2 & worker == 1, 1, 0)))
   return(outdata)
 }
 
-# Adds useful/common county-level variables, requires county-level dataset with variables STATEICP, COUNTYICP (with IPUMS codings)
+# Adds useful/common person-level variables FOR LINKED DATA, requires indiv-level LINKED dataset 
+#   with variables OCC1950, SEX, AGE, MARST (with IPUMS codings) and suffixes _base and _link
+addvars_indiv_linked <- function(dataset){
+  outdata <- dataset %>% 
+    mutate(demgroup_base = case_when(SEX_base == 1 ~ "M",
+                                SEX_base == 2 & MARST_base != 1 & MARST_base != 2 ~ "SW",
+                                TRUE ~ "MW"),
+           demgroup_link = case_when(SEX_link == 1 ~ "M",
+                                SEX_link == 2 & MARST_link != 1 & MARST_link != 2 ~ "SW",
+                                TRUE ~ "MW"),
+           worker_base = ifelse(YEAR_base == 1900, 
+                           ifelse(OCC1950_base != 999 & AGE_base >= 18 & AGE_base <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
+                           ifelse(LABFORCE_base == 2 & AGE_base >= 18 & AGE_base <= 64, 1, 0)), #otherwise, those in LABFORCE 
+           worker_link = ifelse(LABFORCE_link == 2 & AGE_link >= 18 & AGE_link <= 64, 1, 0),
+           teacher_base = ifelse(YEAR_base == 1900,
+                            ifelse(OCC1950_base == 93 & worker_base == 1, 1, 0), #in 1900, no CLASSWKR
+                            ifelse(OCC1950_base == 93 & CLASSWKR_base == 2 & worker_base == 1, 1, 0)),
+           teacher_link = ifelse(OCC1950_link == 93 & CLASSWKR_link == 2 & worker_link == 1, 1, 0),
+           secretary_base = ifelse(YEAR_base == 1900,
+                              ifelse(OCC1950_base == 350 & worker_base == 1, 1, 0), #in 1900, no CLASSWKR
+                              ifelse(OCC1950_base == 350 & CLASSWKR_base == 2 & worker_base == 1, 1, 0)),
+           secretary_link = ifelse(OCC1950_link == 350 & CLASSWKR_link == 2 & worker_link == 1, 1, 0))
+  return(outdata)
+}
+
+# Adds useful/common county-level variables, requires dataset with variables STATEICP, COUNTYICP (with IPUMS codings)
 addvars_county <- function(dataset){
-  mainsampfips <- mainsamp(dataset)
   outdata <- dataset %>% 
     mergefips() %>% 
     mutate(TREAT = ifelse(STATEICP == 47 | STATEICP == 51, 1, 0), # indicator for treated states
-           neighbor_samp = ifelse(STATEICP %in% c(47, 51, 40, 48, 54, 56), 1, 0),
-           mainsamp = ifelse(FIPS %in% mainsampfips, 1, 0)) %>% # indicator for treated or neighbor control
+           neighbor_samp = ifelse(STATEICP %in% c(47, 51, 40, 48, 54, 56), 1, 0)) # indicator for treated or neighbor control
     
   return(outdata)
 }
@@ -129,14 +157,14 @@ retailsales <- function(dataset){
                                   STATEICP == 44 & COUNTYICP == 1210 ~ 1210,
                                   TRUE ~ COUNTYICP
                                   )) %>%
-    left_join(retailsales %>% select(STATE, NDMTCODE, RLDF3929), by = c("STATEICP"="STATE","COUNTYTEMP"="NDMTCODE")) %>% #rldf3929 = growth in retail sales from 1929 to 1939
+    left_join(retailsales %>% select(STATE, NDMTCODE, RLDF3929, RRTSAP29, RRTSAP39), by = c("STATEICP"="STATE","COUNTYTEMP"="NDMTCODE")) %>% #rldf3929 = growth in retail sales from 1929 to 1939
     select(-COUNTYTEMP)
 }
 
 ##############
 ## MATCHING ##
 ##############
-# takes a dataset (long on year x county) and list of variable names (excluding retail sales) on which to match, plus indicator for using retail sales
+# takes a dataset (long on year x county) and list of variable names (excluding % urban and retail sales) on which to match, plus indicator for using retail sales
 # returns dataframe of control counties including the control county FIPS code, and the state of the treatment county to which it was matched
 matching <- function(longdata, varnames, retail = FALSE, verbose = FALSE){
   if (!("FIPS" %in% names(longdata))){
@@ -148,20 +176,28 @@ matching <- function(longdata, varnames, retail = FALSE, verbose = FALSE){
   
   # names of variables for matching (varnames in 1920, 1930, and retail sales if retail=TRUE)
   filter_varnames = c(glue("{varnames}_1920"),glue("{varnames}_1930"))
+  match_varnames = c(glue("{varnames}_1930"), glue("{varnames}_growth"), "URBAN_1920", "URBAN_1930")
+  
   if(retail){
-    filter_varnames <- c(filter_varnames, "RLDF3929")
+    filter_varnames <- c(filter_varnames, "RRTSAP29", "RRTSAP39", "RLDF3929")
+    match_varnames <- c(match_varnames, "RRTSAP29", "RLDF3929")
   }
   
   # prepping data for matching
   matchdata <- longdata %>% filter(FIPS %in% mainsampfips) %>% #keeping only counties in main sample
     pivot_wider(id_cols = c(FIPS, STATEICP, COUNTYICP, TREAT), #pivoting wide (so only one row per county)
                 names_from = YEAR, 
-                values_from = all_of(varnames)) %>%
+                values_from = all_of(c(varnames, "URBAN"))) %>%
     retailsales() %>% #merging with retail sales
-    filter(if_all(all_of(filter_varnames), ~ !is.na(.x)))
+    filter(if_all(all_of(filter_varnames), function(.x) !is.na(.x) & .x != 0)) %>% 
+    filter(!is.na(URBAN_1920) & !is.na(URBAN_1930))
+  
+  for (var in varnames){
+    matchdata[[glue("{var}_growth")]] = (matchdata[[glue("{var}_1930")]]-matchdata[[glue("{var}_1920")]])/matchdata[[glue("{var}_1920")]]
+  }
   
   # matching treated counties with nontreated counties, not allowing replacement
-  match_obj <- matchit(reformulate(filter_varnames, response = "TREAT"), data = matchdata, REPLACE = FALSE)
+  match_obj <- matchit(reformulate(match_varnames, response = "TREAT"), data = matchdata, REPLACE = FALSE, distance = "robust_mahalanobis")
   
   if (verbose){
     print(summary(match_obj))
@@ -173,6 +209,29 @@ matching <- function(longdata, varnames, retail = FALSE, verbose = FALSE){
   control_matches[["FIPS_MATCH"]] <- matchdata[rownames(match_obj$match.matrix),][["FIPS"]] # creating new var equal to fips of treated match
   
   return(select(control_matches, c(FIPS, STATE_MATCH, FIPS_MATCH)))
+}
+
+# testing matching between control and treatment for various samples on variable 'varname'
+match_test <- function(dataset, varname){
+  graphdata <- dataset %>% group_by(TREAT, YEAR, sample) %>% summarize(across(all_of(varname), ~mean(.x, na.rm=TRUE)))
+  graph_out <- ggplot(data = graphdata, aes(x = YEAR, y = .data[[varname]], color = factor(TREAT), shape = factor(TREAT))) + 
+    geom_point() + geom_line() + facet_wrap(~sample)
+  
+  return(graph_out)
+}
+
+# joining outputs of matching (where matches is a list of matching sets) with dataset 
+matching_join <- function(dataset, matchlist){
+  for (i in 1:length(matchlist)){
+    if (i == 1){ # for first matching dataset, keep state of match
+      dataset <- dataset %>% left_join(matchlist[[i]] %>% mutate(match = 1) %>% select(-FIPS_MATCH), by = c("FIPS", "STATEICP")) %>% 
+        mutate(match_samp = ifelse(match == 1 | TREAT == 1, 1, 0))
+    }
+    else{
+      dataset[[glue("match_samp{i}")]] <- ifelse(dataset$TREAT == 1 | dataset$FIPS %in% matchlist[[i]]$FIPS, 1, 0)
+    }
+  }
+  return(dataset)
 }
 
 ##########################
@@ -189,7 +248,7 @@ add_did_dummies <- function(dataset){
   
 # Creating data for graphing dynamic DiD 
 # takes in dataset, depvar (dependant variable), any controls (string of form '+ X1 + X2 +...'), years to include, year to omit
-did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE){
+did_graph_data <- function(dataset, depvar, controls = "", years = c(1900, 1910, 1920, 1940), yearomit = 1930, verbose = FALSE){
   # vector of interaction terms
   interact_vars <- glue("TREATx{years}")
   
@@ -219,8 +278,8 @@ did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920,
 # Creating dynamic DiD graph
 # takes in all parameters of did_graph_data (with list of dep vars), as well as vector of labels for dep vars and labels for graph
 #   and toggles for slides (default is for paper) and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
-did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, 
-                      slides = FALSE, steps = FALSE){
+did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1900, 1910, 1920, 1940), yearomit = 1930, verbose = FALSE, 
+                      slides = FALSE, steps = FALSE, filename = NA){
   nvars = length(depvarlist)
   if (nvars != length(depvarnames)){
     print("Error: depvarlist length diff from depvarnames length")
@@ -228,14 +287,26 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
   }
 
   # compiling all regression outputs (in format for graphing) from different dependent variables
-  did_datasets <- list()
-  for (i in seq(1,nvars)){
-    did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, years, yearomit, verbose) %>%
-      mutate(group = depvarnames[[i]],
-             year_graph = year - 0.6 + (i-1)*(1.2/(nvars - 1))) # shifting over so dots don't overlap
-    did_datasets[[i]] <- did_data_temp
+  if (nvars == 1){
+    did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, years, yearomit, verbose) 
+    did_data <- did_data_temp %>%
+      mutate(group = depvarnames[[1]], year_graph = did_data_temp$year)
   }
-  did_data <- bind_rows(did_datasets)
+  else{
+    did_datasets <- list()
+    for (i in seq(1,nvars)){
+      did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, years, yearomit, verbose) %>%
+        mutate(group = depvarnames[[i]],
+               year_graph = year - 0.6 + (i-1)*(1.2/(nvars - 1))) # shifting over so dots don't overlap
+      did_datasets[[i]] <- did_data_temp
+    }
+    did_data <- bind_rows(did_datasets)
+  }
+  
+  if(verbose){
+    print(did_data)
+  }
+
   # creating graph
   graph_out <- ggplot(did_data, aes(x = year_graph, 
                                     y = y, 
@@ -245,13 +316,28 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
     geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
     scale_color_manual(values=colors) +
     annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
-    geom_text(aes(x = 1935.5, y = -0.07, label = "Marriage Bars \n Removed") ,color = "#656565") +
+    geom_text(aes(x = 1935.5, y = min(did_data$y_lb), label = "Marriage Bars \n Removed") ,color = "#656565") +
     geom_point(size = 4) + labs(x = "Year", y = "Treat X Year", color = "", shape = "") + theme_minimal() + 
     theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
   
+  if (!is.na(filename)){
+    ggsave(glue("{outfigs}/{filename}.png"), graph_out)
+  }
   return(graph_out)
 }
 
 
+graph_treatment <- function(dataset, filename = NA){
+  graph_out <- plot_usmap(data = dataset %>% filter(YEAR == 1940) %>% mutate(fips = FIPS, TREAT = factor(TREAT)) %>% 
+                            select(c(fips, TREAT)), values = "TREAT", color = NA) 
+  if (!is.na(filename)){
+    ggsave(glue("{outfigs}/{filename}.png"), graph_out)
+  }
+  return(graph_out)
+}
 
-
+#ggplot colors
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}

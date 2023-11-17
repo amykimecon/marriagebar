@@ -29,28 +29,42 @@ link_colnames <- c("YEAR","SERIAL","STATEICP", "COUNTYICP", "SEX", "AGE", "MARST
 
 # linking baseyear (year t - 10) to linkyear (year t)
 for (linkyear in seq(1910,1940,10)){
-  # reading in censustree linking file as temporary table (to be deleted after session closed)  
-  dbExecute(con, glue("CREATE OR REPLACE TEMP TABLE link{linkyear} AS FROM read_csv_auto('{rawdata}/{linkyear-10}_{linkyear}.csv')"))
+  # reading in censustree linking file
+  dbExecute(con, glue("CREATE OR REPLACE TABLE link{linkyear} AS FROM read_csv_auto('{rawdata}/{linkyear-10}_{linkyear}.csv')"))
   
-  # inner join of linking file with baseyear census data (only keeping links) as temporary table 
-  dbExecute(con, glue("CREATE OR REPLACE TEMP TABLE linkedtemp{linkyear} AS SELECT * FROM censusraw{linkyear - 10} JOIN link{linkyear} ON (HISTID = histid{linkyear - 10})"))
+  # # renaming histid{year} to format histid_base and histid_link
+  # dbExecute(con, glue("ALTER TABLE link{linkyear} RENAME COLUMN histid{linkyear-10} TO histid_base"))
+  # dbExecute(con, glue("ALTER TABLE link{linkyear} RENAME COLUMN histid{linkyear} TO histid_link"))
+  # 
+  # # editing to include base and link year
+  # dbExecute(con, glue("ALTER TABLE link{linkyear} ADD COLUMN YEAR_base INTEGER"))
+  # dbExecute(con, glue("ALTER TABLE link{linkyear} ADD COLUMN YEAR_link INTEGER"))
+  # dbExecute(con, glue("UPDATE link{linkyear} SET YEAR_base = {linkyear - 10}"))
+  # dbExecute(con, glue("UPDATE link{linkyear} SET YEAR_link = {linkyear}"))
   
+  # inner join of linking file with baseyear census data (only keeping links) as temporary table
+  dbExecute(con, glue("CREATE OR REPLACE TABLE linkedtemp{linkyear} AS SELECT * FROM censusraw{linkyear - 10} JOIN link{linkyear} ON (HISTID = histid{linkyear - 10})"))
+
   # inner join of linking file + baseyear census with linkyear census data (only keeping links)
   dbExecute(con, glue("CREATE OR REPLACE TABLE linked{linkyear} AS SELECT * FROM linkedtemp{linkyear} linkedtemp{linkyear} JOIN censusraw{linkyear} ON (histid{linkyear} = censusraw{linkyear}.HISTID)"))
-  
-  # renaming (kind of hack-y, should change if can find better solution) 
-  #   when joining two tables with duplicate column names (e.g. YEAR), column version in first table kept as YEAR and second version renamed to YEAR:1 -- want to change so first version 
+
+  # renaming (kind of hack-y, should change if can find better solution)
+  #   when joining two tables with duplicate column names (e.g. YEAR), column version in first table kept as YEAR and second version renamed to YEAR:1 -- want to change so first version
   #   (base year) is YEAR_base, second version (link year) is YEAR_link
   for (colname in link_colnames){
     if (linkyear != 1910 | !(colname %in% c("LABFORCE", "CLASSWKR"))){ #dropping missing variables in 1900
       dbExecute(con, glue("ALTER TABLE linked{linkyear} RENAME COLUMN {colname} TO {colname}_base"))
       dbExecute(con, glue("ALTER TABLE linked{linkyear} RENAME COLUMN '{colname}:1' TO {colname}_link"))
     }
+    else{
+      dbExecute(con, glue("ALTER TABLE linked{linkyear} RENAME COLUMN {colname} TO {colname}_link")) # dont have labforce and classwkr in 1900
+    }
   }
 }
 
 # concatenating into one table
 dbExecute(con, paste("CREATE OR REPLACE TABLE linkedall AS",
+                     "SELECT * FROM linked1910 UNION ALL BY NAME",
                      "SELECT * FROM linked1920 UNION ALL BY NAME",
                      "SELECT * FROM linked1930 UNION ALL BY NAME",
                      "SELECT * FROM linked1940"))
