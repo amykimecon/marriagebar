@@ -49,6 +49,9 @@ did_graph(matched, depvars1, depvarlabs1, colors1, filename = "shareteach_matchs
 did_graph(matched2, depvars1, depvarlabs1, colors1, filename = "shareteach_matchsamp2") + ggtitle("matched sample: set 2")
 did_graph(matched3, depvars1, depvarlabs1, colors1, filename = "shareteach_matchsamp3") + ggtitle("matched sample: set 3")
 
+## Result 1.5: Share MW/SW Teachers
+did_graph(neighbor, c("pct_Teacher_mw", "pct_Teacher_sw"), c("% MW that are teachers", "% SW that are teachers"), c(mw_col, sw_col))
+
 ## Result 2: Num Teachers Total and Share of Workers Teachers
 did_graph(neighbor, c("num_Teacher","num_Secretary"), c("Teacher", "Secretary"), c("red","blue")) + ggtitle("neighbor sample")
 did_graph(matched, c("num_Teacher","num_Secretary"), c("Teacher", "Secretary"), c("red","blue")) + ggtitle("matched sample: set 1")

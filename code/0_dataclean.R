@@ -10,8 +10,8 @@ countysumm_gen <- tbl(con, "censusrawall") %>%
   summarize(POP = n(),
             NWHITETEACH = sum(ifelse(teacher==1 & RACE==1, 1, 0)), #number of white teachers
             NWHITEWORK = sum(ifelse(worker == 1 & RACE == 1, 1, 0)), #number of white workers
-            NWHITEMW = sum(ifelse(demgroup == "MW" & RACE == 1, 1, 0)), # number of white married women
-            NWHITESW = sum(ifelse(demgroup == "SW" & RACE == 1, 1, 0)), # number of white unmarried women
+            NWHITEMW = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white married women
+            NWHITESW = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white unmarried women
             URBAN = sum(ifelse(URBAN == 2, 1, 0))/n(), #percent of county living in urban area
             PCT_WHITE = sum(ifelse(RACE == 1, 1, 0))/n(), # percent of county that is black
             WHITESCHOOLPOP = sum(ifelse(RACE == 1 & AGE <= 18 & AGE >= 6, 1, 0)), #white schoolage population
@@ -83,8 +83,8 @@ countysumm <- countysumm_raw %>% matching_join(matchlist = matchlist) %>%
   mutate(mainsamp = ifelse(FIPS %in% mainsamp_list, 1, 0),
          pct_workers_Teacher = num_Teacher/NWHITEWORK,
          pct_workers_Secretary = num_Secretary/NWHITEWORK,
-         pct_mw_Teacher = num_Teacher/NWHITEMW,
-         pct_sw_Teacher = num_Teacher/NWHITESW,
+         pct_Teacher_mw = num_Teacher/NWHITEMW,
+         pct_Teacher_sw = num_Teacher/NWHITESW,
          teacher_ratio = num_Teacher/WHITESCHOOLPOP,
          STATE_MATCH = case_when(match == 1 ~ STATE_MATCH,
                                  TREAT == 1 ~ STATEICP,
