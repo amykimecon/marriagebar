@@ -89,9 +89,9 @@ linklabs1 <- c("MW Teacher", "MW Non-Teacher in LF", "MW Not in LF", "SW Teacher
 did_graph(link1 %>% filter(neighbor_samp & mainsamp), linkvars1, linklabs1, gg_color_hue(6), 
           years = c(1920, 1940), filename = "linked1") + ggtitle("neighbor sample, denom SW Teachers in 1930")
 did_graph(link1 %>% filter(neighbor_sampNC & mainsamp), linkvars1, linklabs1, gg_color_hue(6), 
-          years = c(1920, 1940), filename = "linked1") + ggtitle("neighbor sample NC, denom SW Teachers in 1930")
+          years = c(1920, 1940), filename = "linked1NC") + ggtitle("neighbor sample NC, denom SW Teachers in 1930")
 did_graph(link1 %>% filter(neighbor_sampKY & mainsamp), linkvars1, linklabs1, gg_color_hue(6), 
-          years = c(1920, 1940), filename = "linked1") + ggtitle("neighbor sample KY, denom SW Teachers in 1930")
+          years = c(1920, 1940), filename = "linked1KY") + ggtitle("neighbor sample KY, denom SW Teachers in 1930")
 did_graph(link1 %>% filter(match_samp & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1910, 1920, 1940)) + ggtitle("match sample 1, denom SW Teachers in 1930")
 did_graph(link1 %>% filter(match_samp2 & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1910, 1920, 1940)) + ggtitle("match sample 2, denom SW Teachers in 1930")
 did_graph(link1 %>% filter(match_samp3 & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1910, 1920, 1940)) + ggtitle("match sample 3, denom SW Teachers in 1930")
@@ -100,17 +100,17 @@ did_graph(link1 %>% filter(match_samp3 & mainsamp), linkvars1, linklabs1, gg_col
 did_graph(link2 %>% filter(neighbor_samp & mainsamp), linkvars1, linklabs1, gg_color_hue(6), 
           years = c(1920, 1940), filename = "linked2") + ggtitle("neighbor sample, denom SW Non-Teachers in 1930")
 did_graph(link2 %>% filter(neighbor_sampNC & mainsamp), linkvars1, linklabs1, gg_color_hue(6), 
-          years = c(1920, 1940), filename = "linked2") + ggtitle("neighbor sample NC, denom SW Non-Teachers in 1930")
+          years = c(1920, 1940), filename = "linked2NC") + ggtitle("neighbor sample NC, denom SW Non-Teachers in 1930")
 did_graph(link2 %>% filter(neighbor_sampKY & mainsamp), linkvars1, linklabs1, gg_color_hue(6), 
-          years = c(1920, 1940), filename = "linked2") + ggtitle("neighbor sample KY, denom SW Non-Teachers in 1930")
+          years = c(1920, 1940), filename = "linked2KY") + ggtitle("neighbor sample KY, denom SW Non-Teachers in 1930")
 did_graph(link2 %>% filter(match_samp & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940)) + ggtitle("match sample 1")
 did_graph(link2 %>% filter(match_samp2 & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940)) + ggtitle("match sample 4")
 did_graph(link2 %>% filter(match_samp3 & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940)) + ggtitle("match sample 4")
 
 # sample 3: outcomes for married women non-teachers in base year
 did_graph(link3 %>% filter(neighbor_samp & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940),  filename = "linked3") + ggtitle("neighbor sample, denom MW Non-Teachers in 1930")
-did_graph(link3 %>% filter(neighbor_sampNC & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940),  filename = "linked3") + ggtitle("neighbor sample, denom MW Non-Teachers in 1930")
-did_graph(link3 %>% filter(neighbor_sampKY & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940),  filename = "linked3") + ggtitle("neighbor sample, denom MW Non-Teachers in 1930")
+did_graph(link3 %>% filter(neighbor_sampNC & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940),  filename = "linked3NC") + ggtitle("neighbor sample, denom MW Non-Teachers in 1930")
+did_graph(link3 %>% filter(neighbor_sampKY & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940),  filename = "linked3KY") + ggtitle("neighbor sample, denom MW Non-Teachers in 1930")
 
 did_graph(link3 %>% filter(match_samp & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1910, 1920, 1940)) + ggtitle("match sample 1")
 did_graph(link3 %>% filter(match_samp2 & mainsamp), linkvars1, linklabs1, gg_color_hue(6), years = c(1920, 1940)) + ggtitle("match sample 4")
@@ -129,7 +129,9 @@ match_test(link3 %>% filter(neighbor_samp & mainsamp) %>%
 
 
 
-
+did_graph(link1 %>% filter(neighbor_samp & mainsamp), "pct_t", "pct teacher", "red", filename = "linked1_pctteacher")
+did_graph(link2 %>% filter(neighbor_samp & mainsamp), "pct_t", "pct teacher", "red", filename = "linked2_pctteacher")
+did_graph(link3 %>% filter(neighbor_samp & mainsamp), "pct_t", "pct teacher", "red", filename = "linked3_pctteacher")
 
 
 
