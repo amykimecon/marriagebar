@@ -51,7 +51,12 @@ addvars_county <- function(dataset){
   outdata <- dataset %>% 
     mergefips() %>% 
     mutate(TREAT = ifelse(STATEICP == 47 | STATEICP == 51, 1, 0), # indicator for treated states
-           neighbor_samp = ifelse(STATEICP %in% c(47, 51, 40, 48, 54, 56), 1, 0)) # indicator for treated or neighbor control
+           TREAT_NC = ifelse(STATEICP == 47, 1, 0),
+           TREAT_KY = ifelse(STATEICP == 51, 1, 0),
+           neighbor_samp = ifelse(STATEICP %in% c(47, 51, 40, 48, 54, 56), 1, 0), # indicator for treated or neighbor control
+           neighbor_sampNC = ifelse(STATEICP %in% c(47, 48, 40, 54), 1, 0), #neighbors for NC: SC, VA, TN
+           neighbor_sampKY = ifelse(STATEICP %in% c(51, 54, 56, 22, 21, 24), 1, 0)
+           ) 
     
   return(outdata)
 }
@@ -166,7 +171,7 @@ retailsales <- function(dataset){
 ##############
 # takes a dataset (long on year x county) and list of variable names (excluding % urban and retail sales) on which to match, plus indicator for using retail sales
 # returns dataframe of control counties including the control county FIPS code, and the state of the treatment county to which it was matched
-matching <- function(longdata, varnames, retail = FALSE, verbose = FALSE){
+matching <- function(longdata, varnames, distance = "robust_mahalanobis", retail = FALSE, verbose = FALSE){
   if (!("FIPS" %in% names(longdata))){
     longdata <- longdata %>% mergefips()
   }
@@ -175,8 +180,11 @@ matching <- function(longdata, varnames, retail = FALSE, verbose = FALSE){
   mainsampfips = mainsamp(longdata)
   
   # names of variables for matching (varnames in 1920, 1930, and retail sales if retail=TRUE)
-  filter_varnames = c(glue("{varnames}_1920"),glue("{varnames}_1930"))
-  match_varnames = c(glue("{varnames}_1930"), glue("{varnames}_growth"), "URBAN_1920", "URBAN_1930")
+  # filter_varnames = c(glue("{varnames}_1930"), glue("{varnames}_growth1930"), 
+  #                     glue("{varnames}_growth1920")) #c(glue("{varnames}_1910"), glue("{varnames}_1920"),glue("{varnames}_1930"))
+  # filter_varnames = c(glue("{varnames}_1930"),glue("{varnames}_1920"),glue("{varnames}_1910"))
+  filter_varnames = c(glue("{varnames}_growth1930"),glue("{varnames}_growth1920"))
+  match_varnames = c(filter_varnames,"URBAN_1910", "URBAN_1920", "URBAN_1930")
   
   if(retail){
     filter_varnames <- c(filter_varnames, "RRTSAP29", "RRTSAP39", "RLDF3929")
@@ -188,16 +196,22 @@ matching <- function(longdata, varnames, retail = FALSE, verbose = FALSE){
     pivot_wider(id_cols = c(FIPS, STATEICP, COUNTYICP, TREAT), #pivoting wide (so only one row per county)
                 names_from = YEAR, 
                 values_from = all_of(c(varnames, "URBAN"))) %>%
-    retailsales() %>% #merging with retail sales
-    filter(if_all(all_of(filter_varnames), function(.x) !is.na(.x) & .x != 0)) %>% 
-    filter(!is.na(URBAN_1920) & !is.na(URBAN_1930))
+    retailsales() #merging with retail sales
   
   for (var in varnames){
-    matchdata[[glue("{var}_growth")]] = (matchdata[[glue("{var}_1930")]]-matchdata[[glue("{var}_1920")]])/matchdata[[glue("{var}_1920")]]
+      matchdata[[glue("{var}_growth1930")]] = (matchdata[[glue("{var}_1930")]]-matchdata[[glue("{var}_1920")]])/matchdata[[glue("{var}_1920")]]
+      matchdata[[glue("{var}_growth1920")]] = (matchdata[[glue("{var}_1920")]]-matchdata[[glue("{var}_1910")]])/matchdata[[glue("{var}_1910")]]
   }
   
+  matchdata <- matchdata %>%
+    filter(if_all(all_of(filter_varnames), function(.x) !is.na(.x) & .x != Inf)) %>% 
+    filter(!is.na(URBAN_1910) & !is.na(URBAN_1920) & !is.na(URBAN_1930))
+  
+  print(glue("Retention: {length(unique(matchdata$FIPS))} out of {length(unique(longdata$FIPS))} counties"))
+  
   # matching treated counties with nontreated counties, not allowing replacement
-  match_obj <- matchit(reformulate(match_varnames, response = "TREAT"), data = matchdata, REPLACE = FALSE, distance = "robust_mahalanobis")
+  match_obj <- matchit(reformulate(match_varnames, response = "TREAT"), data = matchdata, REPLACE = FALSE, 
+                       distance = distance)
   
   if (verbose){
     print(summary(match_obj))
@@ -208,14 +222,31 @@ matching <- function(longdata, varnames, retail = FALSE, verbose = FALSE){
   control_matches[["STATE_MATCH"]] <- matchdata[rownames(match_obj$match.matrix),][["STATEICP"]] # creating new var equal to state of treated match
   control_matches[["FIPS_MATCH"]] <- matchdata[rownames(match_obj$match.matrix),][["FIPS"]] # creating new var equal to fips of treated match
   
-  return(select(control_matches, c(FIPS, STATE_MATCH, FIPS_MATCH)))
+  return(select(bind_rows(control_matches, 
+                          get_matches(match_obj) %>% filter(TREAT == 1) %>% mutate(STATE_MATCH = STATEICP, FIPS_MATCH = FIPS)), 
+                c(FIPS, STATE_MATCH, FIPS_MATCH)))
 }
 
 # testing matching between control and treatment for various samples on variable 'varname'
-match_test <- function(dataset, varname){
-  graphdata <- dataset %>% group_by(TREAT, YEAR, sample) %>% summarize(across(all_of(varname), ~mean(.x, na.rm=TRUE)))
-  graph_out <- ggplot(data = graphdata, aes(x = YEAR, y = .data[[varname]], color = factor(TREAT), shape = factor(TREAT))) + 
-    geom_point() + geom_line() + facet_wrap(~sample)
+match_test <- function(dataset, varnames){
+  # if multiple variables and multiple samples, return error
+  if (length(varnames) > 1 & length(unique(dataset$sample))>1){
+    print('ERROR: need single variable OR single sample')
+    return(NA)
+  }
+  # if only one variable, facet wrap by sample
+  if (length(varnames) == 1){
+    graphdata <- dataset %>% group_by(TREAT, YEAR, sample) %>% summarize(across(all_of(varnames), ~mean(.x, na.rm=TRUE)))
+    graph_out <- ggplot(data = graphdata, aes(x = YEAR, y = .data[[varnames]], color = factor(TREAT), shape = factor(TREAT))) + 
+      geom_point() + geom_line() + facet_wrap(~sample)
+  }
+  # if multiple variables and only one sample, pivot long and facet wrap by 
+  if (length(varnames) > 1 & length(unique(dataset$sample)) == 1){
+    graphdata <- dataset %>% group_by(TREAT, YEAR) %>% summarize(across(all_of(varnames), ~mean(.x, na.rm=TRUE))) %>%
+      pivot_longer(all_of(varnames), names_to = "cat", values_to = "val")
+    graph_out <- ggplot(data = graphdata, aes(x = YEAR, y = val, color = factor(TREAT), shape = factor(TREAT))) + 
+      geom_point() + geom_line() + facet_wrap(~cat) + ggtitle(dataset$sample[1])
+  }
   
   return(graph_out)
 }
@@ -225,10 +256,10 @@ matching_join <- function(dataset, matchlist){
   for (i in 1:length(matchlist)){
     if (i == 1){ # for first matching dataset, keep state of match
       dataset <- dataset %>% left_join(matchlist[[i]] %>% mutate(match = 1) %>% select(-FIPS_MATCH), by = c("FIPS", "STATEICP")) %>% 
-        mutate(match_samp = ifelse(match == 1 | TREAT == 1, 1, 0))
+        mutate(match_samp = ifelse(match == 1, 1, 0))
     }
     else{
-      dataset[[glue("match_samp{i}")]] <- ifelse(dataset$TREAT == 1 | dataset$FIPS %in% matchlist[[i]]$FIPS, 1, 0)
+      dataset[[glue("match_samp{i}")]] <- ifelse(dataset$FIPS %in% matchlist[[i]]$FIPS, 1, 0)
     }
   }
   return(dataset)
@@ -248,7 +279,7 @@ add_did_dummies <- function(dataset){
   
 # Creating data for graphing dynamic DiD 
 # takes in dataset, depvar (dependant variable), any controls (string of form '+ X1 + X2 +...'), years to include, year to omit
-did_graph_data <- function(dataset, depvar, controls = "", years = c(1900, 1910, 1920, 1940), yearomit = 1930, verbose = FALSE){
+did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE){
   # vector of interaction terms
   interact_vars <- glue("TREATx{years}")
   
@@ -278,7 +309,7 @@ did_graph_data <- function(dataset, depvar, controls = "", years = c(1900, 1910,
 # Creating dynamic DiD graph
 # takes in all parameters of did_graph_data (with list of dep vars), as well as vector of labels for dep vars and labels for graph
 #   and toggles for slides (default is for paper) and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
-did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1900, 1910, 1920, 1940), yearomit = 1930, verbose = FALSE, 
+did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, 
                       slides = FALSE, steps = FALSE, filename = NA){
   nvars = length(depvarlist)
   if (nvars != length(depvarnames)){
@@ -297,7 +328,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
     for (i in seq(1,nvars)){
       did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, years, yearomit, verbose) %>%
         mutate(group = depvarnames[[i]],
-               year_graph = year - 0.6 + (i-1)*(1.2/(nvars - 1))) # shifting over so dots don't overlap
+               year_graph = year - 1.5 + (i-1)*(3/(nvars - 1))) # shifting over so dots don't overlap
       did_datasets[[i]] <- did_data_temp
     }
     did_data <- bind_rows(did_datasets)

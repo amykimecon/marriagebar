@@ -25,7 +25,7 @@ dbExecute(con, paste("CREATE OR REPLACE TABLE censusrawall AS",
 
 ## CENSUSTREE LINKING
 # names of columns we want to keep in linked dataset
-link_colnames <- c("YEAR","SERIAL","STATEICP", "COUNTYICP", "SEX", "AGE", "MARST", "RACE", "LABFORCE", "CLASSWKR", "OCC1950")
+link_colnames <- c("YEAR","STATEICP", "COUNTYICP", "SEX", "AGE", "MARST", "RACE", "LABFORCE", "CLASSWKR", "OCC1950")
 
 # linking baseyear (year t - 10) to linkyear (year t)
 for (linkyear in seq(1910,1940,10)){
