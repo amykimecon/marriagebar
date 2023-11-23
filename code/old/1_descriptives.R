@@ -1,6 +1,22 @@
-### INITIAL DESCRIPTIVES
+### DESCRIPTIVES
 ### AUTHOR: AMY KIM
-### LAST EDITED: MAY 2023
+
+# opening connection to duckdb database
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
+
+#####################################
+##### Random Facts & Figures ########
+#####################################
+# top occupations for white married women by year 
+occlist <- tbl(con, "censusrawall") %>% filter((MARST == 1 | MARST == 2) & SEX == 2 & RACE == 1 & YEAR != 1900) %>%
+  group_by(YEAR, OCC1950) %>% summarize(n = n()) %>% collect()
+
+#   operative and kindred workers n.e.c. (690)
+#   private household workers n.e.c. (720) []
+#   salesmen/sales clerks (490)
+#   farm labor, unpaid family workers (830)
+#   
+
 
 #################################################################
 ##### SLIDES FIGURE: MAP OF TREATMENT & CONTROL COUNTIES ########

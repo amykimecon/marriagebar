@@ -6,9 +6,12 @@
 # Adds useful/common person-level variables, requires indiv-level dataset with variables OCC1950, SEX, AGE, MARST (with IPUMS codings)
 addvars_indiv <- function(dataset){
   outdata <- dataset %>% 
-    mutate(demgroup = case_when(SEX == 1 ~ "M",
-                                SEX == 2 & MARST != 1 & MARST != 2 ~ "SW",
-                                TRUE ~ "MW"),
+    mutate(demgroup = case_when(SEX == 1 ~ "M", #man
+                                SEX == 2 & MARST != 1 & MARST != 2 ~ "SW", #single/divorced/widowed/separated woman
+                                TRUE ~ "MW"), #married woman
+           demgroup2 = case_when(SEX == 1 ~ "M", #man
+                                 SEX == 2 & NCHILD == 0 ~ "WNC", #woman without children
+                                 TRUE ~ "WC"), #woman with children
            worker = ifelse(YEAR == 1900, 
                            ifelse(OCC1950 != 999 & AGE >= 18 & AGE <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
                            ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), #otherwise, those in LABFORCE 
@@ -17,58 +20,55 @@ addvars_indiv <- function(dataset){
                             ifelse(OCC1950 == 93 & CLASSWKR == 2 & worker == 1, 1, 0)),
            secretary = ifelse(YEAR == 1900,
                               ifelse(OCC1950 == 350 & worker == 1, 1, 0), #in 1900, no CLASSWKR
-                              ifelse(OCC1950 == 350 & CLASSWKR == 2 & worker == 1, 1, 0)))
-  return(outdata)
-}
-
-# Adds useful/common person-level variables FOR LINKED DATA, requires indiv-level LINKED dataset 
-#   with variables OCC1950, SEX, AGE, MARST (with IPUMS codings) and suffixes _base and _link
-addvars_indiv_linked <- function(dataset){
-  outdata <- dataset %>% 
-    mutate(demgroup_base = case_when(SEX_base == 1 ~ "M",
-                                SEX_base == 2 & MARST_base != 1 & MARST_base != 2 ~ "SW",
-                                TRUE ~ "MW"),
-           demgroup_link = case_when(SEX_link == 1 ~ "M",
-                                SEX_link == 2 & MARST_link != 1 & MARST_link != 2 ~ "SW",
-                                TRUE ~ "MW"),
-           worker_base = ifelse(YEAR_base == 1900, 
-                           ifelse(OCC1950_base != 999 & AGE_base >= 18 & AGE_base <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
-                           ifelse(LABFORCE_base == 2 & AGE_base >= 18 & AGE_base <= 64, 1, 0)), #otherwise, those in LABFORCE 
-           worker_link = ifelse(LABFORCE_link == 2 & AGE_link >= 18 & AGE_link <= 64, 1, 0),
-           teacher_base = ifelse(YEAR_base == 1900,
-                            ifelse(OCC1950_base == 93 & worker_base == 1, 1, 0), #in 1900, no CLASSWKR
-                            ifelse(OCC1950_base == 93 & CLASSWKR_base == 2 & worker_base == 1, 1, 0)),
-           teacher_link = ifelse(OCC1950_link == 93 & CLASSWKR_link == 2 & worker_link == 1, 1, 0),
-           secretary_base = ifelse(YEAR_base == 1900,
-                              ifelse(OCC1950_base == 350 & worker_base == 1, 1, 0), #in 1900, no CLASSWKR
-                              ifelse(OCC1950_base == 350 & CLASSWKR_base == 2 & worker_base == 1, 1, 0)),
-           secretary_link = ifelse(OCC1950_link == 350 & CLASSWKR_link == 2 & worker_link == 1, 1, 0))
+                              ifelse(OCC1950 == 350 & CLASSWKR == 2 & worker == 1, 1, 0)),
+           occcat = case_when(OCC1950 %in% c(93, 57) | (OCC1950 >= 12 & OCC1950 <= 29) ~ "Teaching",
+                              OCC1950 < 100 ~ "Professional and Technical",
+                              OCC1950 >= 200 & OCC1950 < 300 ~ "Managers, Officials, Proprietors",
+                              OCC1950 >= 300 & OCC1950 < 400 ~ "Clerical Workers",
+                              OCC1950 >= 400 & OCC1950 < 500 ~ "Sales Workers",
+                              OCC1950 >= 500 & OCC1950 < 600 ~ "Craftsmen",
+                              OCC1950 >= 600 & OCC1950 < 700 ~ "Operative Workers",
+                              OCC1950 >= 700 & OCC1950 <= 720 ~ "Private Household Workers",
+                              OCC1950 >= 730 & OCC1950 < 800 ~ "Non-HH Service Workers",
+                              (OCC1950 >= 800 & OCC1950 < 900) | (OCC1950 >= 100 & OCC1950 <= 123) ~ "Farm Workers/Owners",
+                              OCC1950 >= 900 & OCC1950 <= 970 ~ "Non-Farm Laborers",
+                              TRUE ~ "Not Classified/Non-Occupational Response"
+                              ),
+           age_child = ifelse(NCHILD == 0, NA, AGE - ELDCH))
   return(outdata)
 }
 
 # Adds useful/common county-level variables, requires dataset with variables STATEICP, COUNTYICP (with IPUMS codings)
 addvars_county <- function(dataset){
   outdata <- dataset %>% 
-    mergefips() %>% 
+    mergefips() %>% #helper function to convert separate STATE and COUNTY ICP codes into single FIPS code
     mutate(TREAT = ifelse(STATEICP == 47 | STATEICP == 51, 1, 0), # indicator for treated states
-           TREAT_NC = ifelse(STATEICP == 47, 1, 0),
-           TREAT_KY = ifelse(STATEICP == 51, 1, 0),
            neighbor_samp = ifelse(STATEICP %in% c(47, 51, 40, 48, 54, 56), 1, 0), # indicator for treated or neighbor control
-           neighbor_sampNC = ifelse(STATEICP %in% c(47, 48, 40, 54), 1, 0), #neighbors for NC: SC, VA, TN
-           neighbor_sampKY = ifelse(STATEICP %in% c(51, 54, 56, 22, 21, 24), 1, 0)
+           neighbor_sampNC = ifelse(STATEICP %in% c(47, 48, 40), 1, 0), #neighbors for NC: SC, VA, TN
+           neighbor_sampKY = ifelse(STATEICP %in% c(51, 54, 56), 1, 0) #neighbors for KY: TN, WV, IL, IN, OH
            ) 
     
   return(outdata)
 }
 
 # Takes year x county-level dataset and returns vector of FIPS of counties in main sample 
-#   (only keeping counties with at least n teachers in 1930 and 1940 and non-missing FIPS)
-mainsamp <- function(dataset, n = 10, verbose = FALSE){
+#   (only keeping balanced panel of counties with at least n white teachers in 1930 and 1940 and non-missing FIPS)
+mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
   if (!("FIPS" %in% names(dataset))){
     dataset <- dataset %>% mergefips()
   }
-  outdata <- dataset %>% filter(YEAR == 1930 & NWHITETEACH >= n & !is.na(FIPS) &
-                                  FIPS %in% filter(dataset, YEAR == 1940 & NWHITETEACH >= n)$FIPS)
+  
+  # identifying counties that are observed in all four years
+  balanceddata <- dataset %>% filter(YEAR != 1900) %>% group_by(FIPS) %>% summarize(n = n()) %>% filter(n == 4)
+  
+  fips1940 <- filter(dataset, YEAR == 1940 & NWHITETEACH >= n)$FIPS
+  outdata <- dataset %>% filter(YEAR == 1930 & NWHITETEACH >= n & !is.na(FIPS) & #only keeping FIPS with at least n white teachers in 1930
+                                  FIPS %in% fips1940) #only keeping FIPS with at least n white teachers in 1940
+  
+  if (balanced){
+    outdata <- outdata %>% filter(FIPS %in% balanceddata$FIPS)
+  }
+  
   if (verbose){
     print(glue("Original Dataset: {length(unique(dataset$FIPS))} counties"))
     print(glue("Main Sample (Counties with >= {n} teachers in 1930 and 1940): {length(unique(outdata$FIPS))} counties"))
@@ -164,6 +164,85 @@ retailsales <- function(dataset){
                                   )) %>%
     left_join(retailsales %>% select(STATE, NDMTCODE, RLDF3929, RRTSAP29, RRTSAP39), by = c("STATEICP"="STATE","COUNTYTEMP"="NDMTCODE")) %>% #rldf3929 = growth in retail sales from 1929 to 1939
     select(-COUNTYTEMP)
+}
+
+#####################
+## LINKING HELPERS ##
+#####################
+# Adds useful/common person-level variables FOR LINKED DATA, requires indiv-level LINKED dataset 
+#   with variables OCC1950, SEX, AGE, MARST (with IPUMS codings) and suffixes _base and _link
+addvars_indiv_linked <- function(dataset){
+  outdata <- dataset %>% 
+    mutate(demgroup_base = case_when(SEX_base == 1 ~ "M",
+                                     SEX_base == 2 & MARST_base != 1 & MARST_base != 2 ~ "SW",
+                                     TRUE ~ "MW"),
+           demgroup_link = case_when(SEX_link == 1 ~ "M",
+                                     SEX_link == 2 & MARST_link != 1 & MARST_link != 2 ~ "SW",
+                                     TRUE ~ "MW"),
+           worker_base = ifelse(YEAR_base == 1900, 
+                                ifelse(OCC1950_base != 999 & AGE_base >= 18 & AGE_base <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
+                                ifelse(LABFORCE_base == 2 & AGE_base >= 18 & AGE_base <= 64, 1, 0)), #otherwise, those in LABFORCE 
+           worker_link = ifelse(LABFORCE_link == 2 & AGE_link >= 18 & AGE_link <= 64, 1, 0),
+           teacher_base = ifelse(YEAR_base == 1900,
+                                 ifelse(OCC1950_base == 93 & worker_base == 1, 1, 0), #in 1900, no CLASSWKR
+                                 ifelse(OCC1950_base == 93 & CLASSWKR_base == 2 & worker_base == 1, 1, 0)),
+           teacher_link = ifelse(OCC1950_link == 93 & CLASSWKR_link == 2 & worker_link == 1, 1, 0),
+           secretary_base = ifelse(YEAR_base == 1900,
+                                   ifelse(OCC1950_base == 350 & worker_base == 1, 1, 0), #in 1900, no CLASSWKR
+                                   ifelse(OCC1950_base == 350 & CLASSWKR_base == 2 & worker_base == 1, 1, 0)),
+           secretary_link = ifelse(OCC1950_link == 350 & CLASSWKR_link == 2 & worker_link == 1, 1, 0))
+  return(outdata)
+}
+
+# summarizes linked dataset at the county level with key variables
+summlinks <- function(dataset, n = 10){
+  outdata <- dataset %>% group_by(STATEICP_base, COUNTYICP_base, YEAR_base, YEAR_link) %>%
+    summarize(nlink = n(),
+              pct_t = sum(ifelse(teacher_link == 1, 1, 0))/n(),
+              pct_mw = sum(ifelse(demgroup_link == "MW", 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
+              pct_mwt = sum(ifelse(demgroup_link == "MW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later mw teach
+              pct_mwnt = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later mw non teach but in lf
+              pct_mwnilf = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_link) that are later mw and not in lf
+              pct_sw = sum(ifelse(demgroup_link == "SW", 1, 0))/n(), #share of sample (swt_base) that are later sw (teach + nonteach)
+              pct_swt = sum(ifelse(demgroup_link == "SW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later sw teach
+              pct_swnt = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later sw non teach but in lf
+              pct_swnilf = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 0, 1, 0))/n() #share of sample (swt_link) that are later sw and not in lf
+    ) %>%
+    rename(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, YEAR = YEAR_link) %>%
+    collect() %>%
+    addvars_county()
+  
+  # using helper function to test if FIPS in main linked sample
+  mainlinksamplist = mainlinksamp(outdata, n = n)
+  outdata <- outdata %>% mutate(mainsamp = ifelse(FIPS %in% mainlinksamplist, 1, 0))
+  
+  return(outdata)
+}
+
+# Takes year x county-level LINKED dataset and returns vector of FIPS of counties in main LINKED sample 
+#   (only keeping balanced panel of counties with at least n filtered & linked people in 1930 and 1940 and non-missing FIPS)
+mainlinksamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
+  if (!("FIPS" %in% names(dataset))){
+    dataset <- dataset %>% mergefips()
+  }
+  
+  # identifying counties that are observed in all three links
+  balanceddata <- dataset %>% filter(YEAR != 1910) %>% group_by(FIPS) %>% summarize(n = n()) %>% filter(n == 3)
+  
+  fips1940 <- filter(dataset, YEAR == 1940 & nlink >= n)$FIPS
+  outdata <- dataset %>% filter(YEAR == 1930 & nlink >= n & !is.na(FIPS) & #only keeping FIPS with at least n filtered & linked people in each county in 1930
+                                  FIPS %in% fips1940) #only keeping FIPS with at least n filtered & linked people in each county in 1940
+  
+  if (balanced){
+    outdata <- outdata %>% filter(FIPS %in% balanceddata$FIPS)
+  }
+  
+  if (verbose){
+    print(glue("Original Dataset: {length(unique(dataset$FIPS))} counties"))
+    print(glue("Main Sample (Counties with >= {n} teachers in 1930 and 1940): {length(unique(outdata$FIPS))} counties"))
+    print(glue("Dropped {100*length(unique(outdata$FIPS))/length(unique(dataset$FIPS))}% of Observations"))
+  }
+  return(unique(outdata$FIPS))
 }
 
 ##############
@@ -265,6 +344,34 @@ matching_join <- function(dataset, matchlist){
   return(dataset)
 }
 
+# matching individual control counties to specific treated states in order to assign counties to 'law passing' in 1933 or 1938 and use outcome Married After/Married Before
+# matchtype is a string equal to either `neighbor` (using neighboring states analysis) or `match` (using matched counties analysis)
+state_matching <- function(dataset, matchtype){
+  if (matchtype == "neighbor"){
+    outdata <- dataset %>% mutate(STATE_MATCH = case_when(neighbor_sampNC == 1 ~ 47,
+                                                          neighbor_sampKY == 1 ~ 51,
+                                                          TRUE ~ NA_integer_))
+  }
+  else{
+    outdata <- dataset %>% mutate(STATE_MATCH = case_when(match == 1 ~ STATE_MATCH,
+                                                          TREAT == 1 ~ STATEICP,
+                                                          TRUE ~ NA_integer_))
+  }
+  outdata <- outdata %>% mutate(pct_marr_before_Teacher = case_when(STATE_MATCH == 47 ~ pct_marr_before3_Teacher, #if matched with NC (or in NC), 'law passes' in 1933
+                                                                    STATE_MATCH == 51 ~ pct_marr_before8_Teacher, #if matched with KY (or in KY), 'law passes' in 1938
+                                                                    TRUE ~ NA_real_),
+                                pct_marr_after_Teacher = case_when(STATE_MATCH == 47 ~ pct_marr_after3_Teacher, #if matched with NC (or in NC), 'law passes' in 1933
+                                                                   STATE_MATCH == 51 ~ pct_marr_after8_Teacher, #if matched with KY (or in KY), 'law passes' in 1938
+                                                                   TRUE ~ NA_real_),
+                                pct_marr_before_Secretary = case_when(STATE_MATCH == 47 ~ pct_marr_before3_Secretary, #if matched with NC (or in NC), 'law passes' in 1933
+                                                                      STATE_MATCH == 51 ~ pct_marr_before8_Secretary, #if matched with KY (or in KY), 'law passes' in 1938
+                                                                      TRUE ~ NA_real_),
+                                pct_marr_after_Secretary = case_when(STATE_MATCH == 47 ~ pct_marr_after3_Secretary, #if matched with NC (or in NC), 'law passes' in 1933
+                                                                     STATE_MATCH == 51 ~ pct_marr_after8_Secretary, #if matched with KY (or in KY), 'law passes' in 1938
+                                                                     TRUE ~ NA_real_)) %>% 
+  select(-c(starts_with("pct_marr_before3"),starts_with("pct_marr_after3"),starts_with("pct_marr_before8"),starts_with("pct_marr_after8")))
+  return(outdata)
+}
 ##########################
 ## PRODUCING DID GRAPHS ##
 ##########################
@@ -309,8 +416,9 @@ did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920,
 # Creating dynamic DiD graph
 # takes in all parameters of did_graph_data (with list of dep vars), as well as vector of labels for dep vars and labels for graph
 #   and toggles for slides (default is for paper) and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
-did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, 
-                      slides = FALSE, steps = FALSE, filename = NA){
+#   and pointspan, i.e. total width of all dots for a given year, default is 2
+did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, yvar = "Coef on Treat X Year",
+                      ymax = NA, ymin = NA, slides = FALSE, steps = FALSE, pointspan = 2, filename = NA){
   nvars = length(depvarlist)
   if (nvars != length(depvarnames)){
     print("Error: depvarlist length diff from depvarnames length")
@@ -328,7 +436,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
     for (i in seq(1,nvars)){
       did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, years, yearomit, verbose) %>%
         mutate(group = depvarnames[[i]],
-               year_graph = year - 1.5 + (i-1)*(3/(nvars - 1))) # shifting over so dots don't overlap
+               year_graph = year - pointspan/2 + (i-1)*(pointspan/(nvars - 1))) # shifting over so dots don't overlap
       did_datasets[[i]] <- did_data_temp
     }
     did_data <- bind_rows(did_datasets)
@@ -347,12 +455,21 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
     geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
     scale_color_manual(values=colors) +
     annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
-    geom_text(aes(x = 1935.5, y = min(did_data$y_lb), label = "Marriage Bars \n Removed") ,color = "#656565") +
-    geom_point(size = 4) + labs(x = "Year", y = "Treat X Year", color = "", shape = "") + theme_minimal() + 
+    geom_point(size = 4) + labs(x = "Year", y = yvar, color = "", shape = "") + theme_minimal() + 
     theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
   
-  if (!is.na(filename)){
-    ggsave(glue("{outfigs}/{filename}.png"), graph_out)
+  if (!is.na(ymax) | !is.na(ymin)){
+    graph_out <- graph_out + ylim(ymin,ymax) + geom_text(aes(x = 1935.5, y = ymin + (ymax-ymin)/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
+  }
+  else{
+    graph_out <- graph_out + geom_text(aes(x = 1935.5, y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
+  }
+  
+  if (!is.na(filename) & !slides){ #saving graph in folder for paper figs
+    ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
+  }
+  if (!is.na(filename) & slides){ #changing text size for slides and saving in folder for slide figs
+    ggsave(glue("{outfigs}/slides/{filename}.png"), graph_out + theme(text = element_text(size = 18), axis.text = element_text(size = 14)), width = 8, height = 5)
   }
   return(graph_out)
 }

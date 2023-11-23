@@ -41,21 +41,21 @@ treat_col = "#8751A4"
 ### helper function
 source(glue("{git}/code/helper.R"))
 
-### cleaning data (or loading all cleaned datasets) -- comment out one of these
-## code to clean data
-# source(glue("{git}/code/0_census_clean.R"))
-
-# loading all cleaned datasets
-samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv"))
-filtered_bind <- read_csv(glue("{cleandata}/filtereddata.csv"))
-countydist_byocc <- read_csv(glue("{cleandata}/countydist_byocc.csv"))
-countysumm <- read_csv(glue("{cleandata}/countysumm.csv"))
-countysumm_matched <- read_csv(glue("{cleandata}/countysumm_matched.csv"))
-
-### running scripts
-source(glue("{git}/code/1_descriptives.R"))
-source(glue("{git}/code/2_firststage.R"))
-source(glue("{git}/code/3_elasticity_estimation.R"))
-
+# ### cleaning data (or loading all cleaned datasets) -- comment out one of these
+# ## code to clean data
+# # source(glue("{git}/code/0_census_clean.R"))
+# 
+# # loading all cleaned datasets
+# samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv"))
+# filtered_bind <- read_csv(glue("{cleandata}/filtereddata.csv"))
+# countydist_byocc <- read_csv(glue("{cleandata}/countydist_byocc.csv"))
+# countysumm <- read_csv(glue("{cleandata}/countysumm.csv"))
+# countysumm_matched <- read_csv(glue("{cleandata}/countysumm_matched.csv"))
+# 
+# ### running scripts
+# source(glue("{git}/code/1_descriptives.R"))
+# source(glue("{git}/code/2_firststage.R"))
+# source(glue("{git}/code/3_elasticity_estimation.R"))
+# 
 
 
