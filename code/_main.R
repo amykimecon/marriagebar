@@ -35,11 +35,18 @@ mw_col = "#8751A4"
 sw_col = "#2D1B37"
 men_col = "#C8ADD7"
 
-control_col = "#479F73"
-treat_col = "#8751A4"
+control_col = "#46b97a"
+treat_col = "#B94685"
 
 ### helper function
 source(glue("{git}/code/helper.R"))
+
+### loading cleaned datasets for analysis
+# year-level summary stats (figure 1)
+samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv"))
+
+# county X year-level stats (most analysis uses this)
+countysumm <- read_csv(glue("{cleandata}/countysumm_new.csv"))
 
 # ### cleaning data (or loading all cleaned datasets) -- comment out one of these
 # ## code to clean data

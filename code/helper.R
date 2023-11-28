@@ -42,10 +42,11 @@ addvars_indiv <- function(dataset){
 addvars_county <- function(dataset){
   outdata <- dataset %>% 
     mergefips() %>% #helper function to convert separate STATE and COUNTY ICP codes into single FIPS code
-    mutate(TREAT = ifelse(STATEICP == 47 | STATEICP == 51, 1, 0), # indicator for treated states
+    mutate(SOUTH = ifelse(STATEICP %in% c(54, 41, 46, 51, 40, 56, 47, 11, 52, 48, 43, 44), 1, 0), #us census regions east south central and south atlantic
+           TREAT = ifelse(STATEICP == 47 | STATEICP == 51, 1, 0), # indicator for treated states
            neighbor_samp = ifelse(STATEICP %in% c(47, 51, 40, 48, 54, 56), 1, 0), # indicator for treated or neighbor control
-           neighbor_sampNC = ifelse(STATEICP %in% c(47, 48, 40), 1, 0), #neighbors for NC: SC, VA, TN
-           neighbor_sampKY = ifelse(STATEICP %in% c(51, 54, 56), 1, 0) #neighbors for KY: TN, WV, IL, IN, OH
+           neighbor_sampNC = ifelse(STATEICP %in% c(47, 48, 40, 54), 1, 0), #neighbors for NC: SC, VA, TN
+           neighbor_sampKY = ifelse(STATEICP %in% c(51, 54, 56, 21, 24, 22), 1, 0) #neighbors for KY: TN, WV, IL, IN, OH
            ) 
     
   return(outdata)
@@ -206,7 +207,15 @@ summlinks <- function(dataset, n = 10){
               pct_sw = sum(ifelse(demgroup_link == "SW", 1, 0))/n(), #share of sample (swt_base) that are later sw (teach + nonteach)
               pct_swt = sum(ifelse(demgroup_link == "SW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later sw teach
               pct_swnt = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later sw non teach but in lf
-              pct_swnilf = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 0, 1, 0))/n() #share of sample (swt_link) that are later sw and not in lf
+              pct_swnilf = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_link) that are later sw and not in lf
+              pct_wc = sum(ifelse(NCHILD_link > 0, 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
+              pct_wct = sum(ifelse(NCHILD_link > 0 & teacher_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later mw teach
+              pct_wcnt = sum(ifelse(NCHILD_link > 0 & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later mw non teach but in lf
+              pct_wcnilf = sum(ifelse(NCHILD_link > 0 & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_link) that are later mw and not in lf
+              pct_wnc = sum(ifelse(NCHILD_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later sw (teach + nonteach)
+              pct_wnct = sum(ifelse(NCHILD_link == 0 & teacher_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later sw teach
+              pct_wncnt = sum(ifelse(NCHILD_link == 0 & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_link) that are later sw non teach but in lf
+              pct_wncnilf = sum(ifelse(NCHILD_link == 0 & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_link) that are later sw and not in lf
     ) %>%
     rename(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, YEAR = YEAR_link) %>%
     collect() %>%
@@ -380,21 +389,51 @@ state_matching <- function(dataset, matchtype){
 add_did_dummies <- function(dataset){
   for (yr in unique(dataset$YEAR)){
     dataset[[glue("TREATx{yr}")]] <- ifelse(dataset$YEAR == yr, 1, 0)*ifelse(dataset$TREAT == 1, 1, 0)
+    dataset[[glue("Year{yr}")]] <- ifelse(dataset$YEAR == yr, 1, 0)
   }
   return(dataset)
 }
-  
+
 # Creating data for graphing dynamic DiD 
 # takes in dataset, depvar (dependant variable), any controls (string of form '+ X1 + X2 +...'), years to include, year to omit
-did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE){
-  # vector of interaction terms
-  interact_vars <- glue("TREATx{years}")
-  
+# if table = TRUE, returns list of regression model output and vcov for stargazer table formatting
+# if septreat = TRUE, runs regression for treatment and control groups separately
+did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, table = FALSE, septreat = FALSE){
   # modifying dataset (adding interaction terms, setting cluster to FIPS, filtering to only include relevant years)
   regdata <- dataset %>% add_did_dummies() %>% filter(YEAR %in% c(years, yearomit)) %>% mutate(cluster = as.character(FIPS))
   
+  # regressing treatment groups separately
+  if (septreat){
+    yearvars <- glue("Year{years}")
+    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), data = regdata %>% filter(TREAT == 0))
+    vcov_ctrl = vcovCL(did_reg_ctrl, type = "HC1")
+    did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), data = regdata %>% filter(TREAT == 1))
+    vcov_treat = vcovCL(did_reg_treat, type = "HC1")
+    
+    if (table){
+      return(list(did_reg_ctrl, vcov_ctrl, did_reg_treat, vcov_treat))
+    }
+    
+    effects <- data.frame(y = c(sapply(yearvars, function (.x) did_reg_ctrl$coefficients[[.x]]), 0),
+                          depvar = depvar,
+                          year = c(years, yearomit),
+                          var = c(sapply(yearvars, function(.x) as.numeric(diag(vcov_ctrl)[[.x]])), 0),
+                          treat = "Control") %>%
+      rbind(data.frame(y = c(sapply(yearvars, function (.x) did_reg_treat$coefficients[[.x]]), 0),
+                       depvar = depvar,
+                       year = c(years, yearomit),
+                       var = c(sapply(yearvars, function(.x) as.numeric(diag(vcov_treat)[[.x]])), 0),
+                       treat = "Treated")) %>%
+      mutate(y_ub = y + 1.96*sqrt(var),
+             y_lb = y - 1.96*sqrt(var))
+    return(effects)
+  }
+  # vector of interaction terms
+  interact_vars <- glue("TREATx{years}")
+  yearvars <- glue("Year{years}")
+  
   # running regression: include year and county fixed effects + interaction terms + any controls
-  did_reg <- lm(glue("{depvar} ~ factor(YEAR) + cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), data = regdata)
+  did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), data = regdata)
   
   if (verbose){
     print(summary(did_reg))
@@ -402,6 +441,10 @@ did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920,
   
   # clustered standard errors (hc1 equiv to ,robust in stata i think? double check this)
   vcov = vcovCL(did_reg, type = "HC1")
+  
+  if (table){
+    return(list(did_reg, vcov))
+  }
   
   # constructing dataframe for output -- y is coef var is estimated variance using clustered standard errors
   effects <- data.frame(y = c(sapply(interact_vars, function (.x) did_reg$coefficients[[.x]]), 0),
@@ -418,7 +461,7 @@ did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920,
 #   and toggles for slides (default is for paper) and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
 #   and pointspan, i.e. total width of all dots for a given year, default is 2
 did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, yvar = "Coef on Treat X Year",
-                      ymax = NA, ymin = NA, slides = FALSE, steps = FALSE, pointspan = 2, filename = NA){
+                      ymax = NA, ymin = NA, slides = FALSE, steps = FALSE, pointspan = 2, septreat = FALSE, filename = NA){
   nvars = length(depvarlist)
   if (nvars != length(depvarnames)){
     print("Error: depvarlist length diff from depvarnames length")
@@ -427,11 +470,16 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
 
   # compiling all regression outputs (in format for graphing) from different dependent variables
   if (nvars == 1){
-    did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, years, yearomit, verbose) 
+    did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, years, yearomit, verbose, septreat) 
+    ## FIX FOR SEPTREAT == TRUE!!! 
     did_data <- did_data_temp %>%
       mutate(group = depvarnames[[1]], year_graph = did_data_temp$year)
   }
   else{
+    if (septreat){
+      print("Error: can only use septreat for single variable")
+      return(NA)
+    }
     did_datasets <- list()
     for (i in seq(1,nvars)){
       did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, years, yearomit, verbose) %>%
@@ -446,6 +494,21 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
     print(did_data)
   }
 
+  if (septreat){
+    # creating graph
+    graph_out <- ggplot(did_data, aes(x = year_graph, 
+                                      y = y, 
+                                      color = treat, 
+                                      shape = treat)) + 
+      geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
+      geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
+      annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
+      geom_point(size = 4) + labs(x = "Year", y = yvar, color = "", shape = "") + theme_minimal() + 
+      theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
+    
+    return(graph_out)
+  }
+  
   # creating graph
   graph_out <- ggplot(did_data, aes(x = year_graph, 
                                     y = y, 
@@ -459,7 +522,13 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
     theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
   
   if (!is.na(ymax) | !is.na(ymin)){
-    graph_out <- graph_out + ylim(ymin,ymax) + geom_text(aes(x = 1935.5, y = ymin + (ymax-ymin)/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
+    if (ymax > max(did_data$y_ub) & ymin < min(did_data$y_lb)){
+      graph_out <- graph_out + ylim(ymin,ymax) + geom_text(aes(x = 1935.5, y = ymin + (ymax-ymin)/10, label = "Marriage Bars \n Removed") ,color = "#656565")   
+    }
+    else{
+      print("Error: ymin/ymax out of bounds")
+      graph_out <- graph_out + geom_text(aes(x = 1935.5, y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
+    }
   }
   else{
     graph_out <- graph_out + geom_text(aes(x = 1935.5, y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
@@ -474,12 +543,19 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
   return(graph_out)
 }
 
-
-graph_treatment <- function(dataset, filename = NA){
-  graph_out <- plot_usmap(data = dataset %>% filter(YEAR == 1940) %>% mutate(fips = FIPS, TREAT = factor(TREAT)) %>% 
-                            select(c(fips, TREAT)), values = "TREAT", color = NA) 
+# graph treated vs control counties -- eastern is indicator for whether to show only eastern states or not
+graph_treatment <- function(dataset, eastern = FALSE, filename = NA){
+  exclude_st = c("HI", "AK") # states to exclude
+  if (eastern){
+    exclude_st = c("CA", "CO", "OR", "TX", "WA", "ND", "WY", "UT", "NM", "NV", "SD", "MT", "ID", "AZ", "AK", "HI", "KS", "NE", "OK",
+                   "MN", "AR", "MO", "IA", "LA")
+  }
+  graph_out <- plot_usmap(data = dataset %>% filter(YEAR == 1940) %>% mutate(fips = FIPS, TREAT = ifelse(TREAT == 1, "Treated", "Control")) %>% 
+                            select(c(fips, TREAT)), values = "TREAT", color = NA, exclude = exclude_st) +
+    theme(legend.position = "right", text = element_text(size = 14)) + 
+    scale_fill_manual(breaks = c("Treated", "Control"), values = c(treat_col, control_col)) + labs(fill = "")
   if (!is.na(filename)){
-    ggsave(glue("{outfigs}/{filename}.png"), graph_out)
+    ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
   }
   return(graph_out)
 }

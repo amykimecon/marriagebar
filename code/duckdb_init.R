@@ -6,18 +6,21 @@
 con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
 
 ## IPUMS CENSUS RAW FILES
-for (year in seq(1900,1940,10)){
+for (year in seq(1910,1940,10)){
   # reading in census CSV and creating/replacing initial table
   dbExecute(con, glue("CREATE OR REPLACE TABLE censusraw{year} AS FROM read_csv_auto ('{rawdata}/census_{year}.csv')"))
-  
+
   # editing to include year (delete if IPUMS extract includes variable YEAR)
   dbExecute(con, glue("ALTER TABLE censusraw{year} ADD COLUMN YEAR INTEGER"))
   dbExecute(con, glue("UPDATE censusraw{year} SET YEAR = {year}"))
+
+  ## TODO: spouse linking
+  #dbExecute(con, )
 }
 
 # concatenating all census years into one table
 dbExecute(con, paste("CREATE OR REPLACE TABLE censusrawall AS",
-                     "SELECT * FROM censusraw1900 UNION ALL BY NAME",
+                     #"SELECT * FROM censusraw1900 UNION ALL BY NAME",
                      "SELECT * FROM censusraw1910 UNION ALL BY NAME",
                      "SELECT * FROM censusraw1920 UNION ALL BY NAME",
                      "SELECT * FROM censusraw1930 UNION ALL BY NAME",
@@ -28,19 +31,9 @@ dbExecute(con, paste("CREATE OR REPLACE TABLE censusrawall AS",
 link_colnames <- c("YEAR","STATEICP", "COUNTYICP", "SEX", "AGE", "MARST", "RACE", "LABFORCE", "CLASSWKR", "OCC1950")
 
 # linking baseyear (year t - 10) to linkyear (year t)
-for (linkyear in seq(1910,1940,10)){
+for (linkyear in seq(1920,1940,10)){
   # reading in censustree linking file
   dbExecute(con, glue("CREATE OR REPLACE TABLE link{linkyear} AS FROM read_csv_auto('{rawdata}/{linkyear-10}_{linkyear}.csv')"))
-  
-  # # renaming histid{year} to format histid_base and histid_link
-  # dbExecute(con, glue("ALTER TABLE link{linkyear} RENAME COLUMN histid{linkyear-10} TO histid_base"))
-  # dbExecute(con, glue("ALTER TABLE link{linkyear} RENAME COLUMN histid{linkyear} TO histid_link"))
-  # 
-  # # editing to include base and link year
-  # dbExecute(con, glue("ALTER TABLE link{linkyear} ADD COLUMN YEAR_base INTEGER"))
-  # dbExecute(con, glue("ALTER TABLE link{linkyear} ADD COLUMN YEAR_link INTEGER"))
-  # dbExecute(con, glue("UPDATE link{linkyear} SET YEAR_base = {linkyear - 10}"))
-  # dbExecute(con, glue("UPDATE link{linkyear} SET YEAR_link = {linkyear}"))
   
   # inner join of linking file with baseyear census data (only keeping links) as temporary table
   dbExecute(con, glue("CREATE OR REPLACE TABLE linkedtemp{linkyear} AS SELECT * FROM censusraw{linkyear - 10} JOIN link{linkyear} ON (HISTID = histid{linkyear - 10})"))
@@ -64,7 +57,7 @@ for (linkyear in seq(1910,1940,10)){
 
 # concatenating into one table
 dbExecute(con, paste("CREATE OR REPLACE TABLE linkedall AS",
-                     "SELECT * FROM linked1910 UNION ALL BY NAME",
+                     #"SELECT * FROM linked1910 UNION ALL BY NAME",
                      "SELECT * FROM linked1920 UNION ALL BY NAME",
                      "SELECT * FROM linked1930 UNION ALL BY NAME",
                      "SELECT * FROM linked1940"))
