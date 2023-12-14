@@ -19,6 +19,7 @@ fig1a_demogtrends_workers <- ggplot(data = samp_byyear, aes(x = YEAR, y = pctlf,
   xlab("Year") + ylab("Fraction of US Labor Force") + labs(fill = "") + scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
   theme_minimal() + theme(legend.position = "bottom") 
 
+
 #slides
 fig1a_demogtrends_workers + theme(text = element_text(size=18), axis.text = element_text(size = 14))
 ggsave(filename = glue("{outfigs}/slides/fig1a_demogtrends_workers.png"), width = 8, height = 5) 
