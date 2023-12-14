@@ -211,23 +211,23 @@ did_graph(dataset = neighborNC,
           verbose = FALSE, #set to true to see regression coefficients at the very end of output stream
           filename = "sharewteach_children_neighborNC")
 
-# # OUTCOME: Avg # children (neighbor sample)
-# did_graph(dataset = neighborNC, 
-#           depvarlist = c("avg_nchild_Teacher", "avg_nchild_Secretary"), 
-#           depvarnames = c("Women Teachers", "Women Secretaries"),
-#           colors = c(mw_col, sw_col),
-#           yvar = "DiD Estimate: Mean # of Children",
-#           verbose = FALSE, #set to true to see regression coefficients at the very end of output stream
-#           filename = "nchild_neighborNC")
+# OUTCOME: Avg # children (neighbor sample)
+did_graph(dataset = neighborNC,
+          depvarlist = c("avg_nchild_Teacher", "avg_nchild_Secretary"),
+          depvarnames = c("Women Teachers", "Women Secretaries"),
+          colors = c(mw_col, sw_col),
+          yvar = "DiD Estimate: Mean # of Children",
+          verbose = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename = "nchild_neighborNC")
 
-# # OUTCOME: Avg age at first child (neighbor sample)
-# did_graph(dataset = neighbor, 
-#           depvarlist = c("avg_age_child_Teacher", "avg_age_child_Secretary"), 
-#           depvarnames = c("Women Teachers", "Women Secretaries"),
-#           colors = c(mw_col, sw_col),
-#           yvar = "DiD Estimate: Mean Age at First Child",
-#           verbose = FALSE, #set to true to see regression coefficients at the very end of output stream
-#           filename = "agechild_neighbor")
+# OUTCOME: Avg age at first child (neighbor sample)
+did_graph(dataset = neighborNC,
+          depvarlist = c("avg_age_child_Teacher", "avg_age_child_Secretary"),
+          depvarnames = c("Women Teachers", "Women Secretaries"),
+          colors = c(mw_col, sw_col),
+          yvar = "DiD Estimate: Mean Age at First Child",
+          verbose = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename = "agechild_neighborNC")
 
 # OUTCOME: Average occscore of spouse for teachers (neighbor sample)
 did_graph(dataset = neighbor, 
@@ -246,16 +246,17 @@ did_graph(dataset = neighbor,
           yvar = "DiD Estimate: Share Married Men Teachers w/ Teacher Spouses",
           filename = "spouse_sameocc_neighbor")
 
-# # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
-# did_graph(dataset = link1point5 %>% filter(neighbor_samp == 1 & mainsamp == 1),
-#           depvarlist = c("pct_wct", "pct_wcnt", "pct_wcnilf", "pct_wnc"), 
-#           depvarnames = c("Woman Teacher w/ Children", "Woman Non-Teacher in LF w/ Children", "Woman Not in LF w/ Children", "Woman w/o Children"),
-#           colors = c(men_col, mw_col, "grey", sw_col),
-#           years = c(1920, 1940),
-#           yvar = glue("DiD Estimate: Share of Women Teachers Without Children in t-10"))
+# OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
+did_graph(dataset = link1point5 %>% filter(neighbor_sampNC == 1 & mainsamp == 1),
+          depvarlist = c("pct_wct", "pct_wcnt", "pct_wcnilf", "pct_wnc"),
+          depvarnames = c("Woman Teacher w/ Children", "Woman Non-Teacher in LF w/ Children", "Woman Not in LF w/ Children", "Woman w/o Children"),
+          colors = c(men_col, mw_col, "grey", sw_col),
+          years = c(1920, 1940),
+          yvar = glue("DiD Estimate: Share of Women Teachers Without Children in t-10"),
+          filename = "linktemp_childrenNC")
 
 ## THIS IS THE MAIN GRAPH
-did_graph(dataset = link1 %>% filter(neighbor_sampKY == 1 & mainsamp == 1),
+did_graph(dataset = link1 %>% filter(neighbor_sampNC == 1 & mainsamp == 1),
           depvarlist = c("pct_wct", "pct_wcnt", "pct_wcnilf", "pct_wnct", "pct_wncnt", "pct_wncnilf"), 
           depvarnames = c("Woman Teacher w/ Children", "Woman Non-Teacher in LF w/ Children", "Woman Not in LF w/ Children", 
                           "Woman Teacher w/o Children", "Woman Non-Teacher in LF w/o Children", "Woman Not in LF w/o Children"),
@@ -263,7 +264,7 @@ did_graph(dataset = link1 %>% filter(neighbor_sampKY == 1 & mainsamp == 1),
           years = c(1920, 1940),
           ymin = -0.066, ymax = 0.06,
           yvar = glue("DiD Estimate: Share of Unmarried Women Teachers in t-10"),
-          filename = "linked_swt_children")
+          filename = "linked_swt_childrenNC")
 # 
 # did_graph(dataset = link1point52 %>% filter(neighbor_sampNC == 1 & mainsamp == 1),
 #           depvarlist = c("pct_wct", "pct_wcnt", "pct_wcnilf", "pct_wnc"), 

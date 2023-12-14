@@ -7,20 +7,20 @@ con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
 ######################################################################
 ######### TEMPORARY: SPOUSE LINKING FOR CROSS-SECTIONAL DATA #########
 ######################################################################
-spouselink_all <- tbl(con, "censusrawall") %>% 
-  addvars_indiv() %>% 
-  group_by(SERIAL, YEAR) %>%
-  mutate(teacher_hh = max(teacher)) %>% ungroup() %>% 
-  filter(teacher_hh == 1 & SPLOC != 0) 
-
-spouselink <- spouselink_all %>% filter(teacher == 1 & SPLOC != 0) %>%
-  select(c(demgroup, YEAR, STATEICP, COUNTYICP, SERIAL, PERNUM, SPLOC, RACE, teacher)) %>%
-  left_join(spouselink_all %>% 
-              select(c(teacher, demgroup, YEAR, SERIAL, PERNUM, SPLOC, RACE, AGE, OCCSCORE)) %>% 
-              rename_with(~paste0(.x,"_SP")), 
-            by = c("YEAR" = "YEAR_SP","SERIAL" = "SERIAL_SP", "SPLOC" = "PERNUM_SP")) %>%
-  collect()
-write_csv(spouselink, glue("{cleandata}/spouselink_temp.csv"))
+# spouselink_all <- tbl(con, "censusrawall") %>% 
+#   addvars_indiv() %>% 
+#   group_by(SERIAL, YEAR) %>%
+#   mutate(teacher_hh = max(teacher)) %>% ungroup() %>% 
+#   filter(teacher_hh == 1 & SPLOC != 0) 
+# 
+# spouselink <- spouselink_all %>% filter(teacher == 1 & SPLOC != 0) %>%
+#   select(c(demgroup, YEAR, STATEICP, COUNTYICP, SERIAL, PERNUM, SPLOC, RACE, teacher)) %>%
+#   left_join(spouselink_all %>% 
+#               select(c(teacher, demgroup, YEAR, SERIAL, PERNUM, SPLOC, RACE, AGE, OCCSCORE)) %>% 
+#               rename_with(~paste0(.x,"_SP")), 
+#             by = c("YEAR" = "YEAR_SP","SERIAL" = "SERIAL_SP", "SPLOC" = "PERNUM_SP")) %>%
+#   collect()
+# write_csv(spouselink, glue("{cleandata}/spouselink_temp.csv"))
 
 spouselink <- read_csv(glue("{cleandata}/spouselink_temp.csv"))
 spousesumm <- spouselink %>% 
