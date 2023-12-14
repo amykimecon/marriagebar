@@ -1,177 +1,143 @@
-### INITIAL DESCRIPTIVES
+### DESCRIPTIVES
 ### AUTHOR: AMY KIM
-### LAST EDITED: MAR 17 2023
 
-library(haven)
-library(tidyverse)
-library(glue)
-library(sandwich)
-library(lmtest)
+# opening connection to duckdb database
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
 
-#root = "/Users/amykim/Dropbox (Princeton)/marriagebar"
-root = "/Users/carolyn/Library/CloudStorage/Dropbox/marriagebar_data"
-#git = "Users/amykim/GitHub/marriagebar"
-git = "/Users/carolyn/Library/CloudStorage/Dropbox/marriagebar"
-rawdata = glue("{root}/ipums_raw")
-outdata = glue("{root}/clean_data")
-outfigs = glue("{git}/figures")
+##################################################
+##### MAP OF TREATMENT & CONTROL COUNTIES ########
+##################################################
+graph_treatment(countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1), eastern = TRUE, filename = "treatmap_neighbor") + ggtitle("Neighbor Sample")
+graph_treatment(countysumm %>% filter(match_samp == 1 & mainsamp == 1), filename = "treatmap_matched1") + ggtitle("Matched Sample 1")
+graph_treatment(countysumm %>% filter(match_samp2 == 1 & mainsamp == 1), filename = "treatmap_matched2") + ggtitle("Matched Sample 2")
 
-# importing data
-allyears_raw <- read_csv(glue("{outdata}/allyears_occ.csv"))
-
-# grouping by county (long on occupation)
-grp_county_long <- allyears_raw %>% 
-  filter(MARST != 3 & MARST != 4 & MARST != 5) %>% # taking out those who are divorced/widowed/separated for now
-  group_by(YEAR, STATEICP, COUNTYICP, OCC) %>% 
-  summarize(num = n(),
-            pct_female = sum(ifelse(SEX == 2, 1, 0))/num,
-            pct_female_single = sum(ifelse(SEX == 2 & MARST == 6, 1, 0))/sum(ifelse(SEX == 2, 1, 0))) %>%
-  mutate(STATEGROUP       = ifelse(STATEICP %in% c(34, 56, 48, 54, 24, 22, 21), 2, ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)), # adding grouping for whether in group 1 (ky, nc) or group 2 (WV, TN, SC, OH, IN, IL, MO) neighbouring state
-         STATEGROUP_SOUTH = ifelse(STATEICP %in% c(41, 42, 44, 46, 48, 54), 2, ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)), # AL, Arkansas, Georgia, Mississippi, S Carolina, Tennessee (omitting Louisiana, TX)
-         STATEGROUP_NBR   = ifelse(STATEICP %in% c(48, 54), 2, ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)), # S Carolina, Tennessee (Southern neighbours only)
-         STATEGROUP_ALL   = ifelse(STATEICP %in% c(47, 51, 11), 1, 2)) # KY, NC, DC 
-
-# grouping by county (wide on occupation)
-grp_county_wide <- grp_county_long %>% pivot_wider(id_cols = c(YEAR, 
-                                                               STATEICP, 
-                                                               COUNTYICP, 
-                                                               STATEGROUP, 
-                                                               STATEGROUP_SOUTH,
-                                                               STATEGROUP_NBR,
-                                                               STATEGROUP_ALL), 
-                                                   names_from = OCC, 
-                                                   values_from = c(num, 
-                                                                   pct_female, 
-                                                                   pct_female_single))
-
-#### COUNTY-LEVEL DENSITY PLOTS #### 
-## What were the overall trends of teacher demographics?
-
-# density plot of: percentage of teachers/secretaries in a county who were female
-female_plot <- ggplot(grp_county_long, aes(x = pct_female, group = factor(OCC), color = factor(OCC))) + geom_density() + facet_wrap(~YEAR)
-
-# density plot of: percentage of female teachers/secretaries in a county who were single
-singlefemale_plot <- ggplot(grp_county_long, aes(x = pct_female_single, group = factor(OCC), color = factor(OCC))) + geom_density() + facet_wrap(~YEAR)
-
-# density plot of: percentage of female teachers in a county who were single (by State Group)
-marbar_plot_group <- ggplot(grp_county_wide, aes(x = pct_female_single, group = factor(STATEGROUP), color = factor(STATEGROUP))) + geom_density() + facet_wrap(~YEAR)
+#################################################################
+##### FIGURE 1: DEMOG TRENDS FOR WORKERS/TEACHERS OVER TIME #####
+#################################################################
+# share workers male/single fem/married fem over time
+fig1a_demogtrends_workers <- ggplot(data = samp_byyear, aes(x = YEAR, y = pctlf, fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + geom_area() +
+  xlab("Year") + ylab("Fraction of US Labor Force") + labs(fill = "") + scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
+  theme_minimal() + theme(legend.position = "bottom") 
 
 
-### RESIDUAL DENSITY PLOTS ###
-## What were the trends of teacher demographics, differencing out secretary demographics?
+#slides
+fig1a_demogtrends_workers + theme(text = element_text(size=18), axis.text = element_text(size = 14))
+ggsave(filename = glue("{outfigs}/slides/fig1a_demogtrends_workers.png"), width = 8, height = 5) 
 
-# Generating residuals of regression of pct female single teachers on pct female single secretaries -- separately by year
-allresids <- list()
-i = 0
-for (year in seq(1900,1940,10)){
-  i = i + 1
-  datayear <- grp_county_wide %>% filter(YEAR == year & !is.na(pct_female_single_Teacher) & !is.na(pct_female_single_Secretary))
+#paper
+fig1a_demogtrends_workers + theme(text = element_text(size=12))
+ggsave(filename = glue("{outfigs}/paper/fig1a_demogtrends_workers.png"), width = 6, height = 4) 
 
-  # NOTE: not including fixed effects, since already differencing out county-level trends with secretary trends
-  sec_teach <- lm(data = datayear, pct_female_single_Teacher ~ pct_female_single_Secretary)
-  datayear$resids <- sec_teach$residuals
-  allresids[[i]] <- datayear
+# share teachers male/single fem/married fem over time
+fig1b_demogtrends_teachers <- ggplot(data = samp_byyear, aes(x = YEAR, y = pctteachers, fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + geom_area() +
+  xlab("Year") + ylab("Fraction of US Teachers") + labs(fill = "") + scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
+  theme_minimal() + theme(legend.position = "bottom")
+
+#slides
+fig1b_demogtrends_teachers + theme(text = element_text(size=18), axis.text = element_text(size = 14))
+ggsave(filename = glue("{outfigs}/slides/fig1b_demogtrends_teachers.png"), width = 8, height = 5)
+
+#paper
+fig1b_demogtrends_teachers + theme(text = element_text(size=12))
+ggsave(filename = glue("{outfigs}/paper/fig1b_demogtrends_teachers.png"), width = 6, height = 4)
+
+# extra descriptive -- percentage of married women in LF that were teachers, over time
+print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_dem_teaching)))
+# percentage of married women with at least some college that were teachers
+print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_coll_teachers)))
+
+########################################################################
+##### FIGURE 2: DISTRIBUTION OF FRAC ALL TEACHERS/SEC MARRIED WOMEN #####
+########################################################################
+county_means_all <- countysumm %>% group_by(YEAR, TREAT) %>%
+  filter(mainsamp == 1) %>%
+  summarise(across(c(pct_mw_Teacher, pct_mw_Secretary), function(.x) mean(.x, na.rm=TRUE))) %>%
+  mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed"))
+  
+# teachers
+ggplot(filter(countysumm, mainsamp == 1) %>% mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed")),
+       aes(x = pct_mw_Teacher, color = factor(TREAT), fill = factor(TREAT))) + 
+  geom_histogram(aes(y=after_stat(density)), position = "identity", alpha = 0.3, binwidth = 0.01, linewidth = 0.2) + 
+  #geom_density(alpha = 0.2) +
+  geom_vline(data = county_means_all, aes(xintercept = pct_mw_Teacher, color = factor(TREAT)), linewidth = 0.6,
+             linetype = "dashed") + scale_color_manual(values=c(control_col, treat_col)) +
+  scale_fill_manual(values=c(control_col, treat_col), guide = "none") +
+  facet_wrap(~YEAR) + labs(y = "Density", x = "Married Women Teachers as Fraction of All Teachers in County", color = "") + 
+  theme_minimal() + 
+  theme(legend.position = "bottom", axis.text = element_text(size = 12), text = element_text(size = 14))
+ggsave(filename = glue("{outfigs}/paper/fig2_marteach_dist.png"), width = 8, height = 5)
+
+# slides (teachers by year)
+for (yr in seq(1910,1940,10)){
+  ggplot(filter(countysumm, mainsamp == 1 & YEAR == yr) %>% mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed")),
+         aes(x = pct_mw_Teacher, color = factor(TREAT), fill = factor(TREAT))) + 
+    geom_histogram(aes(y=after_stat(density)), position = "identity", alpha = 0.3, binwidth = 0.01, linewidth = 0.2) + 
+    #geom_density(alpha = 0.2) +
+    geom_vline(data = county_means_all %>% filter(YEAR == yr), aes(xintercept = pct_mw_Teacher, color = factor(TREAT)), linewidth = 0.6,
+               linetype = "dashed") + scale_color_manual(values=c(control_col, treat_col)) +
+    scale_fill_manual(values=c(control_col, treat_col), guide = "none") +
+    facet_wrap(~YEAR) + labs(y = "Density", x = "Married Women Teachers as Fraction of All Teachers in County", color = "") + 
+    theme_minimal() + 
+    theme(legend.position = "bottom")
 }
 
-## plotting residuals
-allresids_df <- bind_rows(allresids)
 
-# density plot of: residuals (interpretation -- positive residual means that a county had more female single teachers relative to female single secretaries, indicating more likely to have had a marriage bar)
-teach_resid_plot <- ggplot(data = allresids_df, aes(x = resids)) + geom_density() + facet_wrap(~YEAR)
+##########################################################
+##### TABLE 1: SUMMARY STATISTICS BY COUNTY GROUP ########
+##########################################################
+countysumm_stats <- countysumm %>%
+  filter(mainsamp == 1) %>% #main sample
+  mutate(POP_THOUS = POP/1000, 
+         WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
+         TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA),
+         summgroup = "All") %>%
+  rbind(countysumm %>% filter(mainsamp == 1 & SOUTH == 1) %>%  
+          mutate(POP_THOUS = POP/1000, WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), summgroup = "South")) %>%
+  rbind(countysumm %>% filter(mainsamp == 1 & neighbor_samp == 1) %>%
+          mutate(POP_THOUS = POP/1000, WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), summgroup = glue("Treat{TREAT}"))) %>%
+  mutate(summgroup = factor(summgroup, levels = c("All", "South", "Treat0", "Treat1")))
 
-# density plot of: residuals by state group (interpretation -- if policy had bite, would expect to see group 1 [non marriage bar] counties had more negative residuals in 1940 than group 2 [marriage bar] counties, as compared to 1930)
-teach_resid_plot_group <- ggplot(data = allresids_df %>% filter(STATEGROUP != 0), 
-                                 aes(x = resids, group = factor(STATEGROUP), color = factor(STATEGROUP))) + 
-  geom_density() + facet_wrap(~YEAR)
+varnames_1930 = c("POP_THOUS","WHITESCHOOLPOP_THOUS", "URBAN", "LFP_MW", "LFP_WMW", "NCHILD", 
+                  "TEACH_PER_STUDENT","pct_m_Teacher", "pct_sw_Teacher", "pct_mw_Teacher")
+varlabs_1930 = c("Population (Thousands)", "White School-Age Pop. (Thous.)", "Share Urban", 
+                 "LFP of Married Women", "LFP of White Married Women", "Num. Children*", 
+                 "start panel here -- Teachers/Students", "Share Men", "Share Single Women", "Share Married Women")
+# 
+# varnames_1940 = c("PCT_HS_GRAD","INCWAGE","AGEMARR")
+# varlabs_1940 = c("Share HS Grads", "Wage Income", "Age at First Marriage")
 
-### DIFF IN DIFF ###
-## Quantifying: how did teacher demographics change for group 1 relative to group 2 counties between 1930 and 1940, taking out any pre trends?
+# summary statistics by state group
+summ_stats <- countysumm_stats %>%
+  filter(YEAR == 1930) %>%
+  group_by(summgroup) %>% 
+  summarize(OBS = n(),
+            across(all_of(varnames_1930), .fns = c(~mean(.x, na.rm=TRUE), #mean
+                                                   ~sd(.x, na.rm=TRUE)/sqrt(OBS))))
 
-### TODO: make sure the reg omits 1930 instead of 1900
-did_data <- grp_county_wide %>% 
-  filter(YEAR!=1900) %>% 
-  filter(STATEGROUP != 0) %>% 
-  mutate(treat = ifelse(STATEGROUP == 1, 1, 0))
+# summ_stats_1940 <- countysumm_stats %>%
+#   filter(YEAR == 1940) %>%
+#   group_by(summgroup) %>% 
+#   summarize(OBS = n(),
+#             across(all_of(varnames_1940), .fns = c(~mean(.x, na.rm=TRUE), #mean
+#                                                    ~sd(.x, na.rm=TRUE)/sqrt(OBS))))
+# 
+# summ_stats_all <- inner_join(summ_stats_1930,summ_stats_1940)
+summ_stats_out <- as.data.frame(t(summ_stats))
 
-did_reg <- lm(pct_female_single_Teacher ~ treat*relevel(factor(YEAR), ref="1930") + pct_female_single_Secretary, 
-              data = did_data)
-summary(did_reg)
-print(lmtest::coeftest(did_reg, type='HC0', vcov. = sandwich::vcovHC))
+summtex <- file(glue("{git}/tables/summstats.tex"), open = "w")
+names <- summ_stats_out[1,]
 
-did_reg_plot <- did_data %>% 
-  group_by(treat, YEAR) %>% 
-  summarize(pct_female_single_Teacher=mean(pct_female_single_Teacher))
-ggplot(did_reg_plot, aes(x = YEAR, y=pct_female_single_Teacher, group=treat, color=treat)) + 
-  geom_line() + 
-  geom_point()
+writeLines(c("\\begin{tabular}{lcccc}", 
+             "\\hhline{=====}",
+             "&", glue("{names[1]} & {names[2]} & {names[3]} & {names[4]}\\\\")), summtex)
+for (i in 1:length(c(varlabs_1930))){
+  means <- summ_stats_out[2*i+1,]
+  sds <- paste0("(", round(as.numeric(summ_stats_out[2*i + 2,]), 3), ")")
+  writeLines(c(paste(c(varlabs_1930)[i], "&", glue("{means[1]} & {means[2]} & {means[3]} & {means[4]}\\\\")),
+               "&", glue("{sds[1]} & {sds[2]} & {sds[3]} & {sds[4]}\\\\")), summtex)
+}
 
-# trying to use packages...
-# did_est <- DIDparams(yname = "pct_female_single_Teacher",
-#           tname = "YEAR",
-#           gname = "treat", 
-#           data = did_data,
-#           control_group = "notyettreated",
-#           true_repeated_cross_sections = TRUE)
-# ggdid(did_est)
-# example_attgt <- att_gt(yname = "pct_female_single_Teacher",
-#                         tname = "YEAR",
-#                         gname = "treat",
-#                         xformla = ~1,
-#                         data = did_data)
-# # summarize the results
-# summary(example_attgt)
-
-### try using only the states in the crazy data collected on all Southern states
-# (excluding TX and Louisiana just due to distance)
-did_data <- grp_county_wide %>% 
-  filter(YEAR!=1900) %>% 
-  filter(STATEGROUP_SOUTH != 0) %>% 
-  mutate(treat = ifelse(STATEGROUP_SOUTH == 1, 1, 0))
-
-did_reg <- lm(pct_female_single_Teacher ~ treat*relevel(factor(YEAR), ref="1930") + pct_female_single_Secretary, 
-                    data = did_data)
-summary(did_reg)
-print(lmtest::coeftest(did_reg, type='HC1', vcov = vcovCL, cluster=~STATEICP))
-did_plot <- did_data %>% 
-  group_by(treat, YEAR) %>% 
-  summarize(pct_female_single_Teacher=mean(pct_female_single_Teacher))
-ggplot(did_plot, aes(x = YEAR, y=pct_female_single_Teacher, group=treat, color=treat)) + 
-  geom_line() + 
-  geom_point()
-# TO DO: Cluster on ... state? 
-
-### try using only neighbouring states to KY and NC
-did_data_nbr <- grp_county_wide %>% 
-  filter(YEAR!=1900) %>% 
-  filter(STATEGROUP_NBR != 0) %>% 
-  mutate(treat = ifelse(STATEGROUP_NBR == 1, 1, 0))
-# regression
-did_reg <- lm(pct_female_single_Teacher ~ treat*relevel(factor(YEAR), ref="1930") + pct_female_single_Secretary, 
-                    data = did_data_nbr)
-summary(did_reg)
-print(lmtest::coeftest(did_reg, type='HC1', vcov = vcovCL, cluster=~STATEICP))
-# plot 
-did_plot <- did_data_nbr %>% 
-  group_by(treat, YEAR) %>% 
-  summarize(pct_female_single_Teacher=mean(pct_female_single_Teacher))
-ggplot(did_plot, aes(x = YEAR, y=pct_female_single_Teacher, group=treat, color=treat)) + 
-  geom_line() + 
-  geom_point()
-
-### try using all states compared to KY, NC, DC
-did_data_all <- grp_county_wide %>% 
-  filter(YEAR!=1900) %>% 
-  filter(STATEGROUP_ALL != 0) %>% 
-  mutate(treat = ifelse(STATEGROUP_ALL == 1, 1, 0))
-# regression
-did_reg <- lm(pct_female_single_Teacher ~ treat*relevel(factor(YEAR), ref="1930") + pct_female_single_Secretary, 
-              data = did_data_all)
-summary(did_reg)
-print(lmtest::coeftest(did_reg, type='HC1', vcov = vcovCL, cluster=~STATEICP))
-# plot 
-did_plot <- did_data_all %>% 
-  group_by(treat, YEAR) %>% 
-  summarize(pct_female_single_Teacher=mean(pct_female_single_Teacher, na.rm=TRUE))
-ggplot(did_plot, aes(x = YEAR, y=pct_female_single_Teacher, group=treat, color=treat)) + 
-  geom_line() + 
-  geom_point()
+obs <- round(as.numeric(summ_stats_out[2,]), 0)
+writeLines(c("Obs.", "&", glue("{obs[1]} & {obs[2]} & {obs[3]} & {obs[4]}\\\\")), summtex)
+writeLines(c("\\hhline{-----}","\\end{tabular}"), summtex)
+close(summtex)

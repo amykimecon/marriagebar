@@ -1,0 +1,45 @@
+\documentclass[12pt]{article}
+%\input{[add path to .sty file here]}
+\setlength\parindent{0pt}
+%%% General formatting
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{breqn}
+\usepackage{bbm}
+\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{subfiles}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage[labelfont=bf]{caption}
+\usepackage{hhline}
+\usepackage{threeparttable}
+\usepackage{tabularx}
+\usepackage{parskip}
+
+\onehalfspacing
+
+\title{Paper/Write-up with Bibliography}
+\author{Amy Kim}
+
+\begin{document}
+\maketitle
+
+\newpage
+
+\begin{table}[!h]
+    \centering 
+    \renewcommand{\arraystretch}{1.1}
+    \begin{threeparttable}
+        \caption{todo}
+        \label{tab:summstats}
+        \input{summstats.tex}
+        \begin{tablenotes}
+            \item $^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01
+            \item 
+            \item \textbf{Notes:} todo
+        \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+\end{document}
