@@ -6,7 +6,8 @@ library(haven)
 library(tidyverse)
 library(glue)
 
-root = "/Users/amykim/Dropbox (Princeton)/marriagebar"
+#root = "/Users/amykim/Dropbox (Princeton)/marriagebar"
+root = "/Users/carolyn/Library/CloudStorage/Dropbox/marriagebar_data"
 rawdata = glue("{root}/ipums_raw")
 outdata = glue("{root}/clean_data")
 

@@ -5,9 +5,13 @@
 library(haven)
 library(tidyverse)
 library(glue)
+library(sandwich)
+library(lmtest)
 
-root = "/Users/amykim/Dropbox (Princeton)/marriagebar"
-git = "Users/amykim/GitHub/marriagebar"
+#root = "/Users/amykim/Dropbox (Princeton)/marriagebar"
+root = "/Users/carolyn/Library/CloudStorage/Dropbox/marriagebar_data"
+#git = "Users/amykim/GitHub/marriagebar"
+git = "/Users/carolyn/Library/CloudStorage/Dropbox/marriagebar"
 rawdata = glue("{root}/ipums_raw")
 outdata = glue("{root}/clean_data")
 outfigs = glue("{git}/figures")
@@ -22,10 +26,23 @@ grp_county_long <- allyears_raw %>%
   summarize(num = n(),
             pct_female = sum(ifelse(SEX == 2, 1, 0))/num,
             pct_female_single = sum(ifelse(SEX == 2 & MARST == 6, 1, 0))/sum(ifelse(SEX == 2, 1, 0))) %>%
-  mutate(STATEGROUP = ifelse(STATEICP %in% c(34, 56, 48, 54, 24, 22, 21), 2, ifelse(STATEICP == 47 | STATEICP == 51, 1, 0))) # adding grouping for whether in group 1 (ky, nc) or group 2 (WV, TN, SC, OH, IN, IL, MO) southern state
+  mutate(STATEGROUP       = ifelse(STATEICP %in% c(34, 56, 48, 54, 24, 22, 21), 2, ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)), # adding grouping for whether in group 1 (ky, nc) or group 2 (WV, TN, SC, OH, IN, IL, MO) neighbouring state
+         STATEGROUP_SOUTH = ifelse(STATEICP %in% c(41, 42, 44, 46, 48, 54), 2, ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)), # AL, Arkansas, Georgia, Mississippi, S Carolina, Tennessee (omitting Louisiana, TX)
+         STATEGROUP_NBR   = ifelse(STATEICP %in% c(48, 54), 2, ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)), # S Carolina, Tennessee (Southern neighbours only)
+         STATEGROUP_ALL   = ifelse(STATEICP %in% c(47, 51, 11), 1, 2)) # KY, NC, DC 
 
 # grouping by county (wide on occupation)
-grp_county_wide <- grp_county_long %>% pivot_wider(id_cols = c(YEAR, STATEICP, COUNTYICP, STATEGROUP), names_from = OCC, values_from = c(num, pct_female, pct_female_single))
+grp_county_wide <- grp_county_long %>% pivot_wider(id_cols = c(YEAR, 
+                                                               STATEICP, 
+                                                               COUNTYICP, 
+                                                               STATEGROUP, 
+                                                               STATEGROUP_SOUTH,
+                                                               STATEGROUP_NBR,
+                                                               STATEGROUP_ALL), 
+                                                   names_from = OCC, 
+                                                   values_from = c(num, 
+                                                                   pct_female, 
+                                                                   pct_female_single))
 
 #### COUNTY-LEVEL DENSITY PLOTS #### 
 ## What were the overall trends of teacher demographics?
@@ -70,8 +87,91 @@ teach_resid_plot_group <- ggplot(data = allresids_df %>% filter(STATEGROUP != 0)
 ### DIFF IN DIFF ###
 ## Quantifying: how did teacher demographics change for group 1 relative to group 2 counties between 1930 and 1940, taking out any pre trends?
 
-# TODO: make sure the reg omits 1930 instead of 1900
-did_data <- grp_county_wide %>% filter(STATEGROUP != 0) %>% 
+### TODO: make sure the reg omits 1930 instead of 1900
+did_data <- grp_county_wide %>% 
+  filter(YEAR!=1900) %>% 
+  filter(STATEGROUP != 0) %>% 
   mutate(treat = ifelse(STATEGROUP == 1, 1, 0))
 
-did_reg <- lm(pct_female_single_Teacher ~ treat*factor(YEAR), data = did_data)
+did_reg <- lm(pct_female_single_Teacher ~ treat*relevel(factor(YEAR), ref="1930") + pct_female_single_Secretary, 
+              data = did_data)
+summary(did_reg)
+print(lmtest::coeftest(did_reg, type='HC0', vcov. = sandwich::vcovHC))
+
+did_reg_plot <- did_data %>% 
+  group_by(treat, YEAR) %>% 
+  summarize(pct_female_single_Teacher=mean(pct_female_single_Teacher))
+ggplot(did_reg_plot, aes(x = YEAR, y=pct_female_single_Teacher, group=treat, color=treat)) + 
+  geom_line() + 
+  geom_point()
+
+# trying to use packages...
+# did_est <- DIDparams(yname = "pct_female_single_Teacher",
+#           tname = "YEAR",
+#           gname = "treat", 
+#           data = did_data,
+#           control_group = "notyettreated",
+#           true_repeated_cross_sections = TRUE)
+# ggdid(did_est)
+# example_attgt <- att_gt(yname = "pct_female_single_Teacher",
+#                         tname = "YEAR",
+#                         gname = "treat",
+#                         xformla = ~1,
+#                         data = did_data)
+# # summarize the results
+# summary(example_attgt)
+
+### try using only the states in the crazy data collected on all Southern states
+# (excluding TX and Louisiana just due to distance)
+did_data <- grp_county_wide %>% 
+  filter(YEAR!=1900) %>% 
+  filter(STATEGROUP_SOUTH != 0) %>% 
+  mutate(treat = ifelse(STATEGROUP_SOUTH == 1, 1, 0))
+
+did_reg <- lm(pct_female_single_Teacher ~ treat*relevel(factor(YEAR), ref="1930") + pct_female_single_Secretary, 
+                    data = did_data)
+summary(did_reg)
+print(lmtest::coeftest(did_reg, type='HC1', vcov = vcovCL, cluster=~STATEICP))
+did_plot <- did_data %>% 
+  group_by(treat, YEAR) %>% 
+  summarize(pct_female_single_Teacher=mean(pct_female_single_Teacher))
+ggplot(did_plot, aes(x = YEAR, y=pct_female_single_Teacher, group=treat, color=treat)) + 
+  geom_line() + 
+  geom_point()
+# TO DO: Cluster on ... state? 
+
+### try using only neighbouring states to KY and NC
+did_data_nbr <- grp_county_wide %>% 
+  filter(YEAR!=1900) %>% 
+  filter(STATEGROUP_NBR != 0) %>% 
+  mutate(treat = ifelse(STATEGROUP_NBR == 1, 1, 0))
+# regression
+did_reg <- lm(pct_female_single_Teacher ~ treat*relevel(factor(YEAR), ref="1930") + pct_female_single_Secretary, 
+                    data = did_data_nbr)
+summary(did_reg)
+print(lmtest::coeftest(did_reg, type='HC1', vcov = vcovCL, cluster=~STATEICP))
+# plot 
+did_plot <- did_data_nbr %>% 
+  group_by(treat, YEAR) %>% 
+  summarize(pct_female_single_Teacher=mean(pct_female_single_Teacher))
+ggplot(did_plot, aes(x = YEAR, y=pct_female_single_Teacher, group=treat, color=treat)) + 
+  geom_line() + 
+  geom_point()
+
+### try using all states compared to KY, NC, DC
+did_data_all <- grp_county_wide %>% 
+  filter(YEAR!=1900) %>% 
+  filter(STATEGROUP_ALL != 0) %>% 
+  mutate(treat = ifelse(STATEGROUP_ALL == 1, 1, 0))
+# regression
+did_reg <- lm(pct_female_single_Teacher ~ treat*relevel(factor(YEAR), ref="1930") + pct_female_single_Secretary, 
+              data = did_data_all)
+summary(did_reg)
+print(lmtest::coeftest(did_reg, type='HC1', vcov = vcovCL, cluster=~STATEICP))
+# plot 
+did_plot <- did_data_all %>% 
+  group_by(treat, YEAR) %>% 
+  summarize(pct_female_single_Teacher=mean(pct_female_single_Teacher, na.rm=TRUE))
+ggplot(did_plot, aes(x = YEAR, y=pct_female_single_Teacher, group=treat, color=treat)) + 
+  geom_line() + 
+  geom_point()
