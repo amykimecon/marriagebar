@@ -41,15 +41,8 @@ treat_col = "#B94685"
 ### helper functions
 source(glue("{git}/code/helper.R"))
 
-### initial duckdb creation: ONLY NEED TO RUN ONCE EVER
-source(glue("{git}/code/duckdb_init.R"))
-
-### loading cleaned datasets for analysis
-# year-level summary stats (figure 1)
-samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv"))
-
-
-countysumm <- read_csv(glue("{cleandata}/countysumm_new.csv"))
+#### initial duckdb creation: ONLY NEED TO RUN ONCE EVER
+# source(glue("{git}/code/duckdb_init.R"))
 
 #### cleaning data (or loading all cleaned datasets) -- comment out one of these
 ### 1) code to clean data
@@ -58,11 +51,14 @@ countysumm <- read_csv(glue("{cleandata}/countysumm_new.csv"))
 ## 2) loading all cleaned datasets
 samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
 countysumm <- read_csv(glue("{cleandata}/countysumm_new.csv")) # county X year-level stats (most analysis uses this)
+link1 <- read_csv(glue("{cleandata}/link1_swt.csv"))
+link2 <- read_csv(glue("{cleandata}/link2_swnt.csv"))
+link3 <- read_csv(glue("{cleandata}/link3_mwnt.csv"))
 
-# ### running scripts
-# source(glue("{git}/code/1_descriptives.R"))
-# source(glue("{git}/code/2_firststage.R"))
-# source(glue("{git}/code/3_elasticity_estimation.R"))
-# 
+### running scripts
+source(glue("{git}/code/1_descriptives.R"))
+source(glue("{git}/code/2_didanalysis.R"))
+
+
 
 

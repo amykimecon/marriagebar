@@ -4,41 +4,6 @@
 # opening connection to duckdb database
 con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
 
-######################################################################
-######### TEMPORARY: SPOUSE LINKING FOR CROSS-SECTIONAL DATA #########
-######################################################################
-# spouselink_all <- tbl(con, "censusrawall") %>% 
-#   addvars_indiv() %>% 
-#   group_by(SERIAL, YEAR) %>%
-#   mutate(teacher_hh = max(teacher)) %>% ungroup() %>% 
-#   filter(teacher_hh == 1 & SPLOC != 0) 
-# 
-# spouselink <- spouselink_all %>% filter(teacher == 1 & SPLOC != 0) %>%
-#   select(c(demgroup, YEAR, STATEICP, COUNTYICP, SERIAL, PERNUM, SPLOC, RACE, teacher)) %>%
-#   left_join(spouselink_all %>% 
-#               select(c(teacher, demgroup, YEAR, SERIAL, PERNUM, SPLOC, RACE, AGE, OCCSCORE)) %>% 
-#               rename_with(~paste0(.x,"_SP")), 
-#             by = c("YEAR" = "YEAR_SP","SERIAL" = "SERIAL_SP", "SPLOC" = "PERNUM_SP")) %>%
-#   collect()
-# write_csv(spouselink, glue("{cleandata}/spouselink_temp.csv"))
-
-spouselink <- read_csv(glue("{cleandata}/spouselink_temp.csv"))
-spousesumm <- spouselink %>% 
-  mutate(OCC = ifelse(teacher ==1, "Teacher", "Secretary")) %>%
-  group_by(YEAR, OCC, STATEICP, COUNTYICP) %>%
-  summarize(n = n(),
-            pct_sp_teach = mean(teacher_SP),
-            pct_sp_teach_w = sum(ifelse(teacher_SP == 1 & demgroup!="M",1,0))/sum(ifelse(demgroup!="M",1,0)),
-            pct_sp_teach_m = sum(ifelse(teacher_SP == 1 & demgroup=="M",1,0))/sum(ifelse(demgroup=="M",1,0)),
-            avg_occscore = mean(OCCSCORE_SP, na.rm=TRUE),
-            avg_occscore_w = mean(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE),
-            avg_occscore_m = mean(ifelse(demgroup == "M", OCCSCORE_SP, NA), na.rm=TRUE),
-            med_occscore = median(OCCSCORE_SP, na.rm=TRUE),
-            med_occscore_w = median(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE),
-            med_occscore_m = median(ifelse(demgroup == "M", OCCSCORE_SP, NA), na.rm=TRUE)) %>%
-  pivot_wider(id_cols = c(YEAR, STATEICP, COUNTYICP), names_from = OCC, values_from = -c(YEAR, STATEICP, COUNTYICP, OCC)) # pivoting wide on occupation (so each variable is now of form {varname}_Teacher or {varname}_Secretary)
-
-
 #########################################################
 ######### 1% SAMPLE 1910-2000: GROUPING BY YEAR #########
 #########################################################
@@ -125,7 +90,16 @@ countysumm_occ <- tbl(con, "censusrawall") %>%
             pct_wc = sum(ifelse(demgroup2 == "WC", 1, 0))/n(), #share of teachers who are women AND have children
             pct_wnc = sum(ifelse(demgroup2 == "WNC", 1, 0))/n(), #share of teachers who are women AND DONT have children
             pctw_wc = sum(ifelse(demgroup2 == "WC" & demgroup != "M", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)), #share of W teachers who have children
-            pctw_wnc = sum(ifelse(demgroup2 == "WNC" & demgroup != "M", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)) #share of W teachers who don't have children
+            pctw_wnc = sum(ifelse(demgroup2 == "WNC" & demgroup != "M", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)), #share of W teachers who don't have children
+            pct_sp_teach = mean(teacher_SP), #share with teacher spouses
+            pct_sp_teach_w = sum(ifelse(teacher_SP == 1 & demgroup!="M",1,0))/sum(ifelse(demgroup!="M",1,0)), #share women with teacher spouses
+            pct_sp_teach_m = sum(ifelse(teacher_SP == 1 & demgroup=="M",1,0))/sum(ifelse(demgroup=="M",1,0)), #share men with teacher spouses
+            avg_occscore = mean(OCCSCORE_SP, na.rm=TRUE), #avg occscore of spouse
+            avg_occscore_w = mean(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE), #avg occscore of spouse for women
+            avg_occscore_m = mean(ifelse(demgroup == "M", OCCSCORE_SP, NA), na.rm=TRUE), #avg occscore of spouse for men
+            med_occscore = median(OCCSCORE_SP, na.rm=TRUE), #median occscore of spouse
+            med_occscore_w = median(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE), #median occscore of spouse for women
+            med_occscore_m = median(ifelse(demgroup == "M", OCCSCORE_SP, NA), na.rm=TRUE) #median occscore of spouse for men
   ) %>% collect() %>% 
   pivot_wider(id_cols = c(YEAR, STATEICP, COUNTYICP), names_from = OCC, values_from = -c(YEAR, STATEICP, COUNTYICP, OCC)) # pivoting wide on occupation (so each variable is now of form {varname}_Teacher or {varname}_Secretary)
 
@@ -133,13 +107,12 @@ countysumm_occ <- tbl(con, "censusrawall") %>%
 ######### CROSS-SECTIONAL DATA: COMBINING COUNTY-LEVEL DATA FOR ANALYSIS #########
 ##################################################################################
 ## Initially combining just for matching
-countysumm_raw <- countysumm_gen %>% full_join(countysumm_occ, by = c("YEAR", "STATEICP", "COUNTYICP")) %>%
-  left_join(spousesumm, by = c("YEAR", "STATEICP", "COUNTYICP"))
+countysumm_raw <- countysumm_gen %>% full_join(countysumm_occ, by = c("YEAR", "STATEICP", "COUNTYICP")) 
 
 # main sample (default is filter on counties with at least 10 white teachers in 1930 and 1940 AND non-missing FIPS code AND observed in all four years 1910-1940)
 mainsamp_list <- mainsamp(countysumm_raw)
 
-###### MATCHING & SAMPLE SELECTION [NOTE -- REVISIT AND EDIT THIS, CURRENTLY NOT OK TO USE] #######
+###### MATCHING & SAMPLE SELECTION [NOTE -- REVISIT AND EDIT THIS] #######
 # matching set 1
 matchvars1 <- c("POP", "PCT_LIT", "PCT_WHITE")
 matches <- matching(countysumm_raw, matchvars1)
@@ -180,28 +153,37 @@ link1<- linkview %>% filter(teacher_base == 1 & demgroup_base == "SW" & RACE_bas
   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
   matching_join(matchlist)
 
+write_csv(link1, glue("{cleandata}/link1_swt.csv"))
+
 # group 1.5: women teachers without children in t-10
-link1point5<- linkview %>% filter(teacher_base == 1 & NCHILD_base == 0 & RACE_base == 1 & AGE_base <= 40) %>% 
+link1point5<- linkview %>% filter(teacher_base == 1 & NCHILD_base == 0 & RACE_base == 1 & AGE_base <= 40) %>%
   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
   matching_join(matchlist)
 
-# group 1.5.2: unmarried women teachers without children in t-10
-link1point52<- linkview %>% filter(teacher_base == 1 & NCHILD_base == 0 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>% 
-  summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
-  matching_join(matchlist)
-
-# group 1.5.3: married women teachers without children in t-10
-link1point53<- linkview %>% filter(teacher_base == 1 & NCHILD_base == 0 & demgroup_base == "MW" & RACE_base == 1 & AGE_base <= 40) %>% 
-  summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
-  matching_join(matchlist)
+write_csv(link1point5, glue("{cleandata}/link1point5_wtnc.csv"))
+# 
+# # group 1.5.2: unmarried women teachers without children in t-10
+# link1point52<- linkview %>% filter(teacher_base == 1 & NCHILD_base == 0 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>% 
+#   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
+#   matching_join(matchlist)
+# 
+# # group 1.5.3: married women teachers without children in t-10
+# link1point53<- linkview %>% filter(teacher_base == 1 & NCHILD_base == 0 & demgroup_base == "MW" & RACE_base == 1 & AGE_base <= 40) %>% 
+#   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
+#   matching_join(matchlist)
 
 # group 2: unmarried women non-teachers in 1930
 link2 <- linkview %>% filter(teacher_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 10 & RACE_base == 1) %>% 
   summlinks() %>% matching_join(matchlist)
 
+write_csv(link2, glue("{cleandata}/link2_swnt.csv"))
+
 # group 3: married women non-teachers in pre-period
 link3 <- linkview %>% filter(teacher_base == 0 & demgroup_base == "MW" & AGE_base <= 50& RACE_base == 1) %>% 
   summlinks() %>% matching_join(matchlist)
+
+write_csv(link3, glue("{cleandata}/link3_mwnt.csv"))
+
 
 # # summarizing links
 # link1 %>% group_by(YEAR, TREAT) %>% summarize(across(starts_with("pct"), mean),n=n())

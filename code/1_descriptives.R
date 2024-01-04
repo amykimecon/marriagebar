@@ -1,9 +1,6 @@
 ### DESCRIPTIVES
 ### AUTHOR: AMY KIM
 
-# opening connection to duckdb database
-con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
-
 ##################################################
 ##### MAP OF TREATMENT & CONTROL COUNTIES ########
 ##################################################
@@ -86,14 +83,14 @@ for (yr in seq(1910,1940,10)){
 ##### TABLE 1: SUMMARY STATISTICS BY COUNTY GROUP ########
 ##########################################################
 countysumm_stats <- countysumm %>%
-  filter(mainsamp == 1) %>% #main sample
+  filter(mainsamp == 1) %>% #main sample (all counties)
   mutate(POP_THOUS = POP/1000, 
          WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
          TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA),
          summgroup = "All") %>%
-  rbind(countysumm %>% filter(mainsamp == 1 & SOUTH == 1) %>%  
+  rbind(countysumm %>% filter(mainsamp == 1 & SOUTH == 1) %>%  # southern counties only
           mutate(POP_THOUS = POP/1000, WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), summgroup = "South")) %>%
-  rbind(countysumm %>% filter(mainsamp == 1 & neighbor_samp == 1) %>%
+  rbind(countysumm %>% filter(mainsamp == 1 & neighbor_samp == 1) %>% #neighboring & treated counties (separately)
           mutate(POP_THOUS = POP/1000, WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), summgroup = glue("Treat{TREAT}"))) %>%
   mutate(summgroup = factor(summgroup, levels = c("All", "South", "Treat0", "Treat1")))
 

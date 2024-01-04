@@ -15,6 +15,7 @@ datanames <- list("neighbor", "matched1", "matched2")
 ##############################################################
 ######### RESULT 1: COMPOSITION OF TEACHER WORKFORCE #########
 ##############################################################
+# iterating through each sample in datasets
 for (i in 1:3){
   # OUTCOME: OVERALL SUPPLY OF TEACHERS
   did_graph(dataset = datasets[[i]], 
@@ -26,7 +27,7 @@ for (i in 1:3){
   
   Sys.sleep(2) #pause so i can see the graph output
   
-  # OUTCOME: SHARE TEACHERS MW/SW/M (neighbor sample)
+  # OUTCOME: SHARE TEACHERS MW/SW/M 
   did_graph(dataset = datasets[[i]], 
             depvarlist = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
             depvarnames = c("Men", "Married Women", "Single Women"),
@@ -39,22 +40,13 @@ for (i in 1:3){
   Sys.sleep(2) #pause so i can see the graph output
 }
 
-# STARGAZER TABLE
+# STARGAZER TABLE (neighbor sample only)
 models <- list()
 ses <- list()
-sharereg_means <- c()
+sharereg_means <- c() #dep var mean in 1930
 i = 1
 for (coefname in c("num_Teacher","teacher_ratio","pct_mw_Teacher","pct_m_Teacher","pct_sw_Teacher", "pctw_wc_Teacher")){
-  # out_by_treat <- did_graph_data(neighbor, coefname, years = c(1940), table = TRUE, septreat = TRUE)
-  # models[[i]] <- out_by_treat[[1]]
-  # ses[[i]] <- sqrt(diag(out_by_treat[[2]]))
-  # sharereg_decomp_means <- c(sharereg_decomp_means, mean(filter(neighbor, YEAR == 1930 & TREAT == 0)[[coefname]]))
-  # i = i + 1
-  # models[[i]] <- out_by_treat[[3]]
-  # ses[[i]] <- sqrt(diag(out_by_treat[[4]]))
-  # sharereg_decomp_means <- c(sharereg_decomp_means, mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]]))
-  # i = i + 1
-  out_did <- did_graph_data(neighbor, coefname, years = c(1940), table = TRUE)
+  out_did <- did_graph_data(neighbor, coefname, years = c(1940), table = TRUE) #returns list of [model, cov matrix]
   models[[i]] <- out_did[[1]]
   ses[[i]] <- sqrt(diag(out_did[[2]]))
   sharereg_means <- c(sharereg_means, mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]]))
@@ -73,17 +65,6 @@ stargazer(models, se=ses, keep = c("TREATx1940"),#omit = c("Constant","cluster*"
           add.lines = list(c("Dep. Var. 1930 Treated Mean", formatC(sharereg_means))),
           table.layout = "=lc#-t-as=")
 
-# stargazer(models, se=ses, omit = c("Constant","cluster*", "factor*"), 
-#           out = glue("{git}/tables/shareregs_decomp.tex"),
-#           float = FALSE,
-#           keep.stat = c('n','adj.rsq'),
-#           dep.var.caption = "Dependent Variable: County-Level Share of Teachers that are",
-#           dep.var.labels.include = FALSE,
-#           column.labels = c("Married Women", "Men", "Unmarried Women"),
-#           column.separate = c(3,3,3),
-#           covariate.labels = c("Post-Marriage Bar Ban ($\\alpha_{1940}^{DD}$)","Treated $\\times$ Post-Ban ($\\gamma_{1940}^{DD}$)"),
-#           add.lines = list(c("Dep. Var. 1930 Mean", formatC(sharereg_decomp_means))),
-#           table.layout = "=lc#-t-as=")
 
 #####################################################################
 ######### RESULT 2: TRANSITION PROBABILITIES W/ LINKED DATA #########

@@ -3,7 +3,7 @@
 ##################
 ## DATA HELPERS ##
 ##################
-# Adds useful/common person-level variables, requires indiv-level dataset with variables OCC1950, SEX, AGE, MARST (with IPUMS codings)
+# Adds useful/common person-level variables, requires indiv-level dataset with variables OCC1950, SEX, AGE, MARST (with IPUMS codings), and OCC1950_SP
 addvars_indiv <- function(dataset){
   outdata <- dataset %>% 
     mutate(demgroup = case_when(SEX == 1 ~ "M", #man
@@ -18,6 +18,7 @@ addvars_indiv <- function(dataset){
            teacher = ifelse(YEAR == 1900,
                             ifelse(OCC1950 == 93 & worker == 1, 1, 0), #in 1900, no CLASSWKR
                             ifelse(OCC1950 == 93 & CLASSWKR == 2 & worker == 1, 1, 0)),
+           teacher_SP = ifelse(OCC1950_SP == 93, 1, 0), #FOR NOW, no LABFORCE_SP so just use OCC1950_SP
            secretary = ifelse(YEAR == 1900,
                               ifelse(OCC1950 == 350 & worker == 1, 1, 0), #in 1900, no CLASSWKR
                               ifelse(OCC1950 == 350 & CLASSWKR == 2 & worker == 1, 1, 0)),
