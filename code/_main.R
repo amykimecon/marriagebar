@@ -38,27 +38,27 @@ men_col = "#C8ADD7"
 control_col = "#46b97a"
 treat_col = "#B94685"
 
-### helper function
+### helper functions
 source(glue("{git}/code/helper.R"))
+
+### initial duckdb creation: ONLY NEED TO RUN ONCE EVER
+source(glue("{git}/code/duckdb_init.R"))
 
 ### loading cleaned datasets for analysis
 # year-level summary stats (figure 1)
 samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv"))
 
-# county X year-level stats (most analysis uses this)
+
 countysumm <- read_csv(glue("{cleandata}/countysumm_new.csv"))
 
-# ### cleaning data (or loading all cleaned datasets) -- comment out one of these
-# ## code to clean data
-# # source(glue("{git}/code/0_census_clean.R"))
-# 
-# # loading all cleaned datasets
-# samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv"))
-# filtered_bind <- read_csv(glue("{cleandata}/filtereddata.csv"))
-# countydist_byocc <- read_csv(glue("{cleandata}/countydist_byocc.csv"))
-# countysumm <- read_csv(glue("{cleandata}/countysumm.csv"))
-# countysumm_matched <- read_csv(glue("{cleandata}/countysumm_matched.csv"))
-# 
+#### cleaning data (or loading all cleaned datasets) -- comment out one of these
+### 1) code to clean data
+# source(glue("{git}/code/0_dataclean.R"))
+
+## 2) loading all cleaned datasets
+samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
+countysumm <- read_csv(glue("{cleandata}/countysumm_new.csv")) # county X year-level stats (most analysis uses this)
+
 # ### running scripts
 # source(glue("{git}/code/1_descriptives.R"))
 # source(glue("{git}/code/2_firststage.R"))
