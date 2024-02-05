@@ -53,7 +53,7 @@ for (coefname in c("num_Teacher","teacher_ratio","pct_mw_Teacher","pct_m_Teacher
 }
 
 stargazer(models, se=ses, keep = c("TREATx1940"),#omit = c("Constant","cluster*", "factor*"), 
-          out = glue("{git}/tables/shareregs.tex"),
+          out = glue("./tables/shareregs.tex"),
           float = FALSE,
           keep.stat = c('n','adj.rsq'),
           dep.var.caption = "Dependent Variable:",
@@ -131,7 +131,7 @@ for (coefname in c("pct_mwt", "pct_mwnt", "pct_mwnilf", "pct_sw")){
 }
 
 stargazer(models1, se=ses1, omit = c("Constant","cluster*", "factor*", "Year*"),
-          out = glue("{git}/tables/linkregs_swt.tex"),
+          out = glue("./tables/linkregs_swt.tex"),
           float = FALSE,
           keep.stat = c('n','adj.rsq'),
           dep.var.caption = "Dep. Var.: fill in by panel",
@@ -144,7 +144,7 @@ stargazer(models1, se=ses1, omit = c("Constant","cluster*", "factor*", "Year*"),
           table.layout = "=lc#-t-as=")
 
 stargazer(models2, se=ses2, omit = c("Constant","cluster*", "factor*", "Year*"),
-          out = glue("{git}/tables/linkregs_swnt.tex"),
+          out = glue("./tables/linkregs_swnt.tex"),
           float = FALSE,
           keep.stat = c('n','adj.rsq'),
           dep.var.caption = "Dep. Var.: fill in by panel",
@@ -157,7 +157,7 @@ stargazer(models2, se=ses2, omit = c("Constant","cluster*", "factor*", "Year*"),
           table.layout = "=lc#-t-as=")
 
 stargazer(models3, se=ses3, omit = c("Constant","cluster*", "factor*", "Year*"),
-          out = glue("{git}/tables/linkregs_mwnt.tex"),
+          out = glue("./tables/linkregs_mwnt.tex"),
           float = FALSE,
           keep.stat = c('n','adj.rsq'),
           dep.var.caption = "Dep. Var.: fill in by panel",
@@ -277,7 +277,7 @@ for (coefname in c("avg_occscore_w_Teacher", "avg_occscore_m_Teacher", "pct_sp_t
 }
 
 stargazer(models4, se=ses4, keep = c("TREATx1940"), 
-          out = glue("{git}/tables/outregs_spouse.tex"),
+          out = glue("./tables/outregs_spouse.tex"),
           float = FALSE,
           keep.stat = c('n','adj.rsq'),
           dep.var.caption = "Dependent Variable:",

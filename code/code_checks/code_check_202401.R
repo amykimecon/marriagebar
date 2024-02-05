@@ -630,9 +630,10 @@ link1 <- link1 %>% matching_join(matchlist)
 
 ## test did_graph, did_graph_data ----
 # use just a subset of the data
-neighbor   <- countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1)
-datasets   <- list(neighbor)
-datanames  <- list("neighbor") #, "matched1", "matched2")
+countysumm  <- read_csv(glue("{cleandata}/countysumm_new.csv"))
+neighbor    <- countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1)
+datasets    <- list(neighbor)
+datanames   <- list("neighbor") #, "matched1", "matched2")
 # ACTUAL FUNCTION CALL
 # did_graph(dataset     = datasets[[i]], 
 #           depvarlist  = c("num_Teacher"),
@@ -647,8 +648,20 @@ datanames  <- list("neighbor") #, "matched1", "matched2")
 #   and toggles for slides (default is for paper) 
 #   and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
 #   and pointspan, i.e. total width of all dots for a given year, default is 2
-did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, yvar = "Coef on Treat X Year",
-                      ymax = NA, ymin = NA, slides = FALSE, steps = FALSE, pointspan = 2, septreat = FALSE, filename = NA){
+# did_graph <- function(dataset, depvarlist, depvarnames, 
+#                       colors, yvar = "Coef on Treat X Year", controls = "", 
+#                       years = c(1910, 1920, 1940), yearomit = 1930, 
+#                       verbose = FALSE, ,
+#                       ymax = NA, ymin = NA, 
+#                       slides = FALSE, steps = FALSE, pointspan = 2, septreat = FALSE, 
+#                       filename = NA){
+dataset <- neighbor 
+depvarlist <- c("num_Teacher")
+depvarnames <- c("Nr of teachers")
+colors = c(mw_col)
+yvar = "Coef: Nr of teachers"
+filename = glue("numteach_neighbor")
+
   nvars = length(depvarlist)
   if (nvars != length(depvarnames)){
     print("Error: depvarlist length diff from depvarnames length")

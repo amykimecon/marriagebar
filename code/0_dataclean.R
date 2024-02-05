@@ -2,7 +2,7 @@
 ### AUTHOR: AMY KIM
 
 # opening connection to duckdb database
-con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
 
 #________________________________________________________
 # 1% SAMPLE 1910-2000: GROUPING BY YEAR ----

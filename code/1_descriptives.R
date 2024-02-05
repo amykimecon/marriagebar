@@ -149,7 +149,7 @@ summ_stats <- countysumm_stats %>%
 # summ_stats_all <- inner_join(summ_stats_1930,summ_stats_1940)
 summ_stats_out <- as.data.frame(t(summ_stats))
 
-summtex <- file(glue("{git}/tables/summstats.tex"), open = "w")
+summtex <- file(glue("./tables/summstats.tex"), open = "w")
 names <- summ_stats_out[1,]
 
 writeLines(c("\\begin{tabular}{lcccc}", 

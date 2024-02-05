@@ -49,11 +49,11 @@ treat_col   = "#B94685"
 source("./code/helper.R")
 
 ## initial duckdb creation: ONLY NEED TO RUN ONCE EVER ----
-# source(glue("{git}/code/duckdb_init.R"))
+# source(glue("./code/duckdb_init.R"))
 
 ## cleaning data (or loading all cleaned datasets) ---- comment out one of these
 ### 1) code to clean data ----
-# source(glue("{git}/code/0_dataclean.R"))
+source(glue("./code/0_dataclean.R"))
 
 ### 2) loading all cleaned datasets ----
 samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
