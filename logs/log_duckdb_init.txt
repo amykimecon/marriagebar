@@ -4,3 +4,6 @@ Link spouses for censusraw1910...: 875.16 sec elapsed
 Create or replace table censusraw1920...: 1039.52 sec elapsed
 Create temp spouse database for censusraw1920...: 76.5 sec elapsed
 Link spouses for censusraw1920...: 1022.59 sec elapsed
+Create or replace table censusraw1930...: 1714.07 sec elapsed
+Create temp spouse database for censusraw1930...: 42.01 sec elapsed
+Link spouses for censusraw1930...: 1226.74 sec elapsed
