@@ -1,77 +1,98 @@
 ### DESCRIPTIVES
 ### AUTHOR: AMY KIM
 
-##################################################
-##### MAP OF TREATMENT & CONTROL COUNTIES ########
-##################################################
-graph_treatment(countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1), eastern = TRUE, filename = "treatmap_neighbor") + ggtitle("Neighbor Sample")
-graph_treatment(countysumm %>% filter(match_samp == 1 & mainsamp == 1), filename = "treatmap_matched1") + ggtitle("Matched Sample 1")
-graph_treatment(countysumm %>% filter(match_samp2 == 1 & mainsamp == 1), filename = "treatmap_matched2") + ggtitle("Matched Sample 2")
+#_________________________________________________
+# MAP OF TREATMENT & CONTROL COUNTIES ----
+#_________________________________________________
+## neighbor ----
+graph_treatment(countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1), 
+                eastern = TRUE, 
+                filename = "treatmap_neighbor") + 
+  ggtitle("Neighbor Sample")
+## match 1 ----
+graph_treatment(countysumm %>% filter(match_samp == 1 & mainsamp == 1), 
+                filename = "treatmap_matched1") + 
+  ggtitle("Matched Sample 1")
+## match 2 ----
+graph_treatment(countysumm %>% filter(match_samp2 == 1 & mainsamp == 1), 
+                filename = "treatmap_matched2") + 
+  ggtitle("Matched Sample 2")
 
-#################################################################
-##### FIGURE 1: DEMOG TRENDS FOR WORKERS/TEACHERS OVER TIME #####
-#################################################################
-# share workers male/single fem/married fem over time
-fig1a_demogtrends_workers <- ggplot(data = samp_byyear, aes(x = YEAR, y = pctlf, fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + geom_area() +
-  xlab("Year") + ylab("Fraction of US Labor Force") + labs(fill = "") + scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
+#________________________________________________________________
+# FIG 1: DEMOG TRENDS FOR WORKERS/TEACHERS OVER TIME ----
+#________________________________________________________________
+## share workers male/single fem/married fem over time ----
+fig1a_demogtrends_workers <- ggplot(data = samp_byyear, 
+                                    aes(x = YEAR, y = pctlf, 
+                                        fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + 
+  geom_area() +
+  xlab("Year") + ylab("Fraction of US Labor Force") + labs(fill = "") + 
+  scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
   theme_minimal() + theme(legend.position = "bottom") 
-
-
 #slides
 fig1a_demogtrends_workers + theme(text = element_text(size=18), axis.text = element_text(size = 14))
 ggsave(filename = glue("{outfigs}/slides/fig1a_demogtrends_workers.png"), width = 8, height = 5) 
-
 #paper
 fig1a_demogtrends_workers + theme(text = element_text(size=12))
 ggsave(filename = glue("{outfigs}/paper/fig1a_demogtrends_workers.png"), width = 6, height = 4) 
 
-# share teachers male/single fem/married fem over time
-fig1b_demogtrends_teachers <- ggplot(data = samp_byyear, aes(x = YEAR, y = pctteachers, fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + geom_area() +
-  xlab("Year") + ylab("Fraction of US Teachers") + labs(fill = "") + scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
+## share teachers male/single fem/married fem over time ----
+fig1b_demogtrends_teachers <- ggplot(data = samp_byyear, 
+                                     aes(x = YEAR, y = pctteachers, 
+                                         fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + 
+  geom_area() +
+  xlab("Year") + ylab("Fraction of US Teachers") + labs(fill = "") + 
+  scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
   theme_minimal() + theme(legend.position = "bottom")
-
 #slides
 fig1b_demogtrends_teachers + theme(text = element_text(size=18), axis.text = element_text(size = 14))
 ggsave(filename = glue("{outfigs}/slides/fig1b_demogtrends_teachers.png"), width = 8, height = 5)
-
 #paper
 fig1b_demogtrends_teachers + theme(text = element_text(size=12))
 ggsave(filename = glue("{outfigs}/paper/fig1b_demogtrends_teachers.png"), width = 6, height = 4)
 
-# extra descriptive -- percentage of married women in LF that were teachers, over time
+## extra stats ---- 
+# percentage of married women in LF that were teachers, over time
 print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_dem_teaching)))
 # percentage of married women with at least some college that were teachers
 print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_coll_teachers)))
 
-########################################################################
-##### FIGURE 2: DISTRIBUTION OF FRAC ALL TEACHERS/SEC MARRIED WOMEN #####
-########################################################################
-county_means_all <- countysumm %>% group_by(YEAR, TREAT) %>%
+#______________________________________________________________________
+# FIG 2: DISTN OF FRAC ALL TEACHERS/SEC MARRIED WOMEN ----
+#______________________________________________________________________
+county_means_all <- countysumm %>% 
+  group_by(YEAR, TREAT) %>%
   filter(mainsamp == 1) %>%
   summarise(across(c(pct_mw_Teacher, pct_mw_Secretary), function(.x) mean(.x, na.rm=TRUE))) %>%
   mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed"))
   
-# teachers
-ggplot(filter(countysumm, mainsamp == 1) %>% mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed")),
+## paper ----
+ggplot(filter(countysumm, mainsamp == 1) %>% 
+         mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed")),
        aes(x = pct_mw_Teacher, color = factor(TREAT), fill = factor(TREAT))) + 
   geom_histogram(aes(y=after_stat(density)), position = "identity", alpha = 0.3, binwidth = 0.01, linewidth = 0.2) + 
   #geom_density(alpha = 0.2) +
-  geom_vline(data = county_means_all, aes(xintercept = pct_mw_Teacher, color = factor(TREAT)), linewidth = 0.6,
-             linetype = "dashed") + scale_color_manual(values=c(control_col, treat_col)) +
+  geom_vline(data = county_means_all, 
+             aes(xintercept = pct_mw_Teacher, color = factor(TREAT)), 
+             linewidth = 0.6,linetype = "dashed") + 
+  scale_color_manual(values=c(control_col, treat_col)) +
   scale_fill_manual(values=c(control_col, treat_col), guide = "none") +
   facet_wrap(~YEAR) + labs(y = "Density", x = "Married Women Teachers as Fraction of All Teachers in County", color = "") + 
   theme_minimal() + 
   theme(legend.position = "bottom", axis.text = element_text(size = 12), text = element_text(size = 14))
 ggsave(filename = glue("{outfigs}/paper/fig2_marteach_dist.png"), width = 8, height = 5)
 
-# slides (teachers by year)
+## slides (teachers by year) ----
 for (yr in seq(1910,1940,10)){
-  ggplot(filter(countysumm, mainsamp == 1 & YEAR == yr) %>% mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed")),
+  ggplot(filter(countysumm, mainsamp == 1 & YEAR == yr) %>% 
+           mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed")),
          aes(x = pct_mw_Teacher, color = factor(TREAT), fill = factor(TREAT))) + 
     geom_histogram(aes(y=after_stat(density)), position = "identity", alpha = 0.3, binwidth = 0.01, linewidth = 0.2) + 
     #geom_density(alpha = 0.2) +
-    geom_vline(data = county_means_all %>% filter(YEAR == yr), aes(xintercept = pct_mw_Teacher, color = factor(TREAT)), linewidth = 0.6,
-               linetype = "dashed") + scale_color_manual(values=c(control_col, treat_col)) +
+    geom_vline(data = county_means_all %>% 
+                 filter(YEAR == yr), aes(xintercept = pct_mw_Teacher, color = factor(TREAT)), 
+               linewidth = 0.6, linetype = "dashed") + 
+    scale_color_manual(values=c(control_col, treat_col)) +
     scale_fill_manual(values=c(control_col, treat_col), guide = "none") +
     facet_wrap(~YEAR) + labs(y = "Density", x = "Married Women Teachers as Fraction of All Teachers in County", color = "") + 
     theme_minimal() + 
@@ -79,27 +100,35 @@ for (yr in seq(1910,1940,10)){
 }
 
 
-##########################################################
-##### TABLE 1: SUMMARY STATISTICS BY COUNTY GROUP ########
-##########################################################
+#______________________________________________________
+# TAB 1: SUM STATS BY COUNTY GROUP ----
+#______________________________________________________
 countysumm_stats <- countysumm %>%
   filter(mainsamp == 1) %>% #main sample (all counties)
-  mutate(POP_THOUS = POP/1000, 
+  mutate(POP_THOUS            = POP/1000, 
          WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
-         TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA),
-         summgroup = "All") %>%
+         TEACH_PER_STUDENT    = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA),
+         summgroup            = "All") %>%
   rbind(countysumm %>% filter(mainsamp == 1 & SOUTH == 1) %>%  # southern counties only
-          mutate(POP_THOUS = POP/1000, WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), summgroup = "South")) %>%
+          mutate(POP_THOUS            = POP/1000, 
+                 WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
+                 TEACH_PER_STUDENT    = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), 
+                 summgroup            = "South")) %>%
   rbind(countysumm %>% filter(mainsamp == 1 & neighbor_samp == 1) %>% #neighboring & treated counties (separately)
-          mutate(POP_THOUS = POP/1000, WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, TEACH_PER_STUDENT = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), summgroup = glue("Treat{TREAT}"))) %>%
+          mutate(POP_THOUS            = POP/1000, 
+                 WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
+                 TEACH_PER_STUDENT    = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), 
+                 summgroup            = glue("Treat{TREAT}"))) %>%
   mutate(summgroup = factor(summgroup, levels = c("All", "South", "Treat0", "Treat1")))
 
-varnames_1930 = c("POP_THOUS","WHITESCHOOLPOP_THOUS", "URBAN", "LFP_MW", "LFP_WMW", "NCHILD", 
-                  "TEACH_PER_STUDENT","pct_m_Teacher", "pct_sw_Teacher", "pct_mw_Teacher")
+varnames_1930 = c("POP_THOUS","WHITESCHOOLPOP_THOUS", "URBAN", 
+                  "LFP_MW", "LFP_WMW", "NCHILD", 
+                  "TEACH_PER_STUDENT","pct_m_Teacher", 
+                  "pct_sw_Teacher", "pct_mw_Teacher")
 varlabs_1930 = c("Population (Thousands)", "White School-Age Pop. (Thous.)", "Share Urban", 
                  "LFP of Married Women", "LFP of White Married Women", "Num. Children*", 
-                 "start panel here -- Teachers/Students", "Share Men", "Share Single Women", "Share Married Women")
-# 
+                 "start panel here -- Teachers/Students", "Share Men", 
+                 "Share Single Women", "Share Married Women")
 # varnames_1940 = c("PCT_HS_GRAD","INCWAGE","AGEMARR")
 # varlabs_1940 = c("Share HS Grads", "Wage Income", "Age at First Marriage")
 
@@ -110,7 +139,6 @@ summ_stats <- countysumm_stats %>%
   summarize(OBS = n(),
             across(all_of(varnames_1930), .fns = c(~mean(.x, na.rm=TRUE), #mean
                                                    ~sd(.x, na.rm=TRUE)/sqrt(OBS))))
-
 # summ_stats_1940 <- countysumm_stats %>%
 #   filter(YEAR == 1940) %>%
 #   group_by(summgroup) %>% 
