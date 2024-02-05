@@ -25,6 +25,7 @@ for (i in 1:3){
             yvar        = "DiD Estimate: Number of Teachers",
             filename    = glue("numteach_{datanames[[i]]}")) %>% print()
   Sys.sleep(2) #pause so i can see the graph output
+  ##! CHECKED
   
   # OUTCOME: SHARE TEACHERS MW/SW/M 
   did_graph(dataset     = datasets[[i]], 
@@ -45,7 +46,7 @@ ses            <- list()
 sharereg_means <- c() #dep var mean in 1930
 i = 1
 for (coefname in c("num_Teacher","teacher_ratio","pct_mw_Teacher","pct_m_Teacher","pct_sw_Teacher", "pctw_wc_Teacher")){
-  out_did        <- did_graph_data(neighbor, coefname, years = c(1940), table = TRUE) #returns list of [model, cov matrix]
+  out_did        <- did_graph_data(neighbor, coefname, years = c(1940, 1950), table = TRUE) #returns list of [model, cov matrix]
   models[[i]]    <- out_did[[1]]
   ses[[i]]       <- sqrt(diag(out_did[[2]]))
   sharereg_means <- c(sharereg_means, mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]]))

@@ -655,27 +655,132 @@ datanames   <- list("neighbor") #, "matched1", "matched2")
 #                       ymax = NA, ymin = NA, 
 #                       slides = FALSE, steps = FALSE, pointspan = 2, septreat = FALSE, 
 #                       filename = NA){
-dataset <- neighbor 
-depvarlist <- c("num_Teacher")
-depvarnames <- c("Nr of teachers")
-colors = c(mw_col)
-yvar = "Coef: Nr of teachers"
+dataset       <- neighbor 
+depvarlist    <- c("num_Teacher")
+depvarnames   <- c("Nr of teachers")
+colors   = c(mw_col)
+yvar     = "Coef: Nr of teachers"
 filename = glue("numteach_neighbor")
+years = c(1910, 1920, 1940) # add in 1950
+yearomit = 1930
+controls = ""
+verbose = FALSE 
 
+
+  # checks that the names and varlist lengths line up
   nvars = length(depvarlist)
   if (nvars != length(depvarnames)){
     print("Error: depvarlist length diff from depvarnames length")
-    return(NA)
+    #return(NA)
   }
   
   # compiling all regression outputs (in format for graphing) from different dependent variables
-  if (nvars == 1){
-    did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, years, yearomit, verbose, septreat) 
+  #if (nvars == 1){
+    #______________________________________________________
+    ## ACTUAL FUNCTION CALL: did_graph_data
+    # did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, years, yearomit, verbose, septreat) 
+    
+    ## DECONSTRUCTING: did_graph_data
+    # Creating data for graphing dynamic DiD 
+    # takes in dataset, depvar (dependant variable), any controls (string of form '+ X1 + X2 +...'), years to include, year to omit
+    # if table = TRUE, returns list of regression model output and vcov for stargazer table formatting
+    # if septreat = TRUE, runs regression for treatment and control groups separately
+    # did_graph_data <- function(dataset, depvar, controls = "", 
+    #                            years = c(1910, 1920, 1940), yearomit = 1930, 
+    #                            verbose = FALSE, table = FALSE, septreat = FALSE){
+    depvar = depvarlist[[1]]
+      # modifying dataset (adding interaction terms, setting cluster to FIPS, filtering to only include relevant years)
+      # ACTUAL FUNCTION CALL: regdata <- dataset %>% add_did_dummies() ....
+      # DECONSTRUCTING: add_did_dummies
+      for (yr in unique(dataset$YEAR)){
+        dataset[[glue("TREATx{yr}")]] <- ifelse(dataset$YEAR == yr, 1, 0)*ifelse(dataset$TREAT == 1, 1, 0)
+        dataset[[glue("Year{yr}")]]   <- ifelse(dataset$YEAR == yr, 1, 0)
+      }
+      #View(dataset %>% arrange(STATEICP, COUNTYICP, YEAR))
+      # end deconstructing add_did_dummies
+      
+     regdata <- dataset %>% 
+        #add_did_dummies() %>%  #done above
+        filter(YEAR %in% c(years, yearomit)) %>% 
+        mutate(cluster = as.character(FIPS))
+     #View(regdata %>% arrange(STATEICP, COUNTYICP, YEAR))
+     
+     #if (septreat){ # if septreat==TRUE, run regs separately by treatment group
+     # pretend septreat==TRUE first
+     septreat = TRUE
+       yearvars     <- glue("Year{years}")
+       if(length(controls)>1) {
+         controls = glue("+{glue_collapse(controls, sep='+')}") 
+       } else {
+         if(controls!="") controls = glue("+{glue_collapse(controls, sep='+')}") 
+       }
+       # for control group
+       did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), 
+                          data = regdata %>% filter(TREAT == 0))
+       vcov_ctrl    = vcovCL(did_reg_ctrl, type = "HC1")
+       # for treated group
+       did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), 
+                           data = regdata %>% filter(TREAT == 1))
+       vcov_treat    = vcovCL(did_reg_treat, type = "HC1")
+       # make dataframe for output to return 
+       if (table) { # for stargazer
+         list(did_reg_ctrl, vcov_ctrl, did_reg_treat, vcov_treat)
+       } else {
+         effects <- data.frame(y      = c(sapply(yearvars, function (.x) did_reg_ctrl$coefficients[[.x]]), 0),
+                               depvar = depvar,
+                               year   = c(years, yearomit),
+                               var    = c(sapply(yearvars, function(.x) as.numeric(diag(vcov_ctrl)[[.x]])), 0),
+                               treat  = "Control") %>%
+           rbind(data.frame(y      = c(sapply(yearvars, function (.x) did_reg_treat$coefficients[[.x]]), 0),
+                            depvar = depvar,
+                            year   = c(years, yearomit),
+                            var    = c(sapply(yearvars, function(.x) as.numeric(diag(vcov_treat)[[.x]])), 0),
+                            treat  = "Treated")) %>%
+           mutate(y_ub = y + 1.96*sqrt(var),
+                  y_lb = y - 1.96*sqrt(var))
+         View(effects)
+       }
+     #} # end SEPTREAT = TRUE 
+      septreat = FALSE
+     else { # otherwise, if septreat==FALSE, run standard DiD regression
+       # vector of interaction terms
+       interact_vars <- glue("TREATx{years}")
+       yearvars <- glue("Year{years}")
+       # run reg: include year and county FE + interaction terms + any controls
+       did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + 
+                       cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), 
+                     data = regdata)
+       verbose = TRUE
+       if (verbose){
+         print(summary(did_reg))
+       }
+       # clustered standard errors (hc1 equiv to ,robust in stata i think? double check this) 
+       ##! Yes, I believe vcov hetero = same as HC1 = same as robust SE in Stata.
+       vcov = vcovCL(did_reg, type = "HC1")
+       # return table of estimates as output
+       if (table){
+         list(did_reg, vcov)
+       }
+       else {
+         # make dataframe for output -- y is coef, var is estimated variance using clustered standard errors
+         effects <- data.frame(y      = c(sapply(interact_vars, function (.x) did_reg$coefficients[[.x]]), 0),
+                               depvar = depvar,
+                               year   = c(years, yearomit),
+                               var    = c(sapply(interact_vars, function(.x) as.numeric(diag(vcov)[[.x]])), 0)) %>%
+           mutate(y_ub = y + 1.96*sqrt(var),
+                  y_lb = y - 1.96*sqrt(var))
+       }
+     } # end ifelse
+    ## end deconstructing did_graph_data -- back to did_graph
+    did_data_temp <- effects
+    #______________________________________________________
+      
     ## FIX FOR SEPTREAT == TRUE!!! ##! ? 
     did_data <- did_data_temp %>%
-      mutate(group = depvarnames[[1]], year_graph = did_data_temp$year)
-  }
-  else{
+      mutate(group      = depvarnames[[1]], 
+             year_graph = did_data_temp$year)
+
+    # if more than 1 variable
     if (septreat){
       print("Error: can only use septreat for single variable")
       return(NA)
@@ -688,28 +793,28 @@ filename = glue("numteach_neighbor")
       did_datasets[[i]] <- did_data_temp
     }
     did_data <- bind_rows(did_datasets)
-  }
   
   if(verbose){
     print(did_data)
   }
   
-  if (septreat){
-    # creating graph
-    graph_out <- ggplot(did_data, aes(x = year_graph, 
-                                      y = y, 
-                                      color = treat, 
-                                      shape = treat)) + 
-      geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
-      geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
-      annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
-      geom_point(size = 4) + labs(x = "Year", y = yvar, color = "", shape = "") + theme_minimal() + 
-      theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
-    
-    return(graph_out)
-  }
+# make graphs
+septreat=TRUE
+#if (septreat){ # if only one dep var
+  graph_out <- ggplot(did_data, aes(x = year_graph, 
+                                    y = y, 
+                                    color = treat, 
+                                    shape = treat)) + 
+    geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
+    geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
+    annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
+    geom_point(size = 4) + labs(x = "Year", y = yvar, color = "", shape = "") + theme_minimal() + 
+    theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
   
-  # creating graph
+  #return(graph_out)
+
+  septreat=FALSE
+  # if more than one dep var
   graph_out <- ggplot(did_data, aes(x = year_graph, 
                                     y = y, 
                                     color = factor(group, levels = depvarnames), 
@@ -720,26 +825,33 @@ filename = glue("numteach_neighbor")
     annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
     geom_point(size = 4) + labs(x = "Year", y = yvar, color = "", shape = "") + theme_minimal() + 
     theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
-  
-  if (!is.na(ymax) | !is.na(ymin)){
-    if (ymax > max(did_data$y_ub) & ymin < min(did_data$y_lb)){
-      graph_out <- graph_out + ylim(ymin,ymax) + geom_text(aes(x = 1935.5, y = ymin + (ymax-ymin)/10, label = "Marriage Bars \n Removed") ,color = "#656565")   
+  # adjust ymin/ymax 
+  if (!is.na(ymax) | !is.na(ymin)){ # if ymin/ymax bounds are specified, and ...
+    if (ymax > max(did_data$y_ub) & ymin < min(did_data$y_lb)){ # the observed ymin/ymax are within said bounds
+      graph_out <- graph_out + 
+        ylim(ymin,ymax) + 
+        geom_text(aes(x = 1935.5, y = ymin + (ymax-ymin)/10, 
+                      label = "Marriage Bars \n Removed"), color = "#656565")   
     }
-    else{
-      print("Error: ymin/ymax out of bounds")
-      graph_out <- graph_out + geom_text(aes(x = 1935.5, y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
+    else{ # the observed ymin/ymax are outside of said bounds
+      print("Warning: ymin/ymax out of bounds") ##! changed from "Error" just so that it doesn't seem like a calc was wrong!
+      graph_out <- graph_out + geom_text(aes(x = 1935.5, 
+                                             y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, 
+                                             label = "Marriage Bars \n Removed"), color = "#656565") 
     }
   }
-  else{
-    graph_out <- graph_out + geom_text(aes(x = 1935.5, y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
+  else{ # no ymin/ymax bound was specified
+    graph_out <- graph_out + geom_text(aes(x = 1935.5, 
+                                           y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, 
+                                           label = "Marriage Bars \n Removed"), color = "#656565") 
   }
-  
+  # save graphs
   if (!is.na(filename) & !slides){ #saving graph in folder for paper figs
     ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
   }
   if (!is.na(filename) & slides){ #changing text size for slides and saving in folder for slide figs
-    ggsave(glue("{outfigs}/slides/{filename}.png"), graph_out + theme(text = element_text(size = 18), axis.text = element_text(size = 14)), width = 8, height = 5)
+    ggsave(glue("{outfigs}/slides/{filename}.png"), graph_out + 
+             theme(text = element_text(size = 18), 
+                   axis.text = element_text(size = 14)), width = 8, height = 5)
   }
   return(graph_out)
-}
-
