@@ -14,7 +14,7 @@ for (year in seq(1910,1940,10)){
   
   # creating temporary spouse database
   dbExecute(con, glue("CREATE OR REPLACE TEMP TABLE censusrawspouse{year} AS SELECT SERIAL, PERNUM AS SPLOC, OCCSCORE AS OCCSCORE_SP, OCC1950 AS OCC1950_SP, AGE AS AGE_SP, 
-                      RACE AS RACE_SP, SEX AS SEX_SP FROM censusraw{year}"))
+                      RACE AS RACE_SP, SEX AS SEX_SP, CLASSWKR AS CLASSWKR_SP, LABFORCE AS LABFORCE_SP FROM censusraw{year}"))
 
   # spouse linking: left join of census raw with itself by serial (same household id) and by spousenum = personnum (spousenum ids the person number of one's spouse)
   dbExecute(con, glue("CREATE OR REPLACE TABLE censusraw{year} AS SELECT * FROM censusraw{year} LEFT JOIN censusrawspouse{year} USING (SERIAL, SPLOC)"))
