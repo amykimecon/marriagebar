@@ -12,7 +12,6 @@ allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
 
 # grouping by year
 samp_byyear <- allyears_raw_samp %>% 
-  group_by(YEAR) %>% ##! why group_by here? 
   mutate(demgroup   = case_when(SEX == 1 ~ "Men",
                               SEX == 2 & (MARST == 6 | MARST == 3 | MARST == 4 | MARST == 5) ~ "Unmarried Women",
                               TRUE ~ "Married Women"),
@@ -66,7 +65,7 @@ countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
             PCT_MARR        = sum(ifelse(AGE >= 18 & SEX == 2 & MARST %in% c(1,2), 1, 0))/sum(ifelse(AGE >= 18 & SEX == 2, 1, 0)), #share adult women married
             PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)) #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
             ) %>%
-  collect() %>% #pulling into R as dataframe ##! Why do we need to do this? 
+  collect() %>%
   addvars_county() #adding county-level variables (treatment status, FIPS codes, etc.)
 #!#! CHECKED 
 
@@ -98,7 +97,7 @@ countysumm_occ <- tbl(con, "censusrawall") %>%
             pct_sp_teach     = mean(teacher_SP), #share with teacher spouses
             pct_sp_teach_w   = sum(ifelse(teacher_SP == 1 & demgroup!="M",1,0))/sum(ifelse(demgroup!="M",1,0)), #share women with teacher spouses
             pct_sp_teach_m   = sum(ifelse(teacher_SP == 1 & demgroup=="M",1,0))/sum(ifelse(demgroup=="M",1,0)), #share men with teacher spouses
-            avg_occscore     = mean(OCCSCORE_SP, na.rm=TRUE), #avg occscore of spouse ##! Where is this generated, and how does it differ from OCC1950_SP? So far we have OCC1950_SP
+            avg_occscore     = mean(OCCSCORE_SP, na.rm=TRUE), #avg occscore of spouse 
             avg_occscore_w   = mean(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE), #avg occscore of spouse for women
             avg_occscore_m   = mean(ifelse(demgroup == "M", OCCSCORE_SP, NA), na.rm=TRUE), #avg occscore of spouse for men
             med_occscore     = median(OCCSCORE_SP, na.rm=TRUE), #median occscore of spouse
@@ -118,7 +117,8 @@ countysumm_occ <- tbl(con, "censusrawall") %>%
 #________________________________________________________
 ## Initially combine county and county-occ data just for matching
 countysumm_raw <- countysumm_gen %>% 
-  full_join(countysumm_occ, by = c("YEAR", "STATEICP", "COUNTYICP")) 
+  full_join(countysumm_occ, by = c("YEAR", "STATEICP", "COUNTYICP")) %>% 
+  ungroup()
 
 # main sample of counties (FIPS)
 # (default is filter on counties with at least 10 white teachers in 
@@ -203,10 +203,10 @@ write_csv(link1point5, glue("{cleandata}/link1point5_wtnc.csv"))
 #   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
 #   matching_join(matchlist)
 
-# group 2: unmarried women non-teachers in 1930 ##! Why only in 1930?
+# group 2: unmarried women non-teachers in pre-period
 link2 <- linkview %>% 
   filter(teacher_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 10 & RACE_base == 1) %>% 
-  summlinks() %>% ##! No n=5 restriction here? The default is 10
+  summlinks() %>%
   matching_join(matchlist)
 write_csv(link2, glue("{cleandata}/link2_swnt.csv"))
 #!#! CHECKED 
@@ -214,17 +214,10 @@ write_csv(link2, glue("{cleandata}/link2_swnt.csv"))
 # group 3: married women non-teachers in pre-period
 link3 <- linkview %>% 
   filter(teacher_base == 0 & demgroup_base == "MW" & AGE_base <= 50 & RACE_base == 1) %>% 
-  summlinks() %>% ##! No n=5 restriction here? The default is 10
+  summlinks() %>%
   matching_join(matchlist)
 write_csv(link3, glue("{cleandata}/link3_mwnt.csv"))
 #!#! CHECKED 
-
-# # summarizing links -- ##! Keep this? 
-# link1 %>% group_by(YEAR, TREAT) %>% summarize(across(starts_with("pct"), mean),n=n())
-# link2 %>% group_by(YEAR) %>% summarize(across(starts_with("pct"), mean))
-# link3 %>% group_by(YEAR) %>% summarize(across(starts_with("pct"), mean))
-# 
-# countysumm %>% filter(match_samp3 == 1) %>% group_by(YEAR, TREAT) %>% summarize( n=n())
 
 
 dbDisconnect(con, shutdown = TRUE)

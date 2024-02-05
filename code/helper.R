@@ -56,7 +56,6 @@ addvars_county <- function(dataset){
 # Takes year x county-level dataset and returns vector of FIPS of counties in main sample 
 #   (only keeping balanced panel of counties with at least n white teachers in 
 #   1930 and 1940 and non-missing FIPS)
-##! Here n is 10, but it is 5 elsewhere. Maybe stick to the same number as defaults?
 mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
   # do nothing if FIPS already exists in dataset
   if (!("FIPS" %in% names(dataset))){
@@ -85,7 +84,6 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
     print(glue("Original Dataset: {length(unique(dataset$FIPS))} counties"))
     print(glue("Main Sample (Counties with >= {n} teachers in 1930 and 1940): {length(unique(outdata$FIPS))} counties"))
     print(glue("Dropped {100*(1-length(unique(outdata$FIPS))/length(unique(dataset$FIPS)))}% of Observations")) 
-    ##! Is this correct? I changed it to 1-(a/b) instead of (a/b)
   }
   return(unique(outdata$FIPS))
 } #!#! CHECKED
@@ -110,7 +108,7 @@ mergefips <- function(dataset){
   outdata <- left_join(dataset, fipscrosswalk, by = c("STATEICP" = "STICPSR"))  %>% 
     mutate(FIPSRAW = paste0(str_pad(FIPS, 2, "left", pad = "0"),
                             str_pad(COUNTYICP, 4, "left", pad = "0")),
-           FIPS    = ifelse(substr(FIPSRAW,6,6) == "0", substr(FIPSRAW,1,5), NA)) %>%  ##! Why this step?
+           FIPS    = ifelse(substr(FIPSRAW,6,6) == "0", substr(FIPSRAW,1,5), NA)) %>% 
     select(-c(NAME, STNAME, FIPSRAW))
 
   return(outdata)
@@ -277,7 +275,6 @@ mainlinksamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
     print(glue("Original Dataset: {length(unique(dataset$FIPS))} counties"))
     print(glue("Main Sample (Counties with >= {n} teachers in 1930 and 1940): {length(unique(outdata$FIPS))} counties"))
     print(glue("Dropped {100*(1-length(unique(outdata$FIPS))/length(unique(dataset$FIPS)))}% of Observations"))
-    ##! Should this also be 1-(a/b)? Vs (a/b)? As in mainsamp?
   }
   return(unique(outdata$FIPS))
 } #!#! CHECKED
@@ -300,10 +297,6 @@ matching <- function(longdata, varnames, distance = "robust_mahalanobis",
   mainsampfips = mainsamp(longdata)
   
   # create lists of names of variables for matching (varnames in 1920, 1930, and retail sales if retail=TRUE)
-  ##! Delete these commented out sections?
-  # filter_varnames = c(glue("{varnames}_1930"), glue("{varnames}_growth1930"), 
-  #                     glue("{varnames}_growth1920")) #c(glue("{varnames}_1910"), glue("{varnames}_1920"),glue("{varnames}_1930"))
-  # filter_varnames = c(glue("{varnames}_1930"),glue("{varnames}_1920"),glue("{varnames}_1910"))
   filter_varnames = c(glue("{varnames}_growth1930"),glue("{varnames}_growth1920"))
   match_varnames  = c(filter_varnames,"URBAN_1910", "URBAN_1920", "URBAN_1930")
   
@@ -354,7 +347,6 @@ matching <- function(longdata, varnames, distance = "robust_mahalanobis",
                             filter(TREAT == 1) %>% 
                             mutate(STATE_MATCH = STATEICP, FIPS_MATCH = FIPS)), 
                 c(FIPS, STATE_MATCH, FIPS_MATCH)))
-  ##! Gets "adding missing grouping variable, STATEICP" -- where is this group coming from? Maybe should ungroup() prior to this step?
 } #!#! CHECKED
 
 # testing matching between control and treatment for various samples on variable 'varname'
@@ -387,7 +379,7 @@ match_test <- function(dataset, varnames){
   }
   
   return(graph_out)
-} ##! Archive? Used in did analysis but commented out.
+}
 
 # joining outputs of matching (where matches is a list of matching sets) with dataset;
 # specifically, adds indicators "match_samp", "match_samp2" to dataset that flag whether
@@ -398,12 +390,11 @@ matching_join <- function(dataset, matchlist){
     if (i == 1){ # for first matching dataset, keep state of match
       dataset <- dataset %>% 
         left_join(matchlist[[i]] %>% mutate(match = 1) %>% select(-FIPS_MATCH), # note: keep STATE_MATCH here for state_matching fcn
-                  by = c("FIPS", "STATEICP")) %>%  
+                  by = c("FIPS")) %>%  
         mutate(match_samp = ifelse(match == 1, 1, 0))
     }
     else{
       dataset[[glue("match_samp{i}")]] <- ifelse(dataset$FIPS %in% matchlist[[i]]$FIPS, 1, 0)
-      ##! There is no match=1 generated for the second matching list, only for the first? Is this correct?
     }
   }
   return(dataset)
@@ -413,6 +404,7 @@ matching_join <- function(dataset, matchlist){
 # assign counties to 'law passing' in 1933 or 1938 and use outcome Married After/Married Before
 # matchtype is a string equal to either `neighbor` (using neighboring states analysis) 
 # or `match` (using matched counties analysis)
+# NOTE: ONLY COVERS MATCHSAMP1 (first matched dataset)
 state_matching <- function(dataset, matchtype){
   # gen variable indicating in which state the county in question has been matched to
   if (matchtype == "neighbor"){
@@ -421,8 +413,8 @@ state_matching <- function(dataset, matchtype){
                                                           TRUE ~ NA_integer_))
   }
   else{
-    outdata <- dataset %>% mutate(STATE_MATCH = case_when(match == 1 ~ STATE_MATCH, ##! This only fills STATE_MATCH for the 1st match list-- maybe should also add when match_samp2==1?
-                                                          TREAT == 1 ~ STATEICP, ##! Is STATEICP==STATE_MATCH for TREAT==1?
+    outdata <- dataset %>% mutate(STATE_MATCH = case_when(match == 1 ~ STATE_MATCH,
+                                                          TREAT == 1 ~ STATEICP,
                                                           TRUE ~ NA_integer_))
   }
   
@@ -542,8 +534,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
 
   # compiling all regression outputs (in format for graphing) from different dependent variables
   if (nvars == 1){
-    did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, years, yearomit, verbose, septreat) 
-    ## FIX FOR SEPTREAT == TRUE!!! ##! ? 
+    did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, years, yearomit, verbose, septreat, table = FALSE) 
     did_data <- did_data_temp %>%
       mutate(group = depvarnames[[1]], year_graph = did_data_temp$year)
   }
