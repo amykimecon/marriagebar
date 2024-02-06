@@ -59,6 +59,7 @@ source("./code/helper.R")
 samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
 countysumm  <- read_csv(glue("{cleandata}/countysumm_new.csv")) # county X year-level stats (most analysis uses this)
 link1       <- read_csv(glue("{cleandata}/link1_swt.csv"))
+link1point5 <- read_csv(glue("{cleandata}/link1point5_wtnc.csv"))
 link2       <- read_csv(glue("{cleandata}/link2_swnt.csv"))
 link3       <- read_csv(glue("{cleandata}/link3_mwnt.csv"))
 

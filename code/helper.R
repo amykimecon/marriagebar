@@ -62,18 +62,20 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
     dataset <- dataset %>% mergefips()
   }
   
-  # identifying counties that are observed in all four years (1910, 20, 30, 40)
+  # identifying counties that are observed in all years (1910, 20, 30, 40, 50)
   balanceddata <- dataset %>% 
     filter(YEAR != 1900) %>% 
     group_by(FIPS) %>% 
     summarize(n = n()) %>% 
-    filter(n == 4)
+    filter(n == 5)
   
   # filter to FIPS with at least n white teachers in 1930 and 40
+  fips1950 <- filter(dataset, YEAR == 1950 & NWHITETEACH >= n)$FIPS
   fips1940 <- filter(dataset, YEAR == 1940 & NWHITETEACH >= n)$FIPS
   outdata <- dataset %>% filter(YEAR == 1930 & NWHITETEACH >= n & 
-                                  !is.na(FIPS) & #only keeping FIPS with at least n white teachers in 1930
-                                  FIPS %in% fips1940) #AND only keeping FIPS with at least n white teachers in 1940
+                                  !is.na(FIPS) &       #only keeping FIPS with at least n white teachers in 1930
+                                  FIPS %in% fips1940 & #AND at least n white teachers in 1940
+                                  FIPS %in% fips1950)  #AND at least n white teachers in 1950
   
   # keep only counties observed in all four years if balanced==TRUE
   if (balanced){
@@ -82,7 +84,7 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
   
   if (verbose){
     print(glue("Original Dataset: {length(unique(dataset$FIPS))} counties"))
-    print(glue("Main Sample (Counties with >= {n} teachers in 1930 and 1940): {length(unique(outdata$FIPS))} counties"))
+    print(glue("Main Sample (Counties with >= {n} teachers in 1930, 40, and 50): {length(unique(outdata$FIPS))} counties"))
     print(glue("Dropped {100*(1-length(unique(outdata$FIPS))/length(unique(dataset$FIPS)))}% of Observations")) 
   }
   return(unique(outdata$FIPS))
@@ -459,7 +461,7 @@ add_did_dummies <- function(dataset){
 #   if septreat = TRUE, runs regression for treatment and control groups separately
 did_graph_data <- function(dataset, depvar, controls = "", 
                            years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
-                           verbose = FALSE, table = FALSE, septreat = FALSE){ 
+                           verbose = FALSE, table = FALSE, septreat = FALSE){ ##! When is septreat used?
   # modifying dataset (adding interaction terms, FIPS vars for clustering, 
   #   filter to only include relevant years)
   regdata <- dataset %>% 
@@ -517,7 +519,8 @@ did_graph_data <- function(dataset, depvar, controls = "",
     if (verbose){
       print(summary(did_reg))
     }
-    # clustered standard errors (hc1 equiv to ,robust in stata) 
+    # clustered standard errors (hc1 equiv to ,robust in stata i think? double check this) 
+    ##! Yes, I believe vcov hetero = same as HC1 = same as robust SE in Stata.
     vcov = vcovCL(did_reg, type = "HC1")
     # return table of estimates as output
     if (table){
@@ -543,6 +546,8 @@ did_graph_data <- function(dataset, depvar, controls = "",
 #   and toggles for slides (default is for paper) 
 #   and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
 #   and pointspan, i.e. total width of all dots for a given year, default is 2
+##! I think I'm missing where we use septreat -- why does it need different treatment/sections
+##! than when there are multiple depvars?
 did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", 
                       years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
                       verbose = FALSE, yvar = "Coef on Treat X Year",
@@ -563,7 +568,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
                                     years, yearomit, 
                                     verbose, septreat, table = FALSE) 
     did_data      <- did_data_temp %>%
-      mutate(group      = depvarnames[[1]], 
+      mutate(group      = depvarnames[[1]], ##! Why do we need the group var? Redundant with depvarnames? 
              year_graph = did_data_temp$year)
   }
   else{ # if more than one depvar is specified
@@ -576,7 +581,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
     for (i in seq(1,nvars)){
       did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, 
                                       years, yearomit, verbose) %>%
-        mutate(group      = depvarnames[[i]],
+        mutate(group      = depvarnames[[i]], ##! Why do we need the group var? Redundant with depvarnames? 
                year_graph = year - pointspan/2 + (i-1)*(pointspan/(nvars - 1))) # shifting over so dots don't overlap
       did_datasets[[i]] <- did_data_temp
     }
@@ -590,7 +595,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
   if (septreat){ # if only one dep var
     graph_out <- ggplot(did_data, aes(x = year_graph, 
                                       y = y, 
-                                      color = treat,
+                                      color = treat, ##! Where is treat generated?
                                       shape = treat)) + 
       geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
       geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
@@ -619,7 +624,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
                         label = "Marriage Bars \n Removed"), color = "#656565")   
       }
       else{ # the observed ymin/ymax are outside of said bounds
-        print("Warning: ymin/ymax out of bounds") 
+        print("Warning: ymin/ymax out of bounds") ##! changed from "Error" just so that it doesn't seem like a calc was wrong!
         graph_out <- graph_out + geom_text(aes(x = 1935.5, 
                                                y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, 
                                                label = "Marriage Bars \n Removed"), color = "#656565") 
@@ -644,6 +649,9 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
 
 } #!#! CHECKED
 
+#__________________________
+# MISC ----
+#__________________________
 # graph treated vs control counties -- default is to plot whole country;
 # eastern is TRUE if want to show only eastern states
 graph_treatment <- function(dataset, eastern = FALSE, filename = NA){

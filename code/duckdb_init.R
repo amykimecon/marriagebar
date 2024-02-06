@@ -10,8 +10,9 @@
 sink("./logs/log_duckdb_init.txt", append=FALSE)
 
 # creating connection to duckdb database ----
-#con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
-con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=FALSE) ## TEMP OFF OF DROPBOX
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
+#for Carolyn, in case connection on Dropbox isn't working:
+#con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=FALSE) 
 
 #________________________________________________________
 # IPUMS CENSUS RAW FILES ----
@@ -42,7 +43,11 @@ for (year in seq(1910,1950,10)){
                           USING (SERIAL, SPLOC)"))
   toc()
   
-  # editing to include year (delete if IPUMS extract includes variable YEAR) ##! As in, it'll replace YEAR?
+  # TEMP FIX 20240206
+  if({year}==1950) {
+    dbExecute(con, "ALTER TABLE censusraw1950 DROP COLUMN YEAR")
+  }
+  # editing to include year (delete if IPUMS extract includes variable YEAR)
   dbExecute(con, glue("ALTER TABLE censusraw{year} ADD COLUMN YEAR INTEGER"))
   dbExecute(con, glue("UPDATE censusraw{year} SET YEAR = {year}"))
 }

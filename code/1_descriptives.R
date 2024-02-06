@@ -1,6 +1,9 @@
 ### DESCRIPTIVES
 ### AUTHOR: AMY KIM
 
+# open log ----
+sink("./logs/log_1_descriptives.txt", append=FALSE)
+
 #_________________________________________________
 # MAP OF TREATMENT & CONTROL COUNTIES ----
 #_________________________________________________
@@ -83,7 +86,7 @@ ggplot(filter(countysumm, mainsamp == 1) %>%
 ggsave(filename = glue("{outfigs}/paper/fig2_marteach_dist.png"), width = 8, height = 5)
 
 ## slides (teachers by year) ----
-for (yr in seq(1910,1940,10)){
+for (yr in seq(1910,1950,10)){
   ggplot(filter(countysumm, mainsamp == 1 & YEAR == yr) %>% 
            mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed")),
          aes(x = pct_mw_Teacher, color = factor(TREAT), fill = factor(TREAT))) + 
@@ -166,3 +169,6 @@ obs <- round(as.numeric(summ_stats_out[2,]), 0)
 writeLines(c("Obs.", "&", glue("{obs[1]} & {obs[2]} & {obs[3]} & {obs[4]}\\\\")), summtex)
 writeLines(c("\\hhline{-----}","\\end{tabular}"), summtex)
 close(summtex)
+
+# close log ----
+sink()

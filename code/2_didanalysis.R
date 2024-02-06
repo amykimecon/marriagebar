@@ -1,6 +1,9 @@
 ### CREATING DiD PLOTS (see helper.R for helper functions to run regressions and create graphs)
 ### AUTHOR: AMY KIM
 
+# open log ----
+sink("./logs/log_2_didanalysis.txt", append=FALSE)
+
 # initializing main datasets ----
 neighbor   <- countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1)
 neighborNC <- countysumm %>% filter(neighbor_sampNC == 1 & mainsamp == 1)
@@ -15,6 +18,7 @@ datanames  <- list("neighbor", "matched1", "matched2")
 #______________________________________________________
 # RESULT 1: COMPOSITION OF TEACHER WORKFORCE ----
 #______________________________________________________
+## figures ----
 # iterating through each sample in datasets
 for (i in 1:3){
   # OUTCOME: OVERALL SUPPLY OF TEACHERS
@@ -40,10 +44,11 @@ for (i in 1:3){
   Sys.sleep(2) #pause so i can see the graph output
 }
 
-# STARGAZER TABLE (neighbor sample only)
+## stargazer table (neighbor sample only) ----
 models         <- list()
 ses            <- list()
 sharereg_means <- c() #dep var mean in 1930
+# prepare table inputs
 i = 1
 for (coefname in c("num_Teacher","teacher_ratio","pct_mw_Teacher","pct_m_Teacher","pct_sw_Teacher", "pctw_wc_Teacher")){
   out_did        <- did_graph_data(neighbor, coefname, years = c(1940, 1950), table = TRUE) #returns list of [model, cov matrix]
@@ -52,16 +57,19 @@ for (coefname in c("num_Teacher","teacher_ratio","pct_mw_Teacher","pct_m_Teacher
   sharereg_means <- c(sharereg_means, mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]]))
   i = i + 1
 }
-
-stargazer(models, se=ses, keep = c("TREATx1940"),#omit = c("Constant","cluster*", "factor*"), 
+# gen table
+stargazer(models, se=ses, keep = c("TREATx1940", "TREATx1950"),#omit = c("Constant","cluster*", "factor*"), 
           out = glue("./tables/shareregs.tex"),
           float = FALSE,
           keep.stat = c('n','adj.rsq'),
           dep.var.caption = "Dependent Variable:",
           dep.var.labels.include = FALSE,
-          column.labels = c("\\# Teachers","Students/Teacher","\\% Teach Mar. Wom.", "\\% Teach Men", "\\% Teach Unmar. Wom.", "\\% Teach Wom. w/ Chil."),
-          column.separate = c(1,1,1,1,1, 1),
-          covariate.labels = c("Treated $\\times$ Post-Ban ($\\gamma_{1940}^{DD}$)"),
+          column.labels = c("\\# Teachers","Students/Teacher",
+                            "\\% Teach Mar. Wom.", "\\% Teach Men", 
+                            "\\% Teach Unmar. Wom.","\\% Teach Wom. w/ Chil."),
+          column.separate = c(1,1,1,1,1,1),
+          covariate.labels = c("Treated $\\times$ Post-Ban ($\\gamma_{1940}^{DD}$)",
+                               "Treated $\\times$ Post-Ban ($\\gamma_{1950}^{DD}$)"),
           add.lines = list(c("Dep. Var. 1930 Treated Mean", formatC(sharereg_means))),
           table.layout = "=lc#-t-as=")
 
@@ -72,19 +80,23 @@ stargazer(models, se=ses, keep = c("TREATx1940"),#omit = c("Constant","cluster*"
 linkdatasets <- list(link1 %>% filter(neighbor_samp == 1 & mainsamp == 1),
                      link2 %>% filter(neighbor_samp == 1 & mainsamp == 1),
                      link3 %>% filter(neighbor_samp == 1 & mainsamp == 1),
+                     
                      link1 %>% filter(match_samp == 1 & mainsamp == 1),
                      link2 %>% filter(match_samp == 1 & mainsamp == 1),
                      link3 %>% filter(match_samp == 1 & mainsamp == 1),
+                     
                      link1 %>% filter(match_samp2 == 1 & mainsamp == 1),
                      link2 %>% filter(match_samp2 == 1 & mainsamp == 1),
                      link3 %>% filter(match_samp2 == 1 & mainsamp == 1)
 )
-yvarlist <- rep(c("Unmarried Women Teachers", "Unmarried Women Non-Teachers", "Married Women Non-Teachers"),3)
+yvarlist    <- rep(c("Unmarried Women Teachers", "Unmarried Women Non-Teachers", "Married Women Non-Teachers"),3)
 yvarlablist <- rep(c("swt","swnt","mwnt"),3)
 linklablist <- c(rep("neighbor",3), rep("matched1", 3), rep("matched2", 3))
 
+## figures ----
 for (i in 1:9){
-  # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
+  # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
+  # TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
   did_graph(dataset     = linkdatasets[[i]],
             depvarlist  = c("pct_mwt", "pct_mwnt", "pct_mwnilf", "pct_sw"), 
             depvarnames = c("Married Teacher", "Married Non-Teacher in LF", "Married Not in LF", "Not Married"),
@@ -99,30 +111,32 @@ for (i in 1:9){
   
 }
 
-# STARGAZER TABLE
-models1 <- list()
-ses1    <- list()
+## stargazer tables ----
+models1        <- list()
+ses1           <- list()
 linkreg_means1 <- c()
-models2 <- list()
-ses2    <- list()
+models2        <- list()
+ses2           <- list()
 linkreg_means2 <- c()
-models3 <- list()
-ses3    <- list()
+models3        <- list()
+ses3           <- list()
 linkreg_means3 <- c()
+# prepare data 
 i = 1
 for (coefname in c("pct_mwt", "pct_mwnt", "pct_mwnilf", "pct_sw")){
+  # for link 1
   out_did <- did_graph_data(link1 %>% filter(neighbor_samp == 1 & mainsamp == 1), 
                             coefname, years = c(1940), table = TRUE)
   models1[[i]] <- out_did[[1]]
   ses1[[i]] <- sqrt(diag(out_did[[2]]))
   linkreg_means1 <- c(linkreg_means1, mean(filter(link1, YEAR == 1930 & TREAT == 1)[[coefname]]))
-  
+  # for link 2
   out_did2 <- did_graph_data(link2 %>% filter(neighbor_samp == 1 & mainsamp == 1), 
                              coefname, years = c(1940), table = TRUE)
   models2[[i]] <- out_did2[[1]]
   ses2[[i]] <- sqrt(diag(out_did2[[2]]))
   linkreg_means2 <- c(linkreg_means2, mean(filter(link2, YEAR == 1930 & TREAT == 1)[[coefname]]))
-  
+  # for link 3
   out_did3 <- did_graph_data(link3 %>% filter(neighbor_samp == 1 & mainsamp == 1), 
                              coefname, years = c(1940), table = TRUE)
   models3[[i]] <- out_did3[[1]]
@@ -130,7 +144,7 @@ for (coefname in c("pct_mwt", "pct_mwnt", "pct_mwnilf", "pct_sw")){
   linkreg_means3 <- c(linkreg_means3, mean(filter(link3, YEAR == 1930 & TREAT == 1)[[coefname]]))
   i = i + 1
 }
-
+# gen tables
 stargazer(models1, se=ses1, omit = c("Constant","cluster*", "factor*", "Year*"),
           out = glue("./tables/linkregs_swt.tex"),
           float = FALSE,
@@ -174,7 +188,8 @@ stargazer(models3, se=ses3, omit = c("Constant","cluster*", "factor*", "Year*"),
 #______________________________________________________
 #  RESULT 3: HH OUTCOMES ----
 #______________________________________________________
-# # OUTCOME: SHARE TEACHERS WC/WNC/M (neighbor sample)
+## figures ----
+# # OUTCOME: SHARE TEACHERS WC/WNC/M (neighbor sample) ##! Keep?
 # did_graph(dataset = neighbor, 
 #           depvarlist = c("pct_m_Teacher", "pct_wc_Teacher", "pct_wnc_Teacher"), 
 #           depvarnames = c("Men", "Women with Children", "Women without Children"),
@@ -263,21 +278,20 @@ did_graph(dataset     = link1 %>% filter(neighbor_sampNC == 1 & mainsamp == 1),
 #           yvar = glue("DiD Estimate: Share of Women Teachers Without Children in t-10"))
 # 
 
-
-# STARGAZER TABLE
+## stargazer tables ----
 models4 <- list()
 ses4 <- list()
 reg_means4 <- c()
 i = 1
 for (coefname in c("avg_occscore_w_Teacher", "avg_occscore_m_Teacher", "pct_sp_teach_m_Teacher")){
-  out_did <- did_graph_data(neighbor, coefname, years = c(1940), table = TRUE)
+  out_did <- did_graph_data(neighbor, coefname, years = c(1940, 1950), table = TRUE)
   models4[[i]] <- out_did[[1]]
   ses4[[i]] <- sqrt(diag(out_did[[2]]))
   reg_means4 <- c(reg_means4, mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]], na.rm=TRUE))
   i = i + 1
 }
 
-stargazer(models4, se=ses4, keep = c("TREATx1940"), 
+stargazer(models4, se=ses4, keep = c("TREATx1940","TREATx1950"), 
           out = glue("./tables/outregs_spouse.tex"),
           float = FALSE,
           keep.stat = c('n','adj.rsq'),
@@ -285,10 +299,16 @@ stargazer(models4, se=ses4, keep = c("TREATx1940"),
           dep.var.labels.include = FALSE,
           column.labels = c("Avg. Spouse OCCSCORE of Mar. Wom. Teachers", "Avg. Spouse OCCSCORE of Mar. Men Teachers", "Share Mar. Men Teachers w/ Teacher Spouse"),
           column.separate = c(1,1,1),
-          covariate.labels = c("Treated $\\times$ Post-Ban ($\\gamma_{1940}^{DD}$)"),
+          covariate.labels = c("Treated $\\times$ Post-Ban ($\\gamma_{1940}^{DD}$)",
+                               "Treated $\\times$ Post-Ban ($\\gamma_{1940}^{DD}$)"),
           add.lines = list(c("Dep. Var. 1930 Mean", formatC(reg_means4))),
           table.layout = "=lc#-t-as=")
 
+# close log ----
+sink() 
+
+# code graveyard ---- 
+##! keep? 
 # ## Initializing key datasets
 # matched <- countysumm %>% filter(match_samp == 1 & mainsamp == 1)
 # neighbor <- countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1)
