@@ -553,7 +553,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
 
 # graph treated vs control counties -- default is to plot whole country;
 # eastern is TRUE if want to show only eastern states
-graph_treatment <- function(dataset, eastern = FALSE, filename = NA){
+graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALSE){
   exclude_st = c("HI", "AK") # states to exclude
   if (eastern){
     exclude_st = c("CA", "CO", "OR", "TX", "WA", 
@@ -562,14 +562,28 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA){
                    "HI", "KS", "NE", "OK",
                    "MN", "AR", "MO", "IA", "LA")
   }
-  graph_out <- plot_usmap(data = dataset %>% 
-                            filter(YEAR == 1940) %>% 
-                            mutate(fips = FIPS, TREAT = ifelse(TREAT == 1, "Treated", "Control")) %>% 
-                            select(c(fips, TREAT)), 
-                          values = "TREAT", color = NA, exclude = exclude_st) +
-    theme(legend.position = "right", text = element_text(size = 14)) + 
-    scale_fill_manual(breaks = c("Treated", "Control"), values = c(treat_col, control_col)) + 
-    labs(fill = "")
+  if (full){ #if full matching, graph weights gradient
+    graph_out <- plot_usmap(data = dataset %>% 
+                              filter(YEAR == 1940) %>% 
+                              mutate(fips = FIPS, weights = cut(weights, quantile(weights, probs = seq(0,1,0.2)))) %>% 
+                              select(c(fips, weights)), 
+                            values = "weights", exclude = exclude_st, color = NA) + 
+      theme(legend.position = "right", text = element_text(size = 14)) + 
+      scale_fill_manual(values = colorRampPalette(c("white",control_col))(5)) +
+      #scale_fill_gradient(low = control_col_min, high = control_col_max) + 
+      geom_sf(data = us_map("counties", include = c("KY", "NC")), fill = treat_col, color = NA) +
+      labs(fill = "")
+  }
+  else{
+    graph_out <- plot_usmap(data = dataset %>% 
+                              filter(YEAR == 1940) %>% 
+                              mutate(fips = FIPS, TREAT = ifelse(TREAT == 1, "Treated", "Control")) %>% 
+                              select(c(fips, TREAT)), 
+                            values = "TREAT", color = NA, exclude = exclude_st) +
+      theme(legend.position = "right", text = element_text(size = 14)) + 
+      scale_fill_manual(breaks = c("Treated", "Control"), values = c(treat_col, control_col)) + 
+      labs(fill = "")  
+  }
   if (!is.na(filename)){
     ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
   }
