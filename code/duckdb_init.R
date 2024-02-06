@@ -19,9 +19,11 @@ for (year in seq(1910,1940,10)){
   # spouse linking: left join of census raw with itself by serial (same household id) and by spousenum = personnum (spousenum ids the person number of one's spouse)
   dbExecute(con, glue("CREATE OR REPLACE TABLE censusraw{year} AS SELECT * FROM censusraw{year} LEFT JOIN censusrawspouse{year} USING (SERIAL, SPLOC)"))
   
-  # editing to include year (delete if IPUMS extract includes variable YEAR)
-  dbExecute(con, glue("ALTER TABLE censusraw{year} ADD COLUMN YEAR INTEGER"))
-  dbExecute(con, glue("UPDATE censusraw{year} SET YEAR = {year}"))
+  # editing to include year if not already in table
+  if (dbGetQuery(con, glue("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'censusraw{year}' AND COLUMN_NAME = 'YEAR'")) == 1){
+    dbExecute(con, glue("ALTER TABLE censusraw{year} ADD COLUMN YEAR INTEGER"))
+    dbExecute(con, glue("UPDATE censusraw{year} SET YEAR = {year}"))
+  }
 }
 
 # concatenating all census years into one table
