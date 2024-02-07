@@ -330,8 +330,7 @@ matching <- function(longdata, varnames, distance = "robust_mahalanobis", method
   
   # keep only counties with complete non-missing data on matching vars
   matchdata <- matchdata %>%
-    filter(if_all(all_of(filter_varnames), function(.x) !is.na(.x) & .x != Inf)) %>% 
-    filter(!is.na(URBAN_1910) & !is.na(URBAN_1920) & !is.na(URBAN_1930))
+    filter(if_all(all_of(filter_varnames), function(.x) !is.na(.x) & .x != Inf))
   print(glue("Retention: {length(unique(matchdata$FIPS))} out of {length(unique(longdata$FIPS))} counties"))
   
   # matching treated counties with nontreated counties, drawing matched counties
@@ -398,23 +397,26 @@ add_did_dummies <- function(dataset){
   return(dataset)
 }
 
-# Creating data for graphing dynamic DiD 
+# Creating data for graphing dynamic DiD (if using weights, must be in dataset with name weight)
 # takes in dataset, depvar (dependant variable), any controls (string of form '+ X1 + X2 +...'), years to include, year to omit
 # if table = TRUE, returns list of regression model output and vcov for stargazer table formatting
 # if septreat = TRUE, runs regression for treatment and control groups separately
 did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, table = FALSE, septreat = FALSE){
-  # modifying dataset (adding interaction terms, setting cluster to FIPS, filtering to only include relevant years)
+  # modifying dataset (adding interaction terms, setting cluster to FIPS, filtering to only include relevant years, setting weights to 1 if don't exist)
   regdata <- dataset %>% 
     add_did_dummies() %>% 
     filter(YEAR %in% c(years, yearomit)) %>% 
-    mutate(cluster = as.character(FIPS))
+    mutate(cluster = as.character(FIPS),
+           weight = ifelse("weight" %in% names(dataset), weight, 1))
   
   # regressing treatment groups separately
   if (septreat){
     yearvars <- glue("Year{years}")
-    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), data = regdata %>% filter(TREAT == 0))
+    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), 
+                       data = regdata %>% filter(TREAT == 0), weights = weight)
     vcov_ctrl = vcovCL(did_reg_ctrl, type = "HC1")
-    did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), data = regdata %>% filter(TREAT == 1))
+    did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), 
+                        data = regdata %>% filter(TREAT == 1), weights = weight)
     vcov_treat = vcovCL(did_reg_treat, type = "HC1")
     
     if (table){
@@ -440,7 +442,8 @@ did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920,
   yearvars <- glue("Year{years}")
   
   # running regression: include year and county fixed effects + interaction terms + any controls
-  did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), data = regdata)
+  did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), 
+                data = regdata, weights = weight)
   
   if (verbose){
     print(summary(did_reg))

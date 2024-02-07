@@ -6,17 +6,18 @@ neighbor   <- countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1)
 neighborNC <- countysumm %>% filter(neighbor_sampNC == 1 & mainsamp == 1)
 neighborKY <- countysumm %>% filter(neighbor_sampKY == 1 & mainsamp == 1)
 
-matched1   <- countysumm %>% filter(match_samp == 1 & mainsamp == 1)
-matched2   <- countysumm %>% filter(match_samp2 == 1 & mainsamp == 1)
+matched1   <- countysumm %>% filter(match_weight1 != 0 & mainsamp == 1)
+matched2   <- countysumm %>% filter(match_weight2 != 0 & mainsamp == 1)
+matched3   <- countysumm %>% filter(match_weight3 != 0 & mainsamp == 1) %>% mutate(weight = match_weight3)
 
-datasets   <- list(neighbor, matched1, matched2)
-datanames  <- list("neighbor", "matched1", "matched2")
+datasets   <- list(neighbor, matched1, matched2, matched3)
+datanames  <- list("neighbor", "matched1", "matched2", "matched3")
 
 #______________________________________________________
 # RESULT 1: COMPOSITION OF TEACHER WORKFORCE ----
 #______________________________________________________
 # iterating through each sample in datasets
-for (i in 1:3){
+for (i in 1:4){
   # OUTCOME: OVERALL SUPPLY OF TEACHERS
   did_graph(dataset     = datasets[[i]], 
             depvarlist  = c("num_Teacher"),

@@ -159,7 +159,7 @@ countysumm <- countysumm_raw %>%
   # state_matching(matchtype = "neighbor") 
 #!#! CHECKED
 
-write_csv(countysumm, glue("{cleandata}/countysumm_new.csv"))
+write_csv(countysumm, glue("{cleandata}/countysumm_newmatch.csv"))
 
 #________________________________________________________
 # LINKED DATA ----
