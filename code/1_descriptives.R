@@ -6,9 +6,9 @@
 #_________________________________________________
 ## neighbor ----
 graph_treatment(countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1), 
-                eastern = TRUE, 
                 filename = "treatmap_neighbor") + 
   ggtitle("Neighbor Sample")
+
 ## match 1 ----
 graph_treatment(countysumm %>% filter(match_weight1 != 0 & mainsamp == 1), 
                 filename = "treatmap_matched1") + 
@@ -24,6 +24,63 @@ graph_treatment(countysumm %>% filter(match_weight3 != 0 & mainsamp == 1) %>% mu
                 filename = "treatmap_matched3", full = TRUE) + 
   ggtitle("Matched Sample 3")
 
+#_________________________________________________
+# MATCHING TEST FOR TREATMENT AND CONTROL: BOXPLOTS
+#_________________________________________________
+#varnames <- c("URBAN","LFP", "PCT_LIT")
+varnames <-  c("URBAN","LFP", "LFP_MW", "POP", "AGE", "PCT_LIT", "PCT_WHITE", "pct_sw_Teacher", "pct_mw_Teacher", "NCHILD","PCT_MARR")
+
+countysummwide <- countysumm %>% filter(mainsamp==1)%>%
+  pivot_wider(id_cols = c(match_weight1, match_weight2, match_weight3, STATEICP, COUNTYICP, FIPS, mainsamp, TREAT, neighbor_samp),
+                                             names_from  = YEAR, values_from = all_of(c(varnames))) %>%
+  retailsales() %>% #merging with retail sales
+  mutate(across(all_of(c(glue("{varnames}_1930"),"RRTSAP39")), scale)) #standardizing variables
+  
+boxplotdata <- countysummwide %>% filter(TREAT != 1) %>% 
+  pivot_longer(starts_with("match_weight"), names_to = "sample", names_prefix = "match_weight", values_to = "weight") %>%
+  filter(weight != 0) %>% #pivoting long so we have each row corresp. to a control unit from a different matched sample
+  bind_rows(countysummwide %>% filter(TREAT != 1) %>% mutate(sample = "All Untreated", weight = 1)) %>% #adding all units
+  bind_rows(countysummwide %>% filter(TREAT == 1) %>% mutate(sample = "Treated", weight = 1)) %>% #adding treated units
+  bind_rows(countysummwide %>% filter(neighbor_samp == 1 & TREAT != 1) %>% mutate(sample = "Neighbor", weight = 1)) %>% #adding neighbor sample
+  mutate(sample = factor(sample, levels = c("All Untreated", 3, 2, 1, "Neighbor", "Treated"), labels = c("All Untreated", "Control 3", "Control 2", "Control 1",  "Neighbor","Treated"))) %>%
+  select(c(all_of(glue("{varnames}_1930")), RRTSAP39, FIPS, sample, weight)) %>%
+  pivot_longer(all_of(c(glue("{varnames}_1930"),"RRTSAP39")), names_to = "var", values_to = "value") %>%
+  mutate(var = factor(var, levels = c("NCHILD_1930","PCT_MARR_1930","pct_mw_Teacher_1930","pct_sw_Teacher_1930","RRTSAP39","LFP_MW_1930", "LFP_1930",
+    "PCT_LIT_1930", "PCT_WHITE_1930", "AGE_1930", "URBAN_1930","POP_1930"), 
+    labels = c("Number of Children", "Share Married", "Share Teachers Marr. Women", "Share Teachers Unmarr. Women",
+               "Retail Sales per Capita (1939)", "LFP of Married Women", "Labor Force Participation", "Share Literate", "Share White", "Mean Age", "Share Urban", "Population")))
+
+# boxplot
+ggplot(data = boxplotdata, aes(x = var, y = value, weight = weight)) + 
+  geom_boxplot(aes(middle = mean(value), fill = sample), outlier.shape = NA) + 
+  ylim(-4,4) + scale_fill_manual(values = c(treat_col, control_col, "#76c996", "#9fd9b3", "#c6e8d1", "grey"),
+                                 breaks = c("Treated", "Neighbor", "Control 1", "Control 2", "Control 3", "All Untreated")) +
+  coord_flip() +
+  labs(y = "Standardized Distribution",x = "",fill = "") + theme_minimal() +
+  theme(text = element_text(size = 18), axis.text = element_text(size = 14))
+ggsave(glue("{outfigs}/paper/matching_boxplot.png"), width = 12, height = 10)
+
+#_________________________________________________
+# MATCHING TEST FOR TREATMENT AND CONTROL: ABS STD MEAN DIFFS
+#_________________________________________________
+meandiffsdata <- countysummwide %>% filter(TREAT != 1) %>% 
+  pivot_longer(starts_with("match_weight"), names_to = "sample", names_prefix = "match_weight", values_to = "weight") %>%
+  filter(weight != 0) %>% #pivoting long so we have each row corresp. to a control unit from a different matched sample
+  bind_rows(countysummwide %>% filter(TREAT != 1) %>% mutate(sample = "All", weight = 1)) %>% #adding all units
+  bind_rows(countysummwide %>% filter(neighbor_samp == 1 & TREAT != 1) %>% mutate(sample = "Neighbor", weight = 1)) %>% #adding neighbor sample
+  mutate(sample = factor(sample, levels = c("All", 3, 2, 1, "Neighbor"), labels = c("All", "Control 3", "Control 2", "Control 1",  "Neighbor"))) %>%
+  group_by(sample) %>%
+  summarize(across(c(all_of(glue("{varnames}_1930")), RRTSAP39), function(.x) weighted.mean(.x, weight, na.rm=TRUE))) %>%
+  pivot_longer(all_of(c(glue("{varnames}_1930"),"RRTSAP39")), names_to = "var", values_to = "value") %>%
+  left_join(countysummwide %>% filter(TREAT == 1) %>% 
+              summarize(across(c(all_of(glue("{varnames}_1930")), RRTSAP39), function(.x) mean(.x, na.rm=TRUE))) %>%
+              pivot_longer(all_of(c(glue("{varnames}_1930"),"RRTSAP39")), names_to = "var", values_to = "treatvalue")) %>%
+  mutate(absmeandiff = abs(value - treatvalue))
+
+ggplot(data = meandiffsdata, aes(x = var, y = absmeandiff)) + 
+  geom_point(aes(color = sample, shape = sample), size = 4) + 
+  coord_flip()
+  
 #________________________________________________________________
 # FIG 1: DEMOG TRENDS FOR WORKERS/TEACHERS OVER TIME ----
 #________________________________________________________________

@@ -315,7 +315,7 @@ matching <- function(longdata, varnames, distance = "robust_mahalanobis", method
     filter(FIPS %in% mainsampfips) %>% #keeping only counties in main sample
     pivot_wider(id_cols     = c(FIPS, STATEICP, COUNTYICP, TREAT), #pivoting wide (so only one row per county)
                 names_from  = YEAR, 
-                values_from = all_of(c(varnames, "URBAN"))) %>%
+                values_from = all_of(c(varnames))) %>%
     retailsales() #merging with retail sales
   
   # gen growth variables (for matching) for each var passed to function
@@ -572,7 +572,7 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALS
       scale_fill_manual(values = colorRampPalette(c("white",control_col))(5)) +
       #scale_fill_gradient(low = control_col_min, high = control_col_max) + 
       geom_sf(data = us_map("counties", include = c("KY", "NC")), fill = treat_col, color = NA) +
-      labs(fill = "")
+      labs(fill = "Matching Weights")
   }
   else{
     graph_out <- plot_usmap(data = dataset %>% 

@@ -61,6 +61,7 @@ countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
             PCT_20TO39      = sum(ifelse(AGE >= 20 & AGE < 40, 1, 0))/n(), #share of pop in each age group
             PCT_40TO59      = sum(ifelse(AGE >= 40 & AGE < 60, 1, 0))/n(), #share of pop in each age group
             PCT_OVER59      = sum(ifelse(AGE >= 60, 1, 0))/n(), #share of pop in each age group
+            AGE             = mean(AGE),
             NCHILD          = mean(ifelse(demgroup == "MW", NCHILD, NA), na.rm=TRUE), #avg number of children for married women
             PCT_MARR        = sum(ifelse(AGE >= 18 & SEX == 2 & MARST %in% c(1,2), 1, 0))/sum(ifelse(AGE >= 18 & SEX == 2, 1, 0)), #share adult women married
             PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)) #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
@@ -134,7 +135,7 @@ matchvars <- c("URBAN","LFP", "LFP_MW", "POP", "PCT_UNDER20", "PCT_20TO39", "PCT
 matches1 <- matching(countysumm_raw, matchvars)
 
 # METHOD TWO: GENETIC (note: this takes a while to run, ~5 min)
-matches2 <- matching(countysumm_raw, matchvars, method = "genetic")
+matches2 <- matching(countysumm_raw, matchvars, method = "genetic", pop.size = 200)
 
 # METHOD THREE: FULL
 matches3 <- matching(countysumm_raw, matchvars, method = "full")
