@@ -284,13 +284,18 @@ mainlinksamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
 #_________________
 # MATCHING ----
 #_________________
+##!! RE-CHECK ALL MATCHING FUNCS (getfipsmatch = TRUE probably breaks somewhere, didn't check it -- not priority right now but should double check later)
+
 # takes a dataset (long on year x county) and list of variable names 
 # (excluding % urban and retail sales) on which to match, plus indicator 
 # for using retail sales
+# distance, method all arguments for matchit function, pop.size for genetic matching
+# IF getfipsmatch is TRUE:
 # returns dataframe of control counties including the control county FIPS code, 
 # and the state of the treatment county to which it was matched
-matching <- function(longdata, varnames, distance = "robust_mahalanobis", 
-                     retail = FALSE, verbose = FALSE){
+# ELSE: returns dataframe of all matched counties with weights (all equal to 1 unless full matching)
+matching <- function(longdata, varnames, distance = "robust_mahalanobis", method = "nearest", pop.size = 200,
+                     getfipsmatch = FALSE, retail = TRUE, verbose = FALSE){
   if (!("FIPS" %in% names(longdata))){
     longdata <- longdata %>% mergefips()
   }
@@ -298,14 +303,12 @@ matching <- function(longdata, varnames, distance = "robust_mahalanobis",
   # fips codes of main sample
   mainsampfips = mainsamp(longdata)
   
-  # create lists of names of variables for matching (varnames in 1920, 1930, and retail sales if retail=TRUE)
-  filter_varnames = c(glue("{varnames}_growth1930"),glue("{varnames}_growth1920"))
-  match_varnames  = c(filter_varnames,"URBAN_1910", "URBAN_1920", "URBAN_1930")
+  # create lists of names of variables for matching (varnames in 1930 & growth from 1920 to 1930, and retail sales if retail=TRUE)
+  filter_varnames = c(glue("{varnames}_1930"),glue("{varnames}_growth1930"))
   
   # add on retail variable names if matching on retail
   if(retail){
-    filter_varnames <- c(filter_varnames, "RRTSAP29", "RRTSAP39", "RLDF3929")
-    match_varnames  <- c(match_varnames, "RRTSAP29", "RLDF3929")
+    filter_varnames <- c(filter_varnames, "RRTSAP39", "RLDF3929") #39 level and growth 29-39
   }
   
   # prepping data for matching: restrict to main sample, 
@@ -314,133 +317,74 @@ matching <- function(longdata, varnames, distance = "robust_mahalanobis",
     filter(FIPS %in% mainsampfips) %>% #keeping only counties in main sample
     pivot_wider(id_cols     = c(FIPS, STATEICP, COUNTYICP, TREAT), #pivoting wide (so only one row per county)
                 names_from  = YEAR, 
-                values_from = all_of(c(varnames, "URBAN"))) %>%
+                values_from = all_of(c(varnames))) %>%
     retailsales() #merging with retail sales
   
   # gen growth variables (for matching) for each var passed to function
   for (var in varnames){
-      matchdata[[glue("{var}_growth1930")]] = (matchdata[[glue("{var}_1930")]]-matchdata[[glue("{var}_1920")]])/matchdata[[glue("{var}_1920")]]
-      matchdata[[glue("{var}_growth1920")]] = (matchdata[[glue("{var}_1920")]]-matchdata[[glue("{var}_1910")]])/matchdata[[glue("{var}_1910")]]
+    # if there are zeros, add 0.01 before calculating growth
+    if (sum(which(longdata[[var]]==0)) > 0){
+      matchdata[[glue("{var}_1930")]] = matchdata[[glue("{var}_1930")]] + 0.01
+      matchdata[[glue("{var}_1920")]] = matchdata[[glue("{var}_1920")]] + 0.01
+    }
+    matchdata[[glue("{var}_growth1930")]] = (matchdata[[glue("{var}_1930")]]-matchdata[[glue("{var}_1920")]])/matchdata[[glue("{var}_1920")]]
   }
   
-  # keep only counties with complete non-missing data on urban/rural and matching vars
+  # keep only counties with complete non-missing data on matching vars
   matchdata <- matchdata %>%
-    filter(if_all(all_of(filter_varnames), function(.x) !is.na(.x) & .x != Inf)) %>% 
-    filter(!is.na(URBAN_1910) & !is.na(URBAN_1920) & !is.na(URBAN_1930))
+    filter(if_all(all_of(filter_varnames), function(.x) !is.na(.x) & .x != Inf))
   print(glue("Retention: {length(unique(matchdata$FIPS))} out of {length(unique(longdata$FIPS))} counties"))
   
   # matching treated counties with nontreated counties, drawing matched counties
-  # WITHOUT replacement
-  match_obj <- matchit(reformulate(match_varnames, response = "TREAT"), 
+  match_obj <- matchit(reformulate(filter_varnames, response = "TREAT"), 
                        data     = matchdata, 
-                       REPLACE  = FALSE, 
-                       distance = distance)
+                       method = method,
+                       distance = distance,
+                       pop.size = pop.size) #pop size for genetic matching
   if (verbose){
     print(summary(match_obj))
   }
   
-  # getting matched data
-  control_matches                  <- matchdata[match_obj$match.matrix,] # match_obj$match.matrix links indices of treated units (rownames) to control units (values)
-  control_matches[["STATE_MATCH"]] <- matchdata[rownames(match_obj$match.matrix),][["STATEICP"]] # creating new var equal to state of treated match
-  control_matches[["FIPS_MATCH"]]  <- matchdata[rownames(match_obj$match.matrix),][["FIPS"]] # creating new var equal to fips of treated match
-  
-  return(select(bind_rows(control_matches, 
-                          get_matches(match_obj) %>% 
-                            filter(TREAT == 1) %>% 
-                            mutate(STATE_MATCH = STATEICP, FIPS_MATCH = FIPS)), 
-                c(FIPS, STATE_MATCH, FIPS_MATCH)))
-} #!#! CHECKED
-
-# testing matching between control and treatment for various samples on variable 'varname'
-match_test <- function(dataset, varnames){
-  # if multiple variables and multiple samples, return error
-  if (length(varnames) > 1 & length(unique(dataset$sample))>1){
-    print('ERROR: need single variable OR single sample')
-    return(NA)
+  if (getfipsmatch){
+    if (method == "full"){
+      print("Error: can't match to treated FIPS when using full matching")
+      return(NA)
+    }
+    # getting matched data WITH corresponding 
+    control_matches                  <- matchdata[match_obj$match.matrix,] # match_obj$match.matrix links indices of treated units (rownames) to control units (values)
+    control_matches[["STATE_MATCH"]] <- matchdata[rownames(match_obj$match.matrix),][["STATEICP"]] # creating new var equal to state of treated match
+    control_matches[["FIPS_MATCH"]]  <- matchdata[rownames(match_obj$match.matrix),][["FIPS"]] # creating new var equal to fips of treated match
+    
+    return(select(bind_rows(control_matches, 
+                            get_matches(match_obj) %>% 
+                              filter(TREAT == 1) %>% 
+                              mutate(STATE_MATCH = STATEICP, FIPS_MATCH = FIPS)), 
+                  c(FIPS, STATE_MATCH, FIPS_MATCH)))
   }
-  # if only one variable, facet wrap by sample
-  if (length(varnames) == 1){
-    graphdata <- dataset %>% 
-      group_by(TREAT, YEAR, sample) %>% 
-      summarize(across(all_of(varnames), ~mean(.x, na.rm=TRUE)))
-    graph_out <- ggplot(data = graphdata, 
-                        aes(x = YEAR, y = .data[[varnames]], 
-                            color = factor(TREAT), 
-                            shape = factor(TREAT))) + 
-      geom_point() + geom_line() + facet_wrap(~sample)
+  else{
+    return(select(match.data(match_obj), c(FIPS, weights)))
   }
-  # if multiple variables and only one sample, pivot long and facet wrap by 
-  if (length(varnames) > 1 & length(unique(dataset$sample)) == 1){
-    graphdata <- dataset %>% 
-      group_by(TREAT, YEAR) %>% 
-      summarize(across(all_of(varnames), ~mean(.x, na.rm=TRUE))) %>%
-      pivot_longer(all_of(varnames), names_to = "cat", values_to = "val")
-    graph_out <- ggplot(data = graphdata, 
-                        aes(x = YEAR, y = val, color = factor(TREAT), shape = factor(TREAT))) + 
-      geom_point() + geom_line() + facet_wrap(~cat) + ggtitle(dataset$sample[1])
-  }
-  
-  return(graph_out)
-}
+} 
 
 # joining outputs of matching (where matches is a list of matching sets) with dataset;
-# specifically, adds indicators "match_samp", "match_samp2" to dataset that flag whether
+# specifically, adds indicators "match_samp1", "match_samp2" to dataset that flag whether
 # the county in a given row appears in a matched dataset or not, either as a
 # treated or control county
-matching_join <- function(dataset, matchlist){
+matching_join <- function(dataset, matchlist, getfipsmatch = FALSE){
   for (i in 1:length(matchlist)){
-    if (i == 1){ # for first matching dataset, keep state of match
+    if (i == 1 & getfipsmatch){ # for first matching dataset, keep state of match IF getfipsmatch = TRUE
       dataset <- dataset %>% 
         left_join(matchlist[[i]] %>% mutate(match = 1) %>% select(-FIPS_MATCH), # note: keep STATE_MATCH here for state_matching fcn
                   by = c("FIPS")) %>%  
-        mutate(match_samp = ifelse(match == 1, 1, 0))
+        mutate(match_samp1 = ifelse(match == 1, 1, 0))
     }
     else{
-      dataset[[glue("match_samp{i}")]] <- ifelse(dataset$FIPS %in% matchlist[[i]]$FIPS, 1, 0)
+      dataset <- dataset %>% left_join(matchlist[[i]]) %>%
+        mutate("match_weight{i}" := ifelse(is.na(weights), 0, weights)) %>% select(-weights)
     }
   }
   return(dataset)
-} #!#! CHECKED
-
-# matching individual control counties to specific treated states in order to 
-# assign counties to 'law passing' in 1933 or 1938 and use outcome Married After/Married Before
-# matchtype is a string equal to either `neighbor` (using neighboring states analysis) 
-# or `match` (using matched counties analysis)
-# NOTE: ONLY COVERS MATCHSAMP1 (first matched dataset)
-state_matching <- function(dataset, matchtype){
-  # gen variable indicating in which state the county in question has been matched to
-  if (matchtype == "neighbor"){
-    outdata <- dataset %>% mutate(STATE_MATCH = case_when(neighbor_sampNC == 1 ~ 47,
-                                                          neighbor_sampKY == 1 ~ 51,
-                                                          TRUE ~ NA_integer_))
-  }
-  else{
-    outdata <- dataset %>% mutate(STATE_MATCH = case_when(match == 1 ~ STATE_MATCH,
-                                                          TREAT == 1 ~ STATEICP,
-                                                          TRUE ~ NA_integer_))
-  }
-  
-  # "update" data on the % of women (teachers or secretaries) married 
-  # before and after the laws passing in 1933 and 38
-  outdata <- outdata %>% 
-    mutate(pct_marr_before_Teacher   = case_when(STATE_MATCH == 47 ~ pct_marr_before3_Teacher, #if matched with NC (or in NC), 'law passes' in 1933
-                                                 STATE_MATCH == 51 ~ pct_marr_before8_Teacher, #if matched with KY (or in KY), 'law passes' in 1938
-                                                 TRUE ~ NA_real_),
-           pct_marr_after_Teacher    = case_when(STATE_MATCH == 47 ~ pct_marr_after3_Teacher, #if matched with NC (or in NC), 'law passes' in 1933
-                                                 STATE_MATCH == 51 ~ pct_marr_after8_Teacher, #if matched with KY (or in KY), 'law passes' in 1938
-                                                 TRUE ~ NA_real_),
-           pct_marr_before_Secretary = case_when(STATE_MATCH == 47 ~ pct_marr_before3_Secretary, #if matched with NC (or in NC), 'law passes' in 1933
-                                                 STATE_MATCH == 51 ~ pct_marr_before8_Secretary, #if matched with KY (or in KY), 'law passes' in 1938
-                                                 TRUE ~ NA_real_),
-           pct_marr_after_Secretary  = case_when(STATE_MATCH == 47 ~ pct_marr_after3_Secretary, #if matched with NC (or in NC), 'law passes' in 1933
-                                                 STATE_MATCH == 51 ~ pct_marr_after8_Secretary, #if matched with KY (or in KY), 'law passes' in 1938
-                                                 TRUE ~ NA_real_)) %>% 
-  select(-c(starts_with("pct_marr_before3"),
-            starts_with("pct_marr_after3"),
-            starts_with("pct_marr_before8"),
-            starts_with("pct_marr_after8")))
-  return(outdata)
-} #!#! CHECKED
+}
 
 #________________________________________________________
 # PRODUCING DID GRAPHS ----
@@ -455,37 +399,30 @@ add_did_dummies <- function(dataset){
   return(dataset)
 } #!#! CHECKED
 
-# Creating data for graphing dynamic DiD 
+# Creating data for graphing dynamic DiD (if using weights, must be in dataset with name weight)
 # takes in dataset, depvar (dependant variable), any controls (string of form '+ X1 + X2 +...'), years to include, year to omit
 #   if table = TRUE, returns list of regression model output and vcov for stargazer table formatting
 #   if septreat = TRUE, runs regression for treatment and control groups separately
 did_graph_data <- function(dataset, depvar, controls = "", 
                            years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
-                           verbose = FALSE, table = FALSE, septreat = FALSE){ ##! When is septreat used?
+                           verbose = FALSE, table = FALSE, septreat = FALSE){
   # modifying dataset (adding interaction terms, FIPS vars for clustering, 
-  #   filter to only include relevant years)
+  #   filter to only include relevant years, setting weights to 1 if they don't exist)
   regdata <- dataset %>% 
     add_did_dummies() %>% 
     filter(YEAR %in% c(years, yearomit)) %>% 
-    mutate(cluster = as.character(FIPS))
+    mutate(cluster = as.character(FIPS),
+           weight = ifelse("weight" %in% names(dataset), weight, 1))
   
   if (septreat){ # if septreat==TRUE, run regs separately by treatment group
     yearvars     <- glue("Year{years}")
     # for control group
-    ##! the {controls} throws an error this way if controls is nonempty. For now, we don't
-    ##! actually use any controls-- but what is a more general solution? Could add smth like this to this
-    ##! function and the did_graph function:
-      # if(length(controls)>1) {
-      #   controls = glue("+{glue_collapse(controls, sep='+')}") 
-      # } else {
-      #   if(controls!="") controls = glue("+{glue_collapse(controls, sep='+')}") 
-      # }
     did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"),  
-                       data = regdata %>% filter(TREAT == 0))
+                       data = regdata %>% filter(TREAT == 0), weights = weight)
     vcov_ctrl    = vcovCL(did_reg_ctrl, type = "HC1")
     # for treated group
     did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), 
-                        data = regdata %>% filter(TREAT == 1))
+                        data = regdata %>% filter(TREAT == 1), weights = weight)
     vcov_treat    = vcovCL(did_reg_treat, type = "HC1")
     # make dataframe for output to return 
     if (table){ # for stargazer 
@@ -515,12 +452,11 @@ did_graph_data <- function(dataset, depvar, controls = "",
     # run reg: include year and county FE + interaction terms + any controls
     did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + 
                        cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), 
-                  data = regdata)
+                  data = regdata, weights = weight)
     if (verbose){
       print(summary(did_reg))
     }
-    # clustered standard errors (hc1 equiv to ,robust in stata i think? double check this) 
-    ##! Yes, I believe vcov hetero = same as HC1 = same as robust SE in Stata.
+    # clustered standard errors (hc1 equiv to ,robust in stata)
     vcov = vcovCL(did_reg, type = "HC1")
     # return table of estimates as output
     if (table){
@@ -537,7 +473,6 @@ did_graph_data <- function(dataset, depvar, controls = "",
       return(effects)
     }
   } # end ifelse
-  
 } #!#! CHECKED
 
 # Creating dynamic DiD graph
@@ -546,8 +481,6 @@ did_graph_data <- function(dataset, depvar, controls = "",
 #   and toggles for slides (default is for paper) 
 #   and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
 #   and pointspan, i.e. total width of all dots for a given year, default is 2
-##! I think I'm missing where we use septreat -- why does it need different treatment/sections
-##! than when there are multiple depvars?
 did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", 
                       years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
                       verbose = FALSE, yvar = "Coef on Treat X Year",
@@ -568,7 +501,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
                                     years, yearomit, 
                                     verbose, septreat, table = FALSE) 
     did_data      <- did_data_temp %>%
-      mutate(group      = depvarnames[[1]], ##! Why do we need the group var? Redundant with depvarnames? 
+      mutate(group      = depvarnames[[1]], 
              year_graph = did_data_temp$year)
   }
   else{ # if more than one depvar is specified
@@ -581,7 +514,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
     for (i in seq(1,nvars)){
       did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, 
                                       years, yearomit, verbose) %>%
-        mutate(group      = depvarnames[[i]], ##! Why do we need the group var? Redundant with depvarnames? 
+        mutate(group      = depvarnames[[i]], 
                year_graph = year - pointspan/2 + (i-1)*(pointspan/(nvars - 1))) # shifting over so dots don't overlap
       did_datasets[[i]] <- did_data_temp
     }
@@ -654,7 +587,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
 #__________________________
 # graph treated vs control counties -- default is to plot whole country;
 # eastern is TRUE if want to show only eastern states
-graph_treatment <- function(dataset, eastern = FALSE, filename = NA){
+graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALSE){
   exclude_st = c("HI", "AK") # states to exclude
   if (eastern){ # states to exclude if only want to plot eastern US
     exclude_st = c("CA", "CO", "OR", "TX", "WA", 
@@ -663,15 +596,29 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA){
                    "HI", "KS", "NE", "OK",
                    "MN", "AR", "MO", "IA", "LA")
   }
-  # plot 
-  graph_out <- plot_usmap(data = dataset %>% 
-                            filter(YEAR == 1940) %>% 
-                            mutate(fips = FIPS, TREAT = ifelse(TREAT == 1, "Treated", "Control")) %>% 
-                            select(c(fips, TREAT)), 
-                          values = "TREAT", color = NA, exclude = exclude_st) +
-    theme(legend.position = "right", text = element_text(size = 14)) + 
-    scale_fill_manual(breaks = c("Treated", "Control"), values = c(treat_col, control_col)) + 
-    labs(fill = "")
+  if (full){ #if full matching, graph weights gradient
+    graph_out <- plot_usmap(data = dataset %>% 
+                              filter(YEAR == 1940) %>% 
+                              mutate(fips = FIPS, weights = cut(weights, quantile(weights, probs = seq(0,1,0.2)))) %>% 
+                              select(c(fips, weights)), 
+                            values = "weights", exclude = exclude_st, color = NA) + 
+      theme(legend.position = "right", text = element_text(size = 14)) + 
+      scale_fill_manual(values = colorRampPalette(c("white",control_col))(5)) +
+      #scale_fill_gradient(low = control_col_min, high = control_col_max) + 
+      geom_sf(data = us_map("counties", include = c("KY", "NC")), fill = treat_col, color = NA) +
+      labs(fill = "Matching Weights")
+  }
+  else{
+    # plot 
+    graph_out <- plot_usmap(data = dataset %>% 
+                              filter(YEAR == 1940) %>% 
+                              mutate(fips = FIPS, TREAT = ifelse(TREAT == 1, "Treated", "Control")) %>% 
+                              select(c(fips, TREAT)), 
+                            values = "TREAT", color = NA, exclude = exclude_st) +
+      theme(legend.position = "right", text = element_text(size = 14)) + 
+      scale_fill_manual(breaks = c("Treated", "Control"), values = c(treat_col, control_col)) + 
+      labs(fill = "")  
+  }
   # save 
   if (!is.na(filename)){
     ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
@@ -684,3 +631,78 @@ gg_color_hue <- function(n) {
   hues = seq(15, 375, length = n + 1)
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
+
+#________________________________________________________
+# TESTER FUNCTIONS/DEPRECATED ----
+#________________________________________________________
+# testing matching between control and treatment for various samples on variable 'varname'
+match_test <- function(dataset, varnames){
+  # if multiple variables and multiple samples, return error
+  if (length(varnames) > 1 & length(unique(dataset$sample))>1){
+    print('ERROR: need single variable OR single sample')
+    return(NA)
+  }
+  # if only one variable, facet wrap by sample
+  if (length(varnames) == 1){
+    graphdata <- dataset %>% 
+      group_by(TREAT, YEAR, sample) %>% 
+      summarize(across(all_of(varnames), ~mean(.x, na.rm=TRUE)))
+    graph_out <- ggplot(data = graphdata, 
+                        aes(x = YEAR, y = .data[[varnames]], 
+                            color = factor(TREAT), 
+                            shape = factor(TREAT))) + 
+      geom_point() + geom_line() + facet_wrap(~sample)
+  }
+  # if multiple variables and only one sample, pivot long and facet wrap by 
+  if (length(varnames) > 1 & length(unique(dataset$sample)) == 1){
+    graphdata <- dataset %>% 
+      group_by(TREAT, YEAR) %>% 
+      summarize(across(all_of(varnames), ~mean(.x, na.rm=TRUE))) %>%
+      pivot_longer(all_of(varnames), names_to = "cat", values_to = "val")
+    graph_out <- ggplot(data = graphdata, 
+                        aes(x = YEAR, y = val, color = factor(TREAT), shape = factor(TREAT))) + 
+      geom_point() + geom_line() + facet_wrap(~cat) + ggtitle(dataset$sample[1])
+  }
+  
+  return(graph_out)
+}
+
+# matching individual control counties to specific treated states in order to 
+# assign counties to 'law passing' in 1933 or 1938 and use outcome Married After/Married Before
+# matchtype is a string equal to either `neighbor` (using neighboring states analysis) 
+# or `match` (using matched counties analysis)
+# NOTE: ONLY COVERS MATCHSAMP1 (first matched dataset)
+state_matching <- function(dataset, matchtype){
+  # gen variable indicating in which state the county in question has been matched to
+  if (matchtype == "neighbor"){
+    outdata <- dataset %>% mutate(STATE_MATCH = case_when(neighbor_sampNC == 1 ~ 47,
+                                                          neighbor_sampKY == 1 ~ 51,
+                                                          TRUE ~ NA_integer_))
+  }
+  else{
+    outdata <- dataset %>% mutate(STATE_MATCH = case_when(match == 1 ~ STATE_MATCH,
+                                                          TREAT == 1 ~ STATEICP,
+                                                          TRUE ~ NA_integer_))
+  }
+  
+  # "update" data on the % of women (teachers or secretaries) married 
+  # before and after the laws passing in 1933 and 38
+  outdata <- outdata %>% 
+    mutate(pct_marr_before_Teacher   = case_when(STATE_MATCH == 47 ~ pct_marr_before3_Teacher, #if matched with NC (or in NC), 'law passes' in 1933
+                                                 STATE_MATCH == 51 ~ pct_marr_before8_Teacher, #if matched with KY (or in KY), 'law passes' in 1938
+                                                 TRUE ~ NA_real_),
+           pct_marr_after_Teacher    = case_when(STATE_MATCH == 47 ~ pct_marr_after3_Teacher, #if matched with NC (or in NC), 'law passes' in 1933
+                                                 STATE_MATCH == 51 ~ pct_marr_after8_Teacher, #if matched with KY (or in KY), 'law passes' in 1938
+                                                 TRUE ~ NA_real_),
+           pct_marr_before_Secretary = case_when(STATE_MATCH == 47 ~ pct_marr_before3_Secretary, #if matched with NC (or in NC), 'law passes' in 1933
+                                                 STATE_MATCH == 51 ~ pct_marr_before8_Secretary, #if matched with KY (or in KY), 'law passes' in 1938
+                                                 TRUE ~ NA_real_),
+           pct_marr_after_Secretary  = case_when(STATE_MATCH == 47 ~ pct_marr_after3_Secretary, #if matched with NC (or in NC), 'law passes' in 1933
+                                                 STATE_MATCH == 51 ~ pct_marr_after8_Secretary, #if matched with KY (or in KY), 'law passes' in 1938
+                                                 TRUE ~ NA_real_)) %>% 
+    select(-c(starts_with("pct_marr_before3"),
+              starts_with("pct_marr_after3"),
+              starts_with("pct_marr_before8"),
+              starts_with("pct_marr_after8")))
+  return(outdata)
+} #!#! CHECKED
