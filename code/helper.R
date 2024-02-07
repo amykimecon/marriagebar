@@ -62,18 +62,20 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
     dataset <- dataset %>% mergefips()
   }
   
-  # identifying counties that are observed in all four years (1910, 20, 30, 40)
+  # identifying counties that are observed in all years (1910, 20, 30, 40, 50)
   balanceddata <- dataset %>% 
     filter(YEAR != 1900) %>% 
     group_by(FIPS) %>% 
     summarize(n = n()) %>% 
-    filter(n == 4)
+    filter(n == 5)
   
   # filter to FIPS with at least n white teachers in 1930 and 40
+  fips1950 <- filter(dataset, YEAR == 1950 & NWHITETEACH >= n)$FIPS
   fips1940 <- filter(dataset, YEAR == 1940 & NWHITETEACH >= n)$FIPS
   outdata <- dataset %>% filter(YEAR == 1930 & NWHITETEACH >= n & 
-                                  !is.na(FIPS) & #only keeping FIPS with at least n white teachers in 1930
-                                  FIPS %in% fips1940) #AND only keeping FIPS with at least n white teachers in 1940
+                                  !is.na(FIPS) &       #only keeping FIPS with at least n white teachers in 1930
+                                  FIPS %in% fips1940 & #AND at least n white teachers in 1940
+                                  FIPS %in% fips1950)  #AND at least n white teachers in 1950
   
   # keep only counties observed in all four years if balanced==TRUE
   if (balanced){
@@ -82,7 +84,7 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
   
   if (verbose){
     print(glue("Original Dataset: {length(unique(dataset$FIPS))} counties"))
-    print(glue("Main Sample (Counties with >= {n} teachers in 1930 and 1940): {length(unique(outdata$FIPS))} counties"))
+    print(glue("Main Sample (Counties with >= {n} teachers in 1930, 40, and 50): {length(unique(outdata$FIPS))} counties"))
     print(glue("Dropped {100*(1-length(unique(outdata$FIPS))/length(unique(dataset$FIPS)))}% of Observations")) 
   }
   return(unique(outdata$FIPS))
@@ -392,79 +394,86 @@ matching_join <- function(dataset, matchlist, getfipsmatch = FALSE){
 add_did_dummies <- function(dataset){
   for (yr in unique(dataset$YEAR)){
     dataset[[glue("TREATx{yr}")]] <- ifelse(dataset$YEAR == yr, 1, 0)*ifelse(dataset$TREAT == 1, 1, 0)
-    dataset[[glue("Year{yr}")]] <- ifelse(dataset$YEAR == yr, 1, 0)
+    dataset[[glue("Year{yr}")]]   <- ifelse(dataset$YEAR == yr, 1, 0)
   }
   return(dataset)
-}
+} #!#! CHECKED
 
 # Creating data for graphing dynamic DiD (if using weights, must be in dataset with name weight)
 # takes in dataset, depvar (dependant variable), any controls (string of form '+ X1 + X2 +...'), years to include, year to omit
-# if table = TRUE, returns list of regression model output and vcov for stargazer table formatting
-# if septreat = TRUE, runs regression for treatment and control groups separately
-did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, table = FALSE, septreat = FALSE){
-  # modifying dataset (adding interaction terms, setting cluster to FIPS, filtering to only include relevant years, setting weights to 1 if don't exist)
+#   if table = TRUE, returns list of regression model output and vcov for stargazer table formatting
+#   if septreat = TRUE, runs regression for treatment and control groups separately
+did_graph_data <- function(dataset, depvar, controls = "", 
+                           years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
+                           verbose = FALSE, table = FALSE, septreat = FALSE){
+  # modifying dataset (adding interaction terms, FIPS vars for clustering, 
+  #   filter to only include relevant years, setting weights to 1 if they don't exist)
   regdata <- dataset %>% 
     add_did_dummies() %>% 
     filter(YEAR %in% c(years, yearomit)) %>% 
     mutate(cluster = as.character(FIPS),
            weight = ifelse("weight" %in% names(dataset), weight, 1))
   
-  # regressing treatment groups separately
-  if (septreat){
-    yearvars <- glue("Year{years}")
-    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), 
+  if (septreat){ # if septreat==TRUE, run regs separately by treatment group
+    yearvars     <- glue("Year{years}")
+    # for control group
+    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"),  
                        data = regdata %>% filter(TREAT == 0), weights = weight)
-    vcov_ctrl = vcovCL(did_reg_ctrl, type = "HC1")
+    vcov_ctrl    = vcovCL(did_reg_ctrl, type = "HC1")
+    # for treated group
     did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), 
                         data = regdata %>% filter(TREAT == 1), weights = weight)
-    vcov_treat = vcovCL(did_reg_treat, type = "HC1")
-    
-    if (table){
+    vcov_treat    = vcovCL(did_reg_treat, type = "HC1")
+    # make dataframe for output to return 
+    if (table){ # for stargazer 
       return(list(did_reg_ctrl, vcov_ctrl, did_reg_treat, vcov_treat))
     }
-    
-    effects <- data.frame(y = c(sapply(yearvars, function (.x) did_reg_ctrl$coefficients[[.x]]), 0),
-                          depvar = depvar,
-                          year = c(years, yearomit),
-                          var = c(sapply(yearvars, function(.x) as.numeric(diag(vcov_ctrl)[[.x]])), 0),
-                          treat = "Control") %>%
-      rbind(data.frame(y = c(sapply(yearvars, function (.x) did_reg_treat$coefficients[[.x]]), 0),
-                       depvar = depvar,
-                       year = c(years, yearomit),
-                       var = c(sapply(yearvars, function(.x) as.numeric(diag(vcov_treat)[[.x]])), 0),
-                       treat = "Treated")) %>%
-      mutate(y_ub = y + 1.96*sqrt(var),
-             y_lb = y - 1.96*sqrt(var))
-    return(effects)
-  }
-  # vector of interaction terms
-  interact_vars <- glue("TREATx{years}")
-  yearvars <- glue("Year{years}")
-  
-  # running regression: include year and county fixed effects + interaction terms + any controls
-  did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), 
-                data = regdata, weights = weight)
-  
-  if (verbose){
-    print(summary(did_reg))
-  }
-  
-  # clustered standard errors (hc1 equiv to ,robust in stata i think? double check this)
-  vcov = vcovCL(did_reg, type = "HC1")
-  
-  if (table){
-    return(list(did_reg, vcov))
-  }
-  
-  # constructing dataframe for output -- y is coef var is estimated variance using clustered standard errors
-  effects <- data.frame(y = c(sapply(interact_vars, function (.x) did_reg$coefficients[[.x]]), 0),
-                        depvar = depvar,
-                        year = c(years, yearomit),
-                        var = c(sapply(interact_vars, function(.x) as.numeric(diag(vcov)[[.x]])), 0)) %>%
-    mutate(y_ub = y + 1.96*sqrt(var),
-           y_lb = y - 1.96*sqrt(var))
-  return(effects)
-}
+    else { # standalone table of point estimates/CIs
+      # include omitted year (1930) for plotting, with point estimate/CIs = 0
+      effects <- data.frame(y      = c(sapply(yearvars, function (.x) did_reg_ctrl$coefficients[[.x]]), 0), 
+                            depvar = depvar,
+                            year   = c(years, yearomit),
+                            var    = c(sapply(yearvars, function(.x) as.numeric(diag(vcov_ctrl)[[.x]])), 0),
+                            treat  = "Control") %>%
+        rbind(data.frame(y      = c(sapply(yearvars, function (.x) did_reg_treat$coefficients[[.x]]), 0),
+                         depvar = depvar,
+                         year   = c(years, yearomit),
+                         var    = c(sapply(yearvars, function(.x) as.numeric(diag(vcov_treat)[[.x]])), 0),
+                         treat  = "Treated")) %>%
+        mutate(y_ub = y + 1.96*sqrt(var),
+               y_lb = y - 1.96*sqrt(var))
+      return(effects)
+    }
+  } 
+  else { # otherwise, if septreat==FALSE, run standard DiD regression
+    # vector of interaction terms
+    interact_vars <- glue("TREATx{years}")
+    yearvars <- glue("Year{years}")
+    # run reg: include year and county FE + interaction terms + any controls
+    did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + 
+                       cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), 
+                  data = regdata, weights = weight)
+    if (verbose){
+      print(summary(did_reg))
+    }
+    # clustered standard errors (hc1 equiv to ,robust in stata)
+    vcov = vcovCL(did_reg, type = "HC1")
+    # return table of estimates as output
+    if (table){
+      return(list(did_reg, vcov))
+    }
+    else {
+      # make dataframe for output -- y is coef, var is estimated variance using clustered standard errors
+      effects <- data.frame(y      = c(sapply(interact_vars, function (.x) did_reg$coefficients[[.x]]), 0),
+                            depvar = depvar,
+                            year   = c(years, yearomit),
+                            var    = c(sapply(interact_vars, function(.x) as.numeric(diag(vcov)[[.x]])), 0)) %>%
+        mutate(y_ub = y + 1.96*sqrt(var),
+               y_lb = y - 1.96*sqrt(var))
+      return(effects)
+    }
+  } # end ifelse
+} #!#! CHECKED
 
 # Creating dynamic DiD graph
 # takes in all parameters of did_graph_data (with list of dep vars), 
@@ -472,44 +481,54 @@ did_graph_data <- function(dataset, depvar, controls = "", years = c(1910, 1920,
 #   and toggles for slides (default is for paper) 
 #   and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
 #   and pointspan, i.e. total width of all dots for a given year, default is 2
-did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", years = c(1910, 1920, 1940), yearomit = 1930, verbose = FALSE, yvar = "Coef on Treat X Year",
-                      ymax = NA, ymin = NA, slides = FALSE, steps = FALSE, pointspan = 2, septreat = FALSE, filename = NA){
+did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", 
+                      years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
+                      verbose = FALSE, yvar = "Coef on Treat X Year",
+                      ymax = NA, ymin = NA, 
+                      slides = FALSE, steps = FALSE, pointspan = 2, 
+                      septreat = FALSE, filename = NA){
+  # check that varlist and namelist passed to function are same length
   nvars = length(depvarlist)
   if (nvars != length(depvarnames)){
     print("Error: depvarlist length diff from depvarnames length")
     return(NA)
   }
 
-  # compiling all regression outputs (in format for graphing) from different dependent variables
-  if (nvars == 1){
-    did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, years, yearomit, verbose, septreat, table = FALSE) 
-    did_data <- did_data_temp %>%
-      mutate(group = depvarnames[[1]], year_graph = did_data_temp$year)
+  # make tables ----
+  # make table of DiD regression outputs (in format for graphing) from all dependent variables
+  if (nvars == 1){ # if only one depvar is specified
+    did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, 
+                                    years, yearomit, 
+                                    verbose, septreat, table = FALSE) 
+    did_data      <- did_data_temp %>%
+      mutate(group      = depvarnames[[1]], 
+             year_graph = did_data_temp$year)
   }
-  else{
+  else{ # if more than one depvar is specified
     if (septreat){
       print("Error: can only use septreat for single variable")
       return(NA)
     }
+    # create separate reg tables for each depvar, then bind together
     did_datasets <- list()
     for (i in seq(1,nvars)){
-      did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, years, yearomit, verbose) %>%
-        mutate(group = depvarnames[[i]],
+      did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, 
+                                      years, yearomit, verbose) %>%
+        mutate(group      = depvarnames[[i]], 
                year_graph = year - pointspan/2 + (i-1)*(pointspan/(nvars - 1))) # shifting over so dots don't overlap
       did_datasets[[i]] <- did_data_temp
     }
     did_data <- bind_rows(did_datasets)
   }
-  
   if(verbose){
     print(did_data)
-  }
+  } # end make tables
 
-  if (septreat){
-    # creating graph
+  # make graphs ----
+  if (septreat){ # if only one dep var
     graph_out <- ggplot(did_data, aes(x = year_graph, 
                                       y = y, 
-                                      color = treat, 
+                                      color = treat, ##! Where is treat generated?
                                       shape = treat)) + 
       geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
       geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
@@ -518,47 +537,59 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", y
       theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
     
     return(graph_out)
-  }
-  
-  # creating graph
-  graph_out <- ggplot(did_data, aes(x = year_graph, 
-                                    y = y, 
-                                    color = factor(group, levels = depvarnames), 
-                                    shape = factor(group, levels = depvarnames))) + 
-    geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
-    geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
-    scale_color_manual(values=colors) +
-    annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
-    geom_point(size = 4) + labs(x = "Year", y = yvar, color = "", shape = "") + theme_minimal() + 
-    theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
-  
-  if (!is.na(ymax) | !is.na(ymin)){
-    if (ymax > max(did_data$y_ub) & ymin < min(did_data$y_lb)){
-      graph_out <- graph_out + ylim(ymin,ymax) + geom_text(aes(x = 1935.5, y = ymin + (ymax-ymin)/10, label = "Marriage Bars \n Removed") ,color = "#656565")   
+  } else { # if more than one dep var
+    graph_out <- ggplot(did_data, aes(x = year_graph, 
+                                      y = y, 
+                                      color = factor(group, levels = depvarnames), 
+                                      shape = factor(group, levels = depvarnames))) + 
+      geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
+      geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
+      scale_color_manual(values=colors) +
+      annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
+      geom_point(size = 4) + labs(x = "Year", y = yvar, color = "", shape = "") + theme_minimal() + 
+      theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
+    # adjust ymin/ymax 
+    if (!is.na(ymax) | !is.na(ymin)){ # if ymin/ymax bounds are specified, and ...
+      if (ymax > max(did_data$y_ub) & ymin < min(did_data$y_lb)){ # the observed ymin/ymax are within said bounds
+        graph_out <- graph_out + 
+          ylim(ymin,ymax) + 
+          geom_text(aes(x = 1935.5, y = ymin + (ymax-ymin)/10, 
+                        label = "Marriage Bars \n Removed"), color = "#656565")   
+      }
+      else{ # the observed ymin/ymax are outside of said bounds
+        print("Warning: ymin/ymax out of bounds") ##! changed from "Error" just so that it doesn't seem like a calc was wrong!
+        graph_out <- graph_out + geom_text(aes(x = 1935.5, 
+                                               y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, 
+                                               label = "Marriage Bars \n Removed"), color = "#656565") 
+      }
     }
-    else{
-      print("Error: ymin/ymax out of bounds")
-      graph_out <- graph_out + geom_text(aes(x = 1935.5, y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
+    else{ # no ymin/ymax bound was specified
+      graph_out <- graph_out + geom_text(aes(x = 1935.5, 
+                                             y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, 
+                                             label = "Marriage Bars \n Removed"), color = "#656565") 
     }
-  }
-  else{
-    graph_out <- graph_out + geom_text(aes(x = 1935.5, y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, label = "Marriage Bars \n Removed") ,color = "#656565") 
-  }
-  
-  if (!is.na(filename) & !slides){ #saving graph in folder for paper figs
-    ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
-  }
-  if (!is.na(filename) & slides){ #changing text size for slides and saving in folder for slide figs
-    ggsave(glue("{outfigs}/slides/{filename}.png"), graph_out + theme(text = element_text(size = 18), axis.text = element_text(size = 14)), width = 8, height = 5)
-  }
-  return(graph_out)
-}
+    # save graphs
+    if (!is.na(filename) & !slides){ #saving graph in folder for paper figs
+      ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
+    }
+    if (!is.na(filename) & slides){ #changing text size for slides and saving in folder for slide figs
+      ggsave(glue("{outfigs}/slides/{filename}.png"), graph_out + 
+               theme(text = element_text(size = 18), 
+                     axis.text = element_text(size = 14)), width = 8, height = 5)
+    }
+    return(graph_out)
+  } # end make graphs
 
+} #!#! CHECKED
+
+#__________________________
+# MISC ----
+#__________________________
 # graph treated vs control counties -- default is to plot whole country;
 # eastern is TRUE if want to show only eastern states
 graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALSE){
   exclude_st = c("HI", "AK") # states to exclude
-  if (eastern){
+  if (eastern){ # states to exclude if only want to plot eastern US
     exclude_st = c("CA", "CO", "OR", "TX", "WA", 
                    "ND", "WY", "UT", "NM", "NV", 
                    "SD", "MT", "ID", "AZ", "AK", 
@@ -578,6 +609,7 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALS
       labs(fill = "Matching Weights")
   }
   else{
+    # plot 
     graph_out <- plot_usmap(data = dataset %>% 
                               filter(YEAR == 1940) %>% 
                               mutate(fips = FIPS, TREAT = ifelse(TREAT == 1, "Treated", "Control")) %>% 
@@ -587,11 +619,12 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALS
       scale_fill_manual(breaks = c("Treated", "Control"), values = c(treat_col, control_col)) + 
       labs(fill = "")  
   }
+  # save 
   if (!is.na(filename)){
     ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
   }
   return(graph_out)
-}
+} #!#! CHECKED
 
 #ggplot colors
 gg_color_hue <- function(n) {

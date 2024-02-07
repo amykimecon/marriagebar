@@ -14,6 +14,7 @@ library(sandwich)
 library(lmtest)
 library(readxl)
 library(duckdb)
+library(tictoc)
 
 # set filepaths ----
 if (Sys.info()[["user"]]=="yk0581"){ #Amy's section laptop
@@ -25,7 +26,7 @@ if (Sys.info()[["user"]]=="amykim"){ #Amy's macbook
   #git  = "~/GitHub/marriagebar"
 }
 if (Sys.info()[["user"]]=="ctsao"){ #Carolyn's section laptop
-  root = "C:\\Users\\ctsao\\Dropbox\\marriagebar_data"
+  root = "C:/Users/ctsao/Dropbox/marriagebar_data"
 }
 if (Sys.info()[["user"]]=="carolyn"){ #Carolyn's macbook
   root = "~/Dropbox/marriagebar_data"
@@ -51,14 +52,14 @@ source("./code/helper.R")
 ## initial duckdb creation: ONLY NEED TO RUN ONCE EVER ----
 # source(glue("./code/duckdb_init.R"))
 
-## cleaning data (or loading all cleaned datasets) ---- comment out one of these
+## cleaning data (or loading all cleaned datasets) ---- run 1) OR 2)
 ### 1) code to clean data ----
-source(glue("./code/0_dataclean.R"))
-
+# source(glue("./code/0_dataclean.R"))
 ### 2) loading all cleaned datasets ----
 samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
 countysumm  <- read_csv(glue("{cleandata}/countysumm_new.csv")) # county X year-level stats (most analysis uses this)
 link1       <- read_csv(glue("{cleandata}/link1_swt.csv"))
+link1point5 <- read_csv(glue("{cleandata}/link1point5_wtnc.csv"))
 link2       <- read_csv(glue("{cleandata}/link2_swnt.csv"))
 link3       <- read_csv(glue("{cleandata}/link3_mwnt.csv"))
 
