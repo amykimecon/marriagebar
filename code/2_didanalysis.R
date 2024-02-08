@@ -43,6 +43,18 @@ for (i in 1:4){
             verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
             filename    = glue("shareteach_{datanames[[i]]}"))  %>% print()
   Sys.sleep(2) #pause so i can see the graph output
+  
+  # OUTCOME: SHARE SECRETARIES MW/SW/M 
+  did_graph(dataset     = datasets[[i]], 
+            depvarlist  = c("pct_m_Secretary", "pct_mw_Secretary", "pct_sw_Secretary"), 
+            depvarnames = c("Men", "Married Women", "Single Women"),
+            colors      = c(men_col, mw_col, sw_col),
+            yvar        = "DiD Estimate: Share of Secretaries",
+            ymin        = -0.065, 
+            ymax        = 0.06,
+            verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+            filename    = glue("sharesec_{datanames[[i]]}"))  %>% print()
+  Sys.sleep(2) #pause so i can see the graph output
 }
 
 ## stargazer table (neighbor sample only) ----

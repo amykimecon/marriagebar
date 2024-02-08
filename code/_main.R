@@ -54,7 +54,7 @@ source("./code/helper.R")
 
 ## cleaning data (or loading all cleaned datasets) ---- run 1) OR 2)
 ### 1) code to clean data ----
-source("./code/0_dataclean.R")
+#source("./code/0_dataclean.R")
 ### 2) loading all cleaned datasets ----
 samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
 countysumm  <- read_csv(glue("{cleandata}/countysumm_newmatch.csv")) # county X year-level stats (most analysis uses this)
