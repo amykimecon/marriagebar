@@ -19,11 +19,9 @@ library(tidyverse)
 # set filepaths ----
 if (Sys.info()[["user"]]=="yk0581"){ #Amy's section laptop
   root = "C:\\Users\\yk0581\\Dropbox (Princeton)\\marriagebar"
-  #git  = "C:\\Users\\yk0581\\Documents\\GitHub\\marriagebar"
 }
 if (Sys.info()[["user"]]=="amykim"){ #Amy's macbook
   root = "~/Dropbox (Princeton)/marriagebar"
-  #git  = "~/GitHub/marriagebar"
 }
 if (Sys.info()[["user"]]=="ctsao"){ #Carolyn's section laptop
   root = "C:/Users/ctsao/Dropbox/marriagebar_data"
@@ -66,7 +64,7 @@ link3       <- read_csv(glue("{cleandata}/link3_mwnt.csv"))
 ## run analysis scripts ----
 source("./code/1_descriptives.R")
 source("./code/2_didanalysis.R")
-source("./code/2_cohortanalysis.R")
+source("./code/2_cohortanalysis.R") # requires duckdb connection
 
 
 

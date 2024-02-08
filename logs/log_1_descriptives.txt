@@ -1,14 +1,26 @@
-           name
-1 censusraw1910
-2 censusraw1920
-3 censusraw1930
-4 censusraw1940
-5 censusraw1950
-6  censusrawall
-           name
-1 censusraw1910
-2 censusraw1920
-3 censusraw1930
-4 censusraw1940
-5 censusraw1950
-6  censusrawall
+-|                                                                                                                     /                                                                                                                     -|                                                                                                                     # A tibble: 10 × 2
+    YEAR pct_dem_teaching
+   <dbl>            <dbl>
+ 1  1910           0.0127
+ 2  1920           0.0284
+ 3  1930           0.0490
+ 4  1940           0.0446
+ 5  1950           0.0491
+ 6  1960           0.0558
+ 7  1970           0.0697
+ 8  1980           0.0695
+ 9  1990           0.0741
+10  2000           0.0728
+# A tibble: 10 × 2
+    YEAR pct_coll_teachers
+   <dbl>             <dbl>
+ 1  1910            NA    
+ 2  1920            NA    
+ 3  1930            NA    
+ 4  1940             0.329
+ 5  1950             0.245
+ 6  1960             0.285
+ 7  1970             0.278
+ 8  1980             0.182
+ 9  1990             0.126
+10  2000             0.126

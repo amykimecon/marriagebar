@@ -94,13 +94,13 @@ linkdatasets <- list(link1 %>% filter(neighbor_samp == 1 & mainsamp == 1),
                      link2 %>% filter(neighbor_samp == 1 & mainsamp == 1),
                      link3 %>% filter(neighbor_samp == 1 & mainsamp == 1),
                      
-                     link1 %>% filter(match_samp == 1 & mainsamp == 1),
-                     link2 %>% filter(match_samp == 1 & mainsamp == 1),
-                     link3 %>% filter(match_samp == 1 & mainsamp == 1),
+                     link1 %>% filter(match_weight1 == 1 & mainsamp == 1),
+                     link2 %>% filter(match_weight1 == 1 & mainsamp == 1),
+                     link3 %>% filter(match_weight1 == 1 & mainsamp == 1),
                      
-                     link1 %>% filter(match_samp2 == 1 & mainsamp == 1),
-                     link2 %>% filter(match_samp2 == 1 & mainsamp == 1),
-                     link3 %>% filter(match_samp2 == 1 & mainsamp == 1)
+                     link1 %>% filter(match_weight2 == 1 & mainsamp == 1),
+                     link2 %>% filter(match_weight2 == 1 & mainsamp == 1),
+                     link3 %>% filter(match_weight2 == 1 & mainsamp == 1)
 )
 yvarlist    <- rep(c("Unmarried Women Teachers", "Unmarried Women Non-Teachers", "Married Women Non-Teachers"),3)
 yvarlablist <- rep(c("swt","swnt","mwnt"),3)

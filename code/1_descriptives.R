@@ -10,22 +10,24 @@ sink("./logs/log_1_descriptives.txt", append=FALSE)
 ## neighbor ----
 graph_treatment(countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1), 
                 filename = "treatmap_neighbor") + 
-  ggtitle("Neighbor Sample")
+                ggtitle("Neighbor Sample")
 
 ## match 1 ----
 graph_treatment(countysumm %>% filter(match_weight1 != 0 & mainsamp == 1), 
                 filename = "treatmap_matched1") + 
-  ggtitle("Matched Sample 1")
+                ggtitle("Matched Sample 1")
 
 ## match 2 ----
 graph_treatment(countysumm %>% filter(match_weight2 != 0 & mainsamp == 1), 
                 filename = "treatmap_matched2") + 
-  ggtitle("Matched Sample 2")
+                ggtitle("Matched Sample 2")
 
 ## match 3 ----
-graph_treatment(countysumm %>% filter(match_weight3 != 0 & mainsamp == 1) %>% mutate(weights = match_weight3), 
-                filename = "treatmap_matched3", full = TRUE) + 
-  ggtitle("Matched Sample 3")
+graph_treatment(countysumm %>% 
+                  filter(match_weight3 != 0 & mainsamp == 1) %>%
+                  mutate(weights = match_weight3),
+                filename = "treatmap_matched3", full = TRUE) +
+                ggtitle("Matched Sample 3")
 
 #_________________________________________________
 # MATCHING TEST FOR TREATMENT AND CONTROL: BOXPLOTS
