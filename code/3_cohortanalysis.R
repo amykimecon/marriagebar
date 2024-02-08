@@ -120,36 +120,41 @@ cohort_cdf(minyear = 1908, maxyear = 1910) # 22-24yo in 1933
 
 
 ## COHORT EVENT STUDY (?) [added by amy 2/8/23] ----
-cohort_range = seq(1905,1925)
+cohort_range = seq(1924,1925)
 
 # construct table by birth cohort
 countysumm_allcohorts <- tbl(con, "censusrawall") %>% #taking table from DuckDB
   addvars_indiv() %>% #helper function to add individual-level variables (demgroup, teacher indicator, etc.) 
   filter(SEX==2 & RACE==1) %>% 
-  mutate(birthyear = YEAR - AGE) %>%
-  filter(birthyear>=min(cohort_range) & birthyear<=max(cohort_range) | 
+  mutate(birthyear = YEAR - AGE,
+         TREAT    = ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)) %>% # indicator for treated states) %>%
+  filter(birthyear>=1895& birthyear<=1925| 
            (AGE==0 & YEAR==1910)) %>% # just to add datapoints for 1910; needed for DiD helper functions
   group_by(YEAR, TREAT, birthyear) %>% #grouping at the year x birth cohort x treatment status level (NOTE: quicker way to aggregate than to first group by county then group by treatment & weight by population)
   summarize(POP             = n(), #overall population of county
             PCT_TEACH       = sum(ifelse(teacher==1,1,0))/n(), #number of white teachers
             PCT_MARR        = sum(ifelse(MARST %in% c(1,2), 1, 0))/n(), #share of cohort married
-            PCT_MARRTEACH   = sum(ifelse(teacher==1,1,0)*ifelse(MARST %in% c(1,2), 1, 0))/n(), # interaction
-            PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)) #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
+            PCT_MARRTEACH   = sum(ifelse(teacher==1,1,0)*ifelse(MARST %in% c(1,2), 1, 0))/n() #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
   ) %>%
   collect() %>%
-  addvars_county() %>% #adding county-level variables (treatment status, FIPS codes, etc.)
   pivot_wider(id_cols     = c(TREAT, birthyear), #pivoting wide on census year -- so each row is county x birth cohort obs
               names_from  = YEAR, 
               values_from = all_of(c("POP", "PCT_TEACH", "PCT_MARR", "PCT_MARRTEACH"))) %>%
-  mutate(mainsamp = ifelse(FIPS %in% mainsamp_list, 1, 0), # keep only main counties
-         PCT_TEACH_CHANGE_30_40 = PCT_TEACH_1940 - PCT_TEACH_1930,
+  mutate(PCT_TEACH_CHANGE_30_40 = PCT_TEACH_1940 - PCT_TEACH_1930,
          PCT_MARR_CHANGE_30_40 = PCT_MARR_1940 - PCT_MARR_1930,
-         PCT_MARRTEACH_CHANGE_30_40 = PCT_MARRTEACH_1940 - PCT_MARRTEACH_1930
+         PCT_MARRTEACH_CHANGE_30_40 = PCT_MARRTEACH_1940 - PCT_MARRTEACH_1930,
+         PCT_TEACH_CHANGE_20_30 = PCT_TEACH_1930 - PCT_TEACH_1920,
+         PCT_MARR_CHANGE_20_30 = PCT_MARR_1930 - PCT_MARR_1920,
+         PCT_MARRTEACH_CHANGE_20_30 = PCT_MARRTEACH_1930 - PCT_MARRTEACH_1920
          )
 
 # graphing
-ggplot(data = countysumm_allcohorts,
-       aes(x = birthyear, y = PCT_TEACH_CHANGE_30_40, color = factor(TREAT))) +
+# 20-30
+ggplot(data = countysumm_allcohorts %>% filter(birthyear >= 1905),
+       aes(x = birthyear, y = PCT_MARR_CHANGE_30_40, color = factor(TREAT))) +
   geom_point()
 
+ggplot(data = countysumm_allcohorts %>% filter(birthyear <= 1915),
+       aes(x = birthyear, y = PCT_MARR_CHANGE_20_30, color = factor(TREAT))) +
+  geom_point()
 
