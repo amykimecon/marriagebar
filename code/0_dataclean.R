@@ -3,6 +3,7 @@
 
 # open log ----
 sink("./logs/log_0_dataclean.txt", append=FALSE)
+print("***************** RUNNING: 0_dataclean.txt *****************\n\n")
 
 # opening connection to duckdb database
 con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
@@ -12,6 +13,7 @@ con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
 #________________________________________________________
 # 1% SAMPLE 1910-2000: GROUPING BY YEAR ----
 #________________________________________________________
+print("\n\n***** writing 1% sample 1910-2000, grouping by year *****\n\n")
 ## reading in raw data
 allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
 
@@ -42,6 +44,7 @@ write_csv(samp_byyear, glue("{cleandata}/samp_byyear.csv"))
 #________________________________________________________
 # CROSS-SECTIONAL DATA, GROUPING BY COUNTY ----
 #________________________________________________________
+print("\n\n***** grouping full count census by county *****\n\n")
 ## GROUPING FOR GENERAL COUNTY CHARACTERISTICS: FULL SAMPLE DATA 
 countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
   addvars_indiv() %>% #helper function to add individual-level variables (demgroup, teacher indicator, etc.)
@@ -76,6 +79,7 @@ countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
 #!#! CHECKED 
 
 ## GROUPING FOR TEACHER/SECRETARY-SPECIFIC COUNTY CHARACTERISTICS: FULL SAMPLE DATA (TEACHERS + SECRETARIES)
+print("\n\n***** grouping full count census by county, wide for teachers/secretaries *****\n\n")
 countysumm_occ <- tbl(con, "censusrawall") %>% 
   addvars_indiv() %>% 
   filter((teacher == 1| secretary == 1) & RACE == 1) %>% #only keeping white teachers and secretaries
@@ -123,6 +127,7 @@ countysumm_occ <- tbl(con, "censusrawall") %>%
 #  MATCHED DATA ----
 #________________________________________________________
 ## Initially combine county and county-occ data just for matching
+print("\n\n***** merging county and county-occ data... *****\n\n")
 countysumm_raw <- countysumm_gen %>% 
   full_join(countysumm_occ, by = c("YEAR", "STATEICP", "COUNTYICP")) %>% 
   ungroup()
@@ -130,12 +135,16 @@ countysumm_raw <- countysumm_gen %>%
 # main sample of counties (FIPS)
 # (default is filter on counties with at least 10 white teachers in 
 # 1930 and 1940 AND non-missing FIPS code AND observed in all four years 1910-1940)
+print("\n\n***** identify main sample of counties... *****\n\n")
 mainsamp_list <- mainsamp(countysumm_raw)
 #!#! CHECKED
 
 ## Matching & samp selection
 # variables to match on (excl retail)
-matchvars <- c("URBAN","LFP", "LFP_MW", "POP", "PCT_UNDER20", "PCT_20TO39", "PCT_40TO59", "PCT_LIT", "PCT_WHITE", "pct_sw_Teacher", "pct_mw_Teacher")
+matchvars <- c("URBAN","LFP", "LFP_MW", "POP", 
+               "PCT_UNDER20", "PCT_20TO39", "PCT_40TO59", 
+               "PCT_LIT", "PCT_WHITE", 
+               "pct_sw_Teacher", "pct_mw_Teacher")
 
 # METHOD ONE: NEAREST NEIGHBOR
 matches1 <- matching(countysumm_raw, matchvars)
@@ -176,7 +185,7 @@ linkview <-  tbl(con, "linkedall") %>%
   addvars_indiv_linked() %>%
   mutate(NCHILD_base = `NCHILD`, 
          NCHILD_link = `NCHILD:1`) %>% #temporary while NCHILD isn't explicitly relabelled in duckdb
-  select(c(ends_with("_base"),ends_with("_link"))) %>% #only keeping variables that have been selected (see duckdb_init)
+  dplyr::select(c(ends_with("_base"),ends_with("_link"))) %>% #only keeping variables that have been selected (see duckdb_init)
   filter(SEX_base == SEX_link & RACE_base == RACE_link &  #only keeping links with consistent sex and race (drops 1.2% of links)
            AGE_base <= AGE_link - 5 & AGE_base >= AGE_link - 15) #and consistent age (age in base year 5-15 years less than age in link year) -- drops an additional 2.2% of links
 ##! CHECKED: JUST HAVE TO CONFIRM THE COMMENTS ABOVE WHEN RE-RUN

@@ -111,7 +111,7 @@ mergefips <- function(dataset){
     mutate(FIPSRAW = paste0(str_pad(FIPS, 2, "left", pad = "0"),
                             str_pad(COUNTYICP, 4, "left", pad = "0")),
            FIPS    = ifelse(substr(FIPSRAW,6,6) == "0", substr(FIPSRAW,1,5), NA)) %>% 
-    select(-c(NAME, STNAME, FIPSRAW))
+    dplyr::select(-c(NAME, STNAME, FIPSRAW))
 
   return(outdata)
 } #!#! CHECKED
@@ -182,9 +182,9 @@ retailsales <- function(dataset){
                                   TRUE ~ COUNTYICP
                                   )) %>%
     #rldf3929 = growth in retail sales from 1929 to 1939
-    left_join(retailsales %>% select(STATE, NDMTCODE, RLDF3929, RRTSAP29, RRTSAP39), 
+    left_join(retailsales %>% dplyr::select(STATE, NDMTCODE, RLDF3929, RRTSAP29, RRTSAP39), 
               by = c("STATEICP"="STATE","COUNTYTEMP"="NDMTCODE")) %>% 
-    select(-COUNTYTEMP)
+    dplyr::select(-COUNTYTEMP)
 } #!#! CHECKED
 
 #________________________
@@ -355,14 +355,14 @@ matching <- function(longdata, varnames, distance = "robust_mahalanobis", method
     control_matches[["STATE_MATCH"]] <- matchdata[rownames(match_obj$match.matrix),][["STATEICP"]] # creating new var equal to state of treated match
     control_matches[["FIPS_MATCH"]]  <- matchdata[rownames(match_obj$match.matrix),][["FIPS"]] # creating new var equal to fips of treated match
     
-    return(select(bind_rows(control_matches, 
+    return(dplyr::select(bind_rows(control_matches, 
                             get_matches(match_obj) %>% 
                               filter(TREAT == 1) %>% 
                               mutate(STATE_MATCH = STATEICP, FIPS_MATCH = FIPS)), 
                   c(FIPS, STATE_MATCH, FIPS_MATCH)))
   }
   else{
-    return(select(match.data(match_obj), c(FIPS, weights)))
+    return(dplyr::select(match.data(match_obj), c(FIPS, weights)))
   }
 } 
 
@@ -374,13 +374,13 @@ matching_join <- function(dataset, matchlist, getfipsmatch = FALSE){
   for (i in 1:length(matchlist)){
     if (i == 1 & getfipsmatch){ # for first matching dataset, keep state of match IF getfipsmatch = TRUE
       dataset <- dataset %>% 
-        left_join(matchlist[[i]] %>% mutate(match = 1) %>% select(-FIPS_MATCH), # note: keep STATE_MATCH here for state_matching fcn
+        left_join(matchlist[[i]] %>% mutate(match = 1) %>% dplyr::select(-FIPS_MATCH), # note: keep STATE_MATCH here for state_matching fcn
                   by = c("FIPS")) %>%  
         mutate(match_samp1 = ifelse(match == 1, 1, 0))
     }
     else{
       dataset <- dataset %>% left_join(matchlist[[i]]) %>%
-        mutate("match_weight{i}" := ifelse(is.na(weights), 0, weights)) %>% select(-weights)
+        mutate("match_weight{i}" := ifelse(is.na(weights), 0, weights)) %>% dplyr::select(-weights)
     }
   }
   return(dataset)
@@ -600,7 +600,7 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALS
     graph_out <- plot_usmap(data = dataset %>% 
                               filter(YEAR == 1940) %>% 
                               mutate(fips = FIPS, weights = cut(weights, quantile(weights, probs = seq(0,1,0.2)))) %>% 
-                              select(c(fips, weights)), 
+                              dplyr::select(c(fips, weights)), 
                             values = "weights", exclude = exclude_st, color = NA) + 
       theme(legend.position = "right", text = element_text(size = 14)) + 
       scale_fill_manual(values = colorRampPalette(c("white",control_col))(5)) +
@@ -613,7 +613,7 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALS
     graph_out <- plot_usmap(data = dataset %>% 
                               filter(YEAR == 1940) %>% 
                               mutate(fips = FIPS, TREAT = ifelse(TREAT == 1, "Treated", "Control")) %>% 
-                              select(c(fips, TREAT)), 
+                              dplyr::select(c(fips, TREAT)), 
                             values = "TREAT", color = NA, exclude = exclude_st) +
       theme(legend.position = "right", text = element_text(size = 14)) + 
       scale_fill_manual(breaks = c("Treated", "Control"), values = c(treat_col, control_col)) + 
@@ -700,7 +700,7 @@ state_matching <- function(dataset, matchtype){
            pct_marr_after_Secretary  = case_when(STATE_MATCH == 47 ~ pct_marr_after3_Secretary, #if matched with NC (or in NC), 'law passes' in 1933
                                                  STATE_MATCH == 51 ~ pct_marr_after8_Secretary, #if matched with KY (or in KY), 'law passes' in 1938
                                                  TRUE ~ NA_real_)) %>% 
-    select(-c(starts_with("pct_marr_before3"),
+    dplyr::select(-c(starts_with("pct_marr_before3"),
               starts_with("pct_marr_after3"),
               starts_with("pct_marr_before8"),
               starts_with("pct_marr_after8")))
