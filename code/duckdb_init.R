@@ -43,13 +43,11 @@ for (year in seq(1910,1950,10)){
                           USING (SERIAL, SPLOC)"))
   toc()
   
-  # TEMP FIX 20240206
-  if({year}==1950) {
-    dbExecute(con, "ALTER TABLE censusraw1950 DROP COLUMN YEAR")
+  # editing to include year if not already in table
+  if (dbGetQuery(con, glue("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'censusraw{year}' AND COLUMN_NAME = 'YEAR'")) == 1){
+    dbExecute(con, glue("ALTER TABLE censusraw{year} ADD COLUMN YEAR INTEGER"))
+    dbExecute(con, glue("UPDATE censusraw{year} SET YEAR = {year}"))
   }
-  # editing to include year (delete if IPUMS extract includes variable YEAR)
-  dbExecute(con, glue("ALTER TABLE censusraw{year} ADD COLUMN YEAR INTEGER"))
-  dbExecute(con, glue("UPDATE censusraw{year} SET YEAR = {year}"))
 }
 
 # concatenating all census years into one table

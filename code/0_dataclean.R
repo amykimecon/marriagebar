@@ -66,6 +66,7 @@ countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
             PCT_20TO39      = sum(ifelse(AGE >= 20 & AGE < 40, 1, 0))/n(), #share of pop in each age group
             PCT_40TO59      = sum(ifelse(AGE >= 40 & AGE < 60, 1, 0))/n(), #share of pop in each age group
             PCT_OVER59      = sum(ifelse(AGE >= 60, 1, 0))/n(), #share of pop in each age group
+            AGE             = mean(AGE),
             NCHILD          = mean(ifelse(demgroup == "MW", NCHILD, NA), na.rm=TRUE), #avg number of children for married women
             PCT_MARR        = sum(ifelse(AGE >= 18 & SEX == 2 & MARST %in% c(1,2), 1, 0))/sum(ifelse(AGE >= 18 & SEX == 2, 1, 0)), #share adult women married
             PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)) #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
@@ -132,22 +133,20 @@ countysumm_raw <- countysumm_gen %>%
 mainsamp_list <- mainsamp(countysumm_raw)
 #!#! CHECKED
 
-## Matching & samp selection [NOTE -- REVISIT AND EDIT THIS] ----
-# matching set 1
-matchvars1 <- c("POP", "PCT_LIT", "PCT_WHITE")
-matches <- matching(countysumm_raw, matchvars1)
-#!#! CHECKED
+## Matching & samp selection
+# variables to match on (excl retail)
+matchvars <- c("URBAN","LFP", "LFP_MW", "POP", "PCT_UNDER20", "PCT_20TO39", "PCT_40TO59", "PCT_LIT", "PCT_WHITE", "pct_sw_Teacher", "pct_mw_Teacher")
 
-# matching set 2
-matchvars2 <- c("LFP", "LFP_MW", 
-                "POP", 
-                "PCT_UNDER20", "PCT_20TO39", "PCT_40TO59", 
-                "PCT_LIT", "PCT_WHITE",
-                "pct_sw_Teacher", "pct_mw_Teacher")
-matches2 <- matching(countysumm_raw, matchvars2, retail = TRUE)
-#!#! CHECKED
+# METHOD ONE: NEAREST NEIGHBOR
+matches1 <- matching(countysumm_raw, matchvars)
 
-matchlist <- list(matches, matches2)
+# METHOD TWO: GENETIC (note: this takes a while to run, ~5 min)
+matches2 <- matching(countysumm_raw, matchvars, method = "genetic", pop.size = 200)
+
+# METHOD THREE: FULL
+matches3 <- matching(countysumm_raw, matchvars, method = "full")
+
+matchlist <- list(matches1, matches2, matches3)
 
 # cleaning county-level combined data, joining with matches
 countysumm <- countysumm_raw %>% 
@@ -160,13 +159,13 @@ countysumm <- countysumm_raw %>%
          pct_Teacher_mw        = num_mw_Teacher/NWHITEMW, #percentage of white married women that are teachers
          pct_Teacher_sw        = num_sw_Teacher/NWHITESW, #percentage of white unmarried women that are teachers
          teacher_ratio         = WHITESCHOOLPOP/num_Teacher #ratio of number of teachers to white school-aged pop
-  ) %>% 
-  #helper function to match individual counties to specific states in order to 
-  #assign counties to 'law passing' in 1933 or 1938 and use outcome Married After/Married Before
-  state_matching(matchtype = "neighbor") 
+  ) # %>% 
+  # #helper function to match individual counties to specific states in order to 
+  # #assign counties to 'law passing' in 1933 or 1938 and use outcome Married After/Married Before
+  # state_matching(matchtype = "neighbor") 
 #!#! CHECKED
 
-write_csv(countysumm, glue("{cleandata}/countysumm_new.csv"))
+write_csv(countysumm, glue("{cleandata}/countysumm_newmatch.csv"))
 
 #________________________________________________________
 # LINKED DATA ----
