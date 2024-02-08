@@ -1,0 +1,14 @@
+           name
+1 censusraw1910
+2 censusraw1920
+3 censusraw1930
+4 censusraw1940
+5 censusraw1950
+6  censusrawall
+           name
+1 censusraw1910
+2 censusraw1920
+3 censusraw1930
+4 censusraw1940
+5 censusraw1950
+6  censusrawall

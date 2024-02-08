@@ -1,22 +1,19 @@
-Create or replace table censusraw1910...: 1056.72 sec elapsed
-Create temp spouse database for censusraw1910...: 90.89 sec elapsed
-Link spouses for censusraw1910...: 875.16 sec elapsed
-Create or replace table censusraw1920...: 1039.52 sec elapsed
-Create temp spouse database for censusraw1920...: 76.5 sec elapsed
-Link spouses for censusraw1920...: 1022.59 sec elapsed
-Create or replace table censusraw1930...: 1714.07 sec elapsed
-Create temp spouse database for censusraw1930...: 42.01 sec elapsed
-Link spouses for censusraw1930...: 1226.74 sec elapsed
-Create or replace table censusraw1940...: 2201.31 sec elapsed
-Create temp spouse database for censusraw1940...: 72.12 sec elapsed
-Link spouses for censusraw1940...: 1604.77 sec elapsed
-Create or replace table censusraw1950...: 2924.95 sec elapsed
-Create temp spouse database for censusraw1950...: 83.42 sec elapsed
-Link spouses for censusraw1950...: 2223.53 sec elapsed
-[1] 0
-[1] 1950
-[1] 0
-[1] 152287077
-[1] 1950 1950 1950 1950 1950 1950
-[1] 604743102
-Concatenate all census years together...: 7937.13 sec elapsed
+           name
+1 censusraw1910
+2 censusraw1920
+3 censusraw1930
+4 censusraw1940
+5 censusraw1950
+6  censusrawall
+[1] "\n\n*********** CENSUS TREE LINKING ************\n\n"
+Create or replace CensusTree linking file for link year 1920...: 95.5 sec elapsed
+Merge CensusTree linking file to base year 1910...: 49.19 sec elapsed
+Merge CensusTree linking file to link year 1920...: 326.85 sec elapsed
+Create or replace CensusTree linking file for link year 1930...: 135.09 sec elapsed
+Merge CensusTree linking file to base year 1920...: 135.03 sec elapsed
+Merge CensusTree linking file to link year 1930...: 747.01 sec elapsed
+Create or replace CensusTree linking file for link year 1940...: 190.79 sec elapsed
+Merge CensusTree linking file to base year 1930...: 265.3 sec elapsed
+Merge CensusTree linking file to link year 1940...: 1795.15 sec elapsed
+[1] 204775274
+Concatenating linked datasets...: 4218.78 sec elapsed

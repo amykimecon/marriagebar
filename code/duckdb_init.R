@@ -10,13 +10,16 @@
 sink("./logs/log_duckdb_init.txt", append=FALSE)
 
 # creating connection to duckdb database ----
-con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
+#con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
 #for Carolyn, in case connection on Dropbox isn't working:
-#con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=FALSE) 
+con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=FALSE) 
+print("*********** Existing tables in database ************")
+dbGetQuery(con, "SHOW TABLES")
 
 #________________________________________________________
 # IPUMS CENSUS RAW FILES ----
 #________________________________________________________
+print("\n\n*********** IPUMS CENSUS FILES ************\n\n")
 for (year in seq(1910,1950,10)){
   # reading in census CSV and creating/replacing initial table
   tic(glue("Create or replace table censusraw{year}..."))
@@ -64,6 +67,7 @@ toc()
 #________________________________________________________
 # CENSUSTREE LINKING ----
 #________________________________________________________
+print("\n\n*********** CENSUS TREE LINKING ************\n\n")
 # names of columns we want to keep in linked dataset
 link_colnames <- c("YEAR","STATEICP", "COUNTYICP", 
                    "SEX", "AGE", "MARST", "RACE", 

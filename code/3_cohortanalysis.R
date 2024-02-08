@@ -117,3 +117,4 @@ cohort_cdf(minyear = 1915, maxyear = 1917) # 16-18yo in 1933
 cohort_cdf(minyear = 1912, maxyear = 1914) # 19-21yo in 1933
 cohort_cdf(minyear = 1908, maxyear = 1910) # 22-24yo in 1933
 
+dbDisconnect(con, shutdown=TRUE)
