@@ -855,5 +855,88 @@ septreat=TRUE
                    axis.text = element_text(size = 14)), width = 8, height = 5)
   }
   return(graph_out)
+  }
+
+# simplify linked analysis graphs ----
+#________________________________________________________
+# RESULT 2: TRANSITION PROBABILITIES W/ LINKED DATA ----
+#________________________________________________________
+con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=TRUE) 
+
+# Creating 'linked view' -- NOTE: NOT A TABLE/DATAFRAME, 
+# just a linking to be filtered/mutated appropriately and collected
+linkview <-  tbl(con, "linkedall") %>% 
+  addvars_indiv_linked() %>%
+  mutate(NCHILD_base = `NCHILD`, 
+         NCHILD_link = `NCHILD:1`) %>% #temporary while NCHILD isn't explicitly relabelled in duckdb
+  dplyr::select(c(ends_with("_base"),ends_with("_link"))) %>% #only keeping variables that have been selected (see duckdb_init)
+  filter(SEX_base == SEX_link & RACE_base == RACE_link &  #only keeping links with consistent sex and race (drops 1.2% of links)
+           AGE_base <= AGE_link - 5 & AGE_base >= AGE_link - 15) #and consistent age (age in base year 5-15 years less than age in link year) -- drops an additional 2.2% of links
+# group: all unmarried women in t-10
+link_sw <- linkview %>% 
+  filter(demgroup_base == "SW" & RACE_base == 1 & AGE_base >= 10 & AGE_base <= 20) %>% 
+  summlinks(n = 10) 
+# group: all married women in t-10
+link_mw <- linkview %>% 
+  filter(demgroup_base == "MW" & RACE_base == 1 & AGE_base <= 40) %>% 
+  summlinks(n = 10) 
+
+linkdatasets <- list(link_sw %>% filter(neighbor_samp == 1 & mainsamp == 1), # SW 
+                     link_mw %>% filter(neighbor_samp == 1 & mainsamp == 1), # MW 
+                     link1   %>% filter(neighbor_samp == 1 & mainsamp == 1), # SWT
+                     link2   %>% filter(neighbor_samp == 1 & mainsamp == 1)  # SWNT
+)
+yvarlist    <- c("Unmarried W", 
+                 "Married W",
+                 "Unmarried W Teachers",
+                 "Unmarried W Non-Teachers")
+yvarlablist <- c("sw", "mw", "swt", "swnt")
+linklablist <- c(rep("neighbor",4))
+
+## figures ----
+for (i in 1:4){
+  # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
+  # TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
+  did_graph(dataset     = linkdatasets[[i]],
+            depvarlist  = c("pct_mw", "pct_t", "pct_mwt"),
+            depvarnames = c("Married", "Teacher", "Married Teacher"),
+            colors      = c(men_col, mw_col, "grey"),
+            years       = c(1920, 1940),
+            yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+            ymin        = -0.066, 
+            ymax        = 0.05,
+            verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+            filename    = glue("test_linked_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+  Sys.sleep(2) #pause so i can see the graph output
+  
+}
+
+# for men
+# group: all men in t-10
+link_m <- linkview %>% 
+  filter(demgroup_base == "M" & RACE_base == 1 & AGE_base >= 10 & AGE_base <= 40) %>% 
+  summlinks(n = 10) %>% 
+  filter(neighbor_samp == 1 & mainsamp == 1) 
+yvarlist    <- c("Men")
+yvarlablist <- c("m")
+linklablist <- c(rep("neighbor",1))
+
+## figures ----
+for (i in 1:1){
+  # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
+  # TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
+  did_graph(dataset     = link_m,
+            depvarlist  = c("pct_marr", "pct_t"),
+            depvarnames = c("Married", "Teacher"),
+            colors      = c(men_col, mw_col),
+            years       = c(1920, 1940),
+            yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+            ymin        = -0.066, 
+            ymax        = 0.05,
+            verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+            filename    = glue("test_linked_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+  Sys.sleep(2) #pause so i can see the graph output
+  
+}
   
  

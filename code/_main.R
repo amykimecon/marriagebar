@@ -64,7 +64,7 @@ link3       <- read_csv(glue("{cleandata}/link3_mwnt.csv"))
 ## run analysis scripts ----
 source("./code/1_descriptives.R")
 source("./code/2_didanalysis.R")
-source("./code/2_cohortanalysis.R") # requires duckdb connection
+source("./code/2_cohortanalysis.R") # NOTE: requires duckdb connection
 
 
 

@@ -200,6 +200,7 @@ addvars_indiv_linked <- function(dataset){
            demgroup_link  = case_when(SEX_link == 1 ~ "M",
                                       SEX_link == 2 & MARST_link != 1 & MARST_link != 2 ~ "SW",
                                       TRUE ~ "MW"),
+           marst_link     = ifelse(MARST_link == 1 | MARST_link == 2, 1, 0), 
            worker_base    = ifelse(YEAR_base == 1900, 
                                 ifelse(OCC1950_base != 999 & AGE_base >= 18 & AGE_base <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
                                 ifelse(LABFORCE_base == 2  & AGE_base >= 18 & AGE_base <= 64, 1, 0)), #otherwise, those in LABFORCE 
@@ -221,6 +222,7 @@ summlinks <- function(dataset, n = 10){
     group_by(STATEICP_base, COUNTYICP_base, YEAR_base, YEAR_link) %>%
     summarize(nlink       = n(),
               pct_t       = sum(ifelse(teacher_link == 1, 1, 0))/n(),
+              pct_marr    = sum(ifelse(marst_link == 1, 1, 0))/n(),
               pct_mw      = sum(ifelse(demgroup_link == "MW", 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
               pct_mwt     = sum(ifelse(demgroup_link == "MW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw teach
               pct_mwnt    = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw non teach but in lf

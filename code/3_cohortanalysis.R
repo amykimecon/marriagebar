@@ -1,7 +1,7 @@
 # COHORT ANALYSIS
-# AUTHOR: CAROLYN
+# AUTHORS: CAROLYN/AMY
 
-## NOTE: Temporary.
+## NOTE: Temporary. Some of this analysis doesn't quite make sense
 ## Maybe split across 0_dataclean and 2_didanalysis?
 
 # open connection to database ----
