@@ -858,9 +858,6 @@ septreat=TRUE
   }
 
 # simplify linked analysis graphs ----
-#________________________________________________________
-# RESULT 2: TRANSITION PROBABILITIES W/ LINKED DATA ----
-#________________________________________________________
 con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=TRUE) 
 
 # Creating 'linked view' -- NOTE: NOT A TABLE/DATAFRAME, 
@@ -872,19 +869,60 @@ linkview <-  tbl(con, "linkedall") %>%
   dplyr::select(c(ends_with("_base"),ends_with("_link"))) %>% #only keeping variables that have been selected (see duckdb_init)
   filter(SEX_base == SEX_link & RACE_base == RACE_link &  #only keeping links with consistent sex and race (drops 1.2% of links)
            AGE_base <= AGE_link - 5 & AGE_base >= AGE_link - 15) #and consistent age (age in base year 5-15 years less than age in link year) -- drops an additional 2.2% of links
-# group: all unmarried women in t-10
-link_sw <- linkview %>% 
-  filter(demgroup_base == "SW" & RACE_base == 1 & AGE_base >= 10 & AGE_base <= 20) %>% 
-  summlinks(n = 10) 
+
+## for women ----
 # group: all married women in t-10
 link_mw <- linkview %>% 
   filter(demgroup_base == "MW" & RACE_base == 1 & AGE_base <= 40) %>% 
-  summlinks(n = 10) 
-
-linkdatasets <- list(link_sw %>% filter(neighbor_samp == 1 & mainsamp == 1), # SW 
-                     link_mw %>% filter(neighbor_samp == 1 & mainsamp == 1), # MW 
-                     link1   %>% filter(neighbor_samp == 1 & mainsamp == 1), # SWT
-                     link2   %>% filter(neighbor_samp == 1 & mainsamp == 1)  # SWNT
+  summlinks(n = 5) 
+# group: all unmarried women teachers in t-10
+link_sw <- linkview %>% 
+  filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base >= 8 & AGE_base<=14) %>% 
+  summlinks(n = 5)
+# group: all unmarried women teachers in t-10
+link_swt <- linkview %>% 
+  filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base > 25 & AGE_base <= 30) %>% 
+  mutate(TREAT_base           = ifelse(STATEICP_base == 47 | STATEICP_base == 51, 1, 0), # indicator for treated states
+         neighbor_samp   = ifelse(STATEICP_base %in% c(47, 51, 40, 48, 54, 56), 1, 0), # indicator for treated or neighbor control
+         neighbor_sampNC = ifelse(STATEICP_base %in% c(47, 48, 40, 54), 1, 0), #neighbors for NC: SC, VA, TN
+         neighbor_sampKY = ifelse(STATEICP_base %in% c(51, 54, 56, 21, 24, 22), 1, 0) #neighbors for KY: TN, WV, IL, IN, OH)
+  ) %>%
+  group_by(TREAT_base, YEAR_base, YEAR_link) %>%
+  summarize(nlink       = n(),
+            pct_t       = sum(ifelse(teacher_link == 1, 1, 0))/n(),
+            pct_marr    = sum(ifelse(marst_link == 1, 1, 0))/n(),
+            pct_mw      = sum(ifelse(demgroup_link == "MW", 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
+            pct_mwt     = sum(ifelse(demgroup_link == "MW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw teach
+            pct_mwnt    = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw non teach but in lf
+            pct_mwnilf  = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later mw and not in lf
+            pct_sw      = sum(ifelse(demgroup_link == "SW", 1, 0))/n(), #share of sample (swt_base) that are later sw (teach + nonteach)
+            pct_swt     = sum(ifelse(demgroup_link == "SW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw teach
+            pct_swnt    = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw non teach but in lf
+            pct_swnilf  = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later sw and not in lf
+            pct_wc      = sum(ifelse(NCHILD_link > 0, 1, 0))/n(), #share of sample (swt_base) that later have children (teach + nonteach)
+            pct_wct     = sum(ifelse(NCHILD_link > 0 & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and teach
+            pct_wcnt    = sum(ifelse(NCHILD_link > 0 & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and work, but not as teachers
+            pct_wcnilf  = sum(ifelse(NCHILD_link > 0 & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that later have children and exit lf
+            pct_wnc     = sum(ifelse(NCHILD_link == 0, 1, 0))/n(), #share of sample (swt_base) that later do not have children
+            pct_wnct    = sum(ifelse(NCHILD_link == 0 & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that later don't have children and teach
+            pct_wncnt   = sum(ifelse(NCHILD_link == 0 & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that don't have children and work, but not as teachers
+            pct_wncnilf = sum(ifelse(NCHILD_link == 0 & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that don't have children and exit lf
+  ) %>%
+  rename(TREAT = TREAT_base, YEAR = YEAR_link) %>%
+  collect() 
+ggplot(data = link_swt, aes(x = YEAR, y = pct_mw, color = factor(TREAT))) + geom_point()
+  
+# full version
+minage <- 18
+maxage <- 40
+link_swt <- linkview %>% 
+  filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & 
+           AGE_base > minage & AGE_base <= maxage) %>%
+  summlinks(n = 5)
+linkdatasets <- list(link_sw  %>% filter(neighbor_samp == 1 & mainsamp == 1), # SW 
+                     link_mw  %>% filter(neighbor_samp == 1 & mainsamp == 1), # MW 
+                     link_swt %>% filter(neighbor_samp == 1 & mainsamp == 1), # SWT
+                     link2    %>% filter(neighbor_samp == 1 & mainsamp == 1)  # SWNT
 )
 yvarlist    <- c("Unmarried W", 
                  "Married W",
@@ -892,9 +930,93 @@ yvarlist    <- c("Unmarried W",
                  "Unmarried W Non-Teachers")
 yvarlablist <- c("sw", "mw", "swt", "swnt")
 linklablist <- c(rep("neighbor",4))
+## figures
+#for (i in 1:4){
+i=3
+did_graph(dataset     = linkdatasets[[i]],
+          depvarlist  = c("pct_mw"), #, "pct_t", "pct_mwt"),
+          depvarnames = c("Married"), #, "Teacher", "Married Teacher"),
+          colors      = c(men_col), #, mw_col, "grey"),
+          years       = c(1920, 1940),
+          yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+          ymin        = -0.066, 
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          #septreat    = TRUE,
+          filename    = glue("test_linked_baseage{minage}to{maxage}_mw_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+did_graph(dataset     = linkdatasets[[i]],
+          depvarlist  = c("pct_t"), #, "pct_t", "pct_mwt"),
+          depvarnames = c("Teacher"), #, "Teacher", "Married Teacher"),
+          colors      = c(men_col), #, mw_col, "grey"),
+          years       = c(1920, 1940),
+          yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+          ymin        = -0.066, 
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          #septreat    = TRUE,
+          filename    = glue("test_linked_baseage{minage}to{maxage}_t_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+did_graph(dataset     = linkdatasets[[i]],
+          depvarlist  = c("pct_mwt"), #, "pct_t", "pct_mwt"),
+          depvarnames = c("Married Teacher"), #, "Teacher", "Married Teacher"),
+          colors      = c(men_col), #, mw_col, "grey"),
+          years       = c(1920, 1940),
+          yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+          ymin        = -0.066, 
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          #septreat    = TRUE,
+          filename    = glue("test_linked_baseage{minage}to{maxage}_mwt_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+did_graph(dataset     = linkdatasets[[i]],
+          depvarlist  = c("pct_nilf"), #, "pct_t", "pct_mwt"),
+          depvarnames = c("Not in labor force"), #, "Teacher", "Married Teacher"),
+          colors      = c(men_col), #, mw_col, "grey"),
+          years       = c(1920, 1940),
+          yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+          ymin        = -0.066, 
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          #septreat    = TRUE,
+          filename    = glue("test_linked_baseage{minage}to{maxage}_nilf_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
 
-## figures ----
-for (i in 1:4){
+## ARCHIVE
+# OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
+# TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
+did_graph(dataset     = linkdatasets[[i]],
+          depvarlist  = c("pct_mwt"), #, "pct_t", "pct_mwt"),
+          depvarnames = c("Married Teacher"), #, "Teacher", "Married Teacher"),
+          colors      = c(men_col), #, mw_col, "grey"),
+          years       = c(1920, 1940),
+          yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+          ymin        = -0.066, 
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          #septreat    = TRUE,
+          filename    = glue("test_linked_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+#}
+
+### NC ----
+# group: all unmarried women in t-10
+link_sw <- linkview %>% 
+  filter(demgroup_base == "SW" & RACE_base == 1 & AGE_base >= 8 & AGE_base <= 14) %>% 
+  summlinks(n = 5) 
+# group: all single women teachers in 5-10
+link_swt <- linkview %>% 
+  filter(teacher_base==1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base >= 30 & AGE_base <=35) %>% 
+  summlinks(n = 5) 
+linkdatasets <- list(link_sw  %>% filter(neighbor_sampNC == 1 & mainsamp == 1), # SW 
+                     link_mw  %>% filter(neighbor_sampNC == 1 & mainsamp == 1), # MW 
+                     link_swt %>% filter(neighbor_sampNC == 1 & mainsamp == 1), # SWT
+                     link2    %>% filter(neighbor_sampNC == 1 & mainsamp == 1)  # SWNT
+)
+yvarlist    <- c("Unmarried W", 
+                 "Married W",
+                 "Unmarried W Teachers",
+                 "Unmarried W Non-Teachers")
+yvarlablist <- c("sw", "mw", "swt", "swnt")
+linklablist <- c(rep("neighbor",4))
+## figures
+i=3
+#for (i in 1:4){
   # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
   # TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
   did_graph(dataset     = linkdatasets[[i]],
@@ -906,12 +1028,49 @@ for (i in 1:4){
             ymin        = -0.066, 
             ymax        = 0.05,
             verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
-            filename    = glue("test_linked_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
-  Sys.sleep(2) #pause so i can see the graph output
-  
-}
+            #septreat    = TRUE,
+            filename    = glue("test_nc_linked_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+#}
 
-# for men
+### KY ----
+# group: all unmarried women in t-10
+link_sw <- linkview %>% 
+  filter(demgroup_base == "SW" & RACE_base == 1 & AGE_base >= 7 & AGE_base <= 10) %>% 
+  summlinks(n = 5) 
+# group: all single women teachers in 5-10
+link_swt <- linkview %>% 
+    filter(teacher_base==1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 25) %>% 
+    summlinks(n = 5) 
+linkdatasets <- list(link_sw  %>% filter(neighbor_sampKY == 1 & mainsamp == 1), # SW 
+                     link_mw  %>% filter(neighbor_sampKY == 1 & mainsamp == 1), # MW 
+                     link_swt %>% filter(neighbor_sampKY == 1 & mainsamp == 1), # SWT
+                     link2    %>% filter(neighbor_sampKY == 1 & mainsamp == 1)  # SWNT
+)
+yvarlist    <- c("Unmarried W", 
+                 "Married W",
+                 "Unmarried W Teachers",
+                 "Unmarried W Non-Teachers")
+yvarlablist <- c("sw", "mw", "swt", "swnt")
+linklablist <- c(rep("neighbor",4))
+## figures
+#for (i in 1:4){
+i=3
+  # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
+  # TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
+  did_graph(dataset     = linkdatasets[[i]],
+            depvarlist  = c("pct_mw", "pct_t", "pct_mwt"),
+            depvarnames = c("Married", "Teacher", "Married Teacher"),
+            colors      = c(men_col, mw_col, "grey"),
+            years       = c(1920, 1940),
+            yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+            ymin        = -0.066, 
+            ymax        = 0.05,
+            #septreat    = TRUE,
+            verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+            filename    = glue("test_ky_linked_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+#}
+
+## for men ----
 # group: all men in t-10
 link_m <- linkview %>% 
   filter(demgroup_base == "M" & RACE_base == 1 & AGE_base >= 10 & AGE_base <= 40) %>% 
@@ -921,7 +1080,7 @@ yvarlist    <- c("Men")
 yvarlablist <- c("m")
 linklablist <- c(rep("neighbor",1))
 
-## figures ----
+## figures
 for (i in 1:1){
   # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
   # TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
@@ -938,5 +1097,37 @@ for (i in 1:1){
   Sys.sleep(2) #pause so i can see the graph output
   
 }
+
+# simplified linking results
+# merge on controls/weights
+link1 <- linkview %>% 
+  filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>% 
+  summlinks(n = 5)
+link_controls <- left_join(x=link1 %>% filter(neighbor_samp == 1 & mainsamp == 1), 
+                           y=neighbor %>% 
+                             select(c("YEAR","STATEICP","COUNTYICP","URBAN","LFP","NWHITETEACH","POP")), 
+                           by=c("YEAR","STATEICP","COUNTYICP"))
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: MARRIED BY LINK YEAR
+did_graph(dataset     = link_controls,
+          depvarlist  = c("pct_mw"),
+          depvarnames = c("Pr(Married by t)"),
+          colors      = c(men_col),
+          years       = c(1920, 1940),
+          yvar        = glue("Estimated coefficient"),
+          ymin        = -0.066,
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("linked_{yvarlablist[[1]]}_{linklablist[[1]]}_mw"))
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: (MARRIED BY LINK YEAR ) X (OCC IN LINK YEAR)
+did_graph(dataset     = link_controls,
+          depvarlist  = c("pct_mwt", "pct_mwnt", "pct_mwnilf"),
+          depvarnames = c("Pr(Married and teaching in t)", "Pr(Married and working (not teaching) in t)", "Pr(Married and not in labor force in t)"),
+          colors      = c(men_col, mw_col, "grey"),
+          years       = c(1920, 1940),
+          yvar        = glue("Estimated coefficient"),
+          ymin        = -0.066,
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("linked_{yvarlablist[[1]]}_{linklablist[[1]]}_mw_heterog"))
   
  

@@ -20,6 +20,30 @@ datanames  <- list("neighbor", "matched1", "matched2", "matched3")
 # RESULT 1: COMPOSITION OF TEACHER WORKFORCE ----
 #______________________________________________________
 ## figures ----
+
+# simplified set of figures
+did_graph(dataset     = neighbor, 
+          depvarlist  = c("PCT_MARR_COHORT"), 
+          depvarnames = c("Pr(married)"),
+          colors      = c(men_col),
+          yvar        = "Estimated coefficient",
+          ymin        = -0.065, 
+          ymax        = 0.06,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = "sharemarried_neighbor")  %>% print()
+
+# OUTCOME: SHARE TEACHERS MW/SW/M 
+did_graph(dataset     = neighbor, 
+          depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
+          depvarnames = c("Men", "Married Women", "Single Women"),
+          colors      = c(men_col, mw_col, sw_col),
+          yvar        = "DiD Estimate: Share of Teachers",
+          ymin        = -0.065, 
+          ymax        = 0.06,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("shareteach_neighbor"))  %>% print()
+
+# OG figures: All figures
 # iterating through each sample in datasets
 for (i in 1:4){
   # OUTCOME: OVERALL SUPPLY OF TEACHERS
@@ -107,22 +131,52 @@ yvarlablist <- rep(c("swt","swnt","mwnt"),3)
 linklablist <- c(rep("neighbor",3), rep("matched1", 3), rep("matched2", 3))
 
 ## figures ----
-for (i in 1:9){
-  # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
-  # TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
-  did_graph(dataset     = linkdatasets[[i]],
-            depvarlist  = c("pct_mwt", "pct_mwnt", "pct_mwnilf", "pct_sw"), 
-            depvarnames = c("Married Teacher", "Married Non-Teacher in LF", "Married Not in LF", "Not Married"),
-            colors      = c(men_col, mw_col, "grey", sw_col),
-            years       = c(1920, 1940),
-            yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
-            ymin        = -0.066, 
-            ymax        = 0.05,
-            verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
-            filename    = glue("linked_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
-  Sys.sleep(2) #pause so i can see the graph output
-  
-}
+# simplified linking results
+# merge on weights, by link quality ##! Helpful?
+# link_controls <- left_join(x=link1 %>% filter(neighbor_samp == 1 & mainsamp == 1), 
+#                            y=neighbor %>% 
+#                              select(c("YEAR","STATEICP","COUNTYICP","POP")), 
+#                            by=c("YEAR","STATEICP","COUNTYICP"))
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: MARRIED BY LINK YEAR
+did_graph(dataset     = linkdatasets[[1]],
+          depvarlist  = c("pct_mw"),
+          depvarnames = c("Pr(Married by t)"),
+          colors      = c(men_col),
+          years       = c(1920, 1940),
+          yvar        = glue("Estimated coefficient"),
+          ymin        = -0.066,
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("linked_{yvarlablist[[1]]}_{linklablist[[1]]}_mw"))
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: (MARRIED BY LINK YEAR ) X (OCC IN LINK YEAR)
+did_graph(dataset     = linkdatasets[[1]],
+          depvarlist  = c("pct_mwt", "pct_mwnt", "pct_mwnilf"),
+          depvarnames = c("Pr(Married and teaching in t)", "Pr(Married and working (not teaching) in t)", "Pr(Married and not in labor force in t)"),
+          colors      = c(men_col, mw_col, "grey"),
+          years       = c(1920, 1940),
+          yvar        = glue("Estimated coefficient"),
+          ymin        = -0.066,
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("linked_{yvarlablist[[1]]}_{linklablist[[1]]}_mw_heterog"))
+
+# OG code for generating all combos of Pr(MWT/MWNT/MWNILF/SW) on all linked samples
+# for (i in 1:9){
+#   # OUTCOME: SHARE OF UNMARRIED/MARRIED WOMEN (NON-)TEACHERS WHO ARE MARRIED & 
+#   # TEACHING/WORKING NOT IN TEACHING/NOT IN LF 10 YEARS LATER
+#   did_graph(dataset     = linkdatasets[[i]],
+#             depvarlist  = c("pct_mwt", "pct_mwnt", "pct_mwnilf", "pct_sw"), 
+#             depvarnames = c("Married Teacher", "Married Non-Teacher in LF", "Married Not in LF", "Not Married"),
+#             colors      = c(men_col, mw_col, "grey", sw_col),
+#             years       = c(1920, 1940),
+#             yvar        = glue("DiD Estimate: Share of {yvarlist[[i]]} in t-10"),
+#             ymin        = -0.066, 
+#             ymax        = 0.05,
+#             verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+#             filename    = glue("linked_{yvarlablist[[i]]}_{linklablist[[i]]}")) %>% print()
+#   Sys.sleep(2) #pause so i can see the graph output
+#   
+# }
 
 ## stargazer tables ----
 models1        <- list()

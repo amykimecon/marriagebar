@@ -5,7 +5,7 @@
 [1] "Warning: ymin/ymax out of bounds"
 
 % Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Thu, Feb 08, 2024 - 4:11:47 PM
+% Date and time: Sat, Feb 10, 2024 - 5:32:45 PM
 \begin{tabular}{@{\extracolsep{5pt}}lcccccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
@@ -27,25 +27,9 @@ Adjusted R$^{2}$ & 0.966 & 0.464 & 0.787 & 0.731 & 0.824 & 0.742 \\
 \hline 
 \hline \\[-1.8ex] 
 \end{tabular} 
- [1] "STATEICP"        "COUNTYICP"       "YEAR_base"       "YEAR"            "nlink"           "pct_t"          
- [7] "pct_mw"          "pct_mwt"         "pct_mwnt"        "pct_mwnilf"      "pct_sw"          "pct_swt"        
-[13] "pct_swnt"        "pct_swnilf"      "pct_wc"          "pct_wct"         "pct_wcnt"        "pct_wcnilf"     
-[19] "pct_wnc"         "pct_wnct"        "pct_wncnt"       "pct_wncnilf"     "FIPS"            "AB"             
-[25] "SOUTH"           "TREAT"           "neighbor_samp"   "neighbor_sampNC" "neighbor_sampKY" "mainsamp"       
-[31] "match_weight1"   "match_weight2"   "match_weight3"  
-[1] 0 1
-[1] 0 1
- [1]  1.04457364  1.25348837  0.40435109  0.83565891  0.07081855  1.00000000  0.46425495  0.89534884  1.39276486
-[10]  0.10533516  0.37984496  1.13953488  0.59689922  0.28488372  1.56686047  0.29844961  0.26669965  2.08914729
-[19]  0.54499494  0.43223737  0.32140727  0.39171512  0.69638243  0.73734610  0.22383721  0.41782946  0.22790698
-[28]  0.56976744  0.20548990  0.96422182  6.26744186  1.79069767  3.13372093  0.48211091  0.50139535  0.78343023
-[37]  0.10190962  0.29150892  0.62674419  4.17829457  0.52228682 12.53488372  0.65973072  2.50697674  0.36867305
-[46]  0.00000000
-[1] "Warning: ymin/ymax out of bounds"
-[1] "Warning: ymin/ymax out of bounds"
 
 % Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Thu, Feb 08, 2024 - 4:23:56 PM
+% Date and time: Sat, Feb 10, 2024 - 5:32:59 PM
 \begin{tabular}{@{\extracolsep{5pt}}lcccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
@@ -66,7 +50,7 @@ Adjusted R$^{2}$ & 0.115 & 0.058 & 0.586 & 0.561 \\
 \end{tabular} 
 
 % Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Thu, Feb 08, 2024 - 4:23:58 PM
+% Date and time: Sat, Feb 10, 2024 - 5:33:02 PM
 \begin{tabular}{@{\extracolsep{5pt}}lcccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
@@ -87,7 +71,7 @@ Adjusted R$^{2}$ & 0.150 & 0.685 & 0.905 & 0.872 \\
 \end{tabular} 
 
 % Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Thu, Feb 08, 2024 - 4:24:00 PM
+% Date and time: Sat, Feb 10, 2024 - 5:33:04 PM
 \begin{tabular}{@{\extracolsep{5pt}}lcccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
@@ -109,7 +93,7 @@ Adjusted R$^{2}$ & 0.330 & 0.559 & 0.676 & 0.681 \\
 [1] "Warning: ymin/ymax out of bounds"
 
 % Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Thu, Feb 08, 2024 - 4:24:25 PM
+% Date and time: Sat, Feb 10, 2024 - 5:33:22 PM
 \begin{tabular}{@{\extracolsep{5pt}}lccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 

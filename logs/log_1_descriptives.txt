@@ -1,4 +1,4 @@
--|                                                                                                                     /                                                                                                                     -|                                                                                                                     # A tibble: 10 × 2
+-|                                                                                                                /                                                                                                                -|                                                                                                                # A tibble: 10 × 2
     YEAR pct_dem_teaching
    <dbl>            <dbl>
  1  1910           0.0127

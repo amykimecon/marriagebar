@@ -223,6 +223,7 @@ summlinks <- function(dataset, n = 10){
     summarize(nlink       = n(),
               pct_t       = sum(ifelse(teacher_link == 1, 1, 0))/n(),
               pct_marr    = sum(ifelse(marst_link == 1, 1, 0))/n(),
+              pct_nilf    = sum(ifelse(worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later mw and not in lf
               pct_mw      = sum(ifelse(demgroup_link == "MW", 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
               pct_mwt     = sum(ifelse(demgroup_link == "MW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw teach
               pct_mwnt    = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw non teach but in lf
@@ -414,7 +415,7 @@ did_graph_data <- function(dataset, depvar, controls = "",
     add_did_dummies() %>% 
     filter(YEAR %in% c(years, yearomit)) %>% 
     mutate(cluster = as.character(FIPS),
-           weight = ifelse("weight" %in% names(dataset), weight, 1))
+           weight = ifelse("weight" %in% names(dataset), weight, 1)) ##! Weight using nlink or pop size?
   
   if (septreat){ # if septreat==TRUE, run regs separately by treatment group
     yearvars     <- glue("Year{years}")

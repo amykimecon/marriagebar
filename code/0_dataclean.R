@@ -72,6 +72,8 @@ countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
             AGE             = mean(AGE),
             NCHILD          = mean(ifelse(demgroup == "MW", NCHILD, NA), na.rm=TRUE), #avg number of children for married women
             PCT_MARR        = sum(ifelse(AGE >= 18 & SEX == 2 & MARST %in% c(1,2), 1, 0))/sum(ifelse(AGE >= 18 & SEX == 2, 1, 0)), #share adult women married
+            PCT_MARR_COHORT = sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2 & MARST %in% c(1,2), 1, 0)) / 
+              sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2, 1, 0)), #share adult women aged 18-40 married
             PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)) #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
             ) %>%
   collect() %>%
@@ -168,7 +170,7 @@ countysumm <- countysumm_raw %>%
          pct_Teacher_mw        = num_mw_Teacher/NWHITEMW, #percentage of white married women that are teachers
          pct_Teacher_sw        = num_sw_Teacher/NWHITESW, #percentage of white unmarried women that are teachers
          teacher_ratio         = WHITESCHOOLPOP/num_Teacher #ratio of number of teachers to white school-aged pop
-  ) # %>% 
+         ) # %>% 
   # #helper function to match individual counties to specific states in order to 
   # #assign counties to 'law passing' in 1933 or 1938 and use outcome Married After/Married Before
   # state_matching(matchtype = "neighbor") 

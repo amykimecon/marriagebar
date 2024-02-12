@@ -16,7 +16,7 @@ library(duckdb)
 library(tictoc)
 library(tidyverse)
 
-# set filepaths ----
+# set filepaths to access the data directory ----
 if (Sys.info()[["user"]]=="yk0581"){ #Amy's section laptop
   root = "C:\\Users\\yk0581\\Dropbox (Princeton)\\marriagebar"
 }
