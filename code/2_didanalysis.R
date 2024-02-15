@@ -148,6 +148,17 @@ did_graph(dataset     = linkdatasets[[1]],
           ymax        = 0.05,
           verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
           filename    = glue("linked_{yvarlablist[[1]]}_{linklablist[[1]]}_mw"))
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: TEACHER IN LINK YEAR
+did_graph(dataset     = linkdatasets[[1]],
+          depvarlist  = c("pct_t"),
+          depvarnames = c("Pr(Teacher in t)"),
+          colors      = c(men_col),
+          years       = c(1920, 1940),
+          yvar        = glue("Estimated coefficient"),
+          ymin        = -0.066,
+          ymax        = 0.05,
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("linked_{yvarlablist[[1]]}_{linklablist[[1]]}_t"))
 # SAMPLE: SWT IN BASE YEAR; OUTCOME: (MARRIED BY LINK YEAR ) X (OCC IN LINK YEAR)
 did_graph(dataset     = linkdatasets[[1]],
           depvarlist  = c("pct_mwt", "pct_mwnt", "pct_mwnilf"),
