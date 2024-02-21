@@ -27,8 +27,6 @@ did_graph(dataset     = neighbor,
           depvarnames = c("Pr(married)"),
           colors      = c(men_col),
           yvar        = "Estimated coefficient",
-          ymin        = -0.065, 
-          ymax        = 0.06,
           verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
           filename    = "sharemarried_neighbor")  %>% print()
 

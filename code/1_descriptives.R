@@ -133,7 +133,7 @@ county_means_all <- countysumm %>%
   filter(mainsamp == 1) %>%
   summarise(across(c(pct_mw_Teacher, pct_mw_Secretary), function(.x) mean(.x, na.rm=TRUE))) %>%
   mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed"))
-  
+
 ## paper ----
 ggplot(filter(countysumm, mainsamp == 1) %>% 
          mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed", "Marriage Bar Not Removed")),

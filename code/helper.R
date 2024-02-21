@@ -414,8 +414,12 @@ did_graph_data <- function(dataset, depvar, controls = "",
   regdata <- dataset %>% 
     add_did_dummies() %>% 
     filter(YEAR %in% c(years, yearomit)) %>% 
-    mutate(cluster = as.character(FIPS),
-           weight = ifelse("weight" %in% names(dataset), weight, 1)) ##! Weight using nlink or pop size?
+    mutate(cluster = as.character(FIPS))
+  
+  # if weight not already a variable, just weight by vector of 1s
+  if(!("weight" %in% names(dataset))){
+    regdata$weight <- 1 
+  }
   
   if (septreat){ # if septreat==TRUE, run regs separately by treatment group
     yearvars     <- glue("Year{years}")
