@@ -1,2 +1,10 @@
 [1] "***************** RUNNING: 0_dataclean.txt *****************\n\n"
 [1] "\n\n***** writing 1% sample 1910-2000, grouping by year *****\n\n"
+[1] "\n\n***** grouping full count census by county *****\n\n"
+-/                                                    /                                                    -                                                    [1] "\n\n***** grouping full count census by county, wide for teachers/secretaries *****\n\n"
+[1] "\n\n***** merging county and county-occ data... *****\n\n"
+[1] "\n\n***** identify main sample of counties... *****\n\n"
+-|                                                    /                                                    -|                                                    Retention: 2910 out of 3111 counties
+-|                                                    /                                                    -|                                                    Retention: 2910 out of 3111 counties
+-|                                                    /                                                    -|                                                    Retention: 2910 out of 3111 counties
+[1mwrote[0m [32m148.42kB[0m in [36m 0s[0m, [32m16.82GB/s[0m                                                    [1mwrote[0m [32m1.00TB[0m in [36m 0s[0m, [32m14.37TB/s[0m                                                    -/                                                    /                                                    -                                                    [1mwrote[0m [32m31.39kB[0m in [36m 0s[0m, [32m5.27GB/s[0m[1mwrote[0m [32m1.00TB[0m in [36m 0s[0m, [32m52.90TB/s[0m                                                    

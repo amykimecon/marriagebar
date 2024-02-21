@@ -201,7 +201,7 @@ write_csv(link1, glue("{cleandata}/link1_swt.csv"))
 #!#! CHECKED
 
 # group 1.5: women teachers without children in t-10
-link1point5 <- linkview %>% 
+link1point5 <- linkview %>%
   filter(teacher_base == 1 & NCHILD_base == 0 & RACE_base == 1 & AGE_base <= 40) %>%
   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
   matching_join(matchlist)
@@ -230,24 +230,24 @@ write_csv(link3, glue("{cleandata}/link3_mwnt.csv"))
 # group 1: unmarried women secretaries in t-10
 link1sec <- linkview %>% 
   filter(secretary_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>% 
-  summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
+  summlinks_sec(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
   matching_join(matchlist)
 write_csv(link1sec, glue("{cleandata}/link1_sws.csv"))
 
 # group 2: unmarried women non-secretaries in pre-period
 link2sec <- linkview %>% 
   filter(secretary_base == 0 & demgroup_base == "SW" & AGE_base <= 20 & AGE_base >= 10 & RACE_base == 1) %>% 
-  summlinks() %>%
+  summlinks_sec() %>%
   matching_join(matchlist)
-write_csv(link2, glue("{cleandata}/link2_swns.csv"))
+write_csv(link2sec, glue("{cleandata}/link2_swns.csv"))
 #!#! CHECKED 
 
 # group 3: married women non-secretaries in pre-period
 link3sec <- linkview %>% 
   filter(secretary_base == 0 & demgroup_base == "MW" & AGE_base <= 50 & RACE_base == 1) %>% 
-  summlinks() %>%
+  summlinks_sec() %>%
   matching_join(matchlist)
-write_csv(link3, glue("{cleandata}/link3_mwns.csv"))
+write_csv(link3sec, glue("{cleandata}/link3_mwns.csv"))
 
 
 dbDisconnect(con, shutdown = TRUE)

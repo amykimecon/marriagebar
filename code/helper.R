@@ -216,7 +216,7 @@ addvars_indiv_linked <- function(dataset){
   return(outdata)
 } #!#! CHECKED
 
-# summarizes linked dataset at the county level with key variables
+# summarizes linked dataset at the county level with key variables -- FOR TEACHERS
 summlinks <- function(dataset, n = 10){
   outdata <- dataset %>% 
     group_by(STATEICP_base, COUNTYICP_base, YEAR_base, YEAR_link) %>%
@@ -240,6 +240,43 @@ summlinks <- function(dataset, n = 10){
               pct_wnct    = sum(ifelse(NCHILD_link == 0 & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that later don't have children and teach
               pct_wncnt   = sum(ifelse(NCHILD_link == 0 & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that don't have children and work, but not as teachers
               pct_wncnilf = sum(ifelse(NCHILD_link == 0 & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that don't have children and exit lf
+    ) %>%
+    rename(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, YEAR = YEAR_link) %>%
+    collect() %>%
+    addvars_county()
+  
+  # using helper function to test if FIPS in main linked sample
+  mainlinksamplist = mainlinksamp(outdata, n = n)
+  outdata <- outdata %>% 
+    mutate(mainsamp = ifelse(FIPS %in% mainlinksamplist, 1, 0))
+  
+  return(outdata)
+} #!#! CHECKED
+
+# summarizes linked dataset at the county level with key variables -- FOR SECRETARIES
+summlinks_sec <- function(dataset, n = 10){
+  outdata <- dataset %>% 
+    group_by(STATEICP_base, COUNTYICP_base, YEAR_base, YEAR_link) %>%
+    summarize(nlink       = n(),
+              pct_s       = sum(ifelse(secretary_link == 1, 1, 0))/n(),
+              pct_marr    = sum(ifelse(marst_link == 1, 1, 0))/n(),
+              pct_nilf    = sum(ifelse(worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later mw and not in lf
+              pct_mw      = sum(ifelse(demgroup_link == "MW", 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
+              pct_mws     = sum(ifelse(demgroup_link == "MW" & secretary_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw teach
+              pct_mwns    = sum(ifelse(demgroup_link == "MW" & secretary_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw non teach but in lf
+              pct_mwnilf  = sum(ifelse(demgroup_link == "MW" & secretary_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later mw and not in lf
+              pct_sw      = sum(ifelse(demgroup_link == "SW", 1, 0))/n(), #share of sample (swt_base) that are later sw (teach + nonteach)
+              pct_sws     = sum(ifelse(demgroup_link == "SW" & secretary_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw teach
+              pct_swns    = sum(ifelse(demgroup_link == "SW" & secretary_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw non teach but in lf
+              pct_swnilf  = sum(ifelse(demgroup_link == "SW" & secretary_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later sw and not in lf
+              pct_wc      = sum(ifelse(NCHILD_link > 0, 1, 0))/n(), #share of sample (swt_base) that later have children (teach + nonteach)
+              pct_wct     = sum(ifelse(NCHILD_link > 0 & secretary_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and teach
+              pct_wcns    = sum(ifelse(NCHILD_link > 0 & secretary_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and work, but not as secretarys
+              pct_wcnilf  = sum(ifelse(NCHILD_link > 0 & secretary_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that later have children and exit lf
+              pct_wnc     = sum(ifelse(NCHILD_link == 0, 1, 0))/n(), #share of sample (swt_base) that later do not have children
+              pct_wncs    = sum(ifelse(NCHILD_link == 0 & secretary_link == 1, 1, 0))/n(), #share of sample (swt_base) that later don't have children and teach
+              pct_wncns   = sum(ifelse(NCHILD_link == 0 & secretary_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that don't have children and work, but not as secretarys
+              pct_wncnilf = sum(ifelse(NCHILD_link == 0 & secretary_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that don't have children and exit lf
     ) %>%
     rename(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, YEAR = YEAR_link) %>%
     collect() %>%

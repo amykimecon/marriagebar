@@ -52,19 +52,23 @@ source("./code/helper.R")
 
 ## cleaning data (or loading all cleaned datasets) ---- run 1) OR 2)
 ### 1) code to clean data ----
-#source("./code/0_dataclean.R")
+source("./code/0_dataclean.R")
 ### 2) loading all cleaned datasets ----
-samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
-countysumm  <- read_csv(glue("{cleandata}/countysumm_newmatch.csv")) # county X year-level stats (most analysis uses this)
-link1       <- read_csv(glue("{cleandata}/link1_swt.csv"))
-link1point5 <- read_csv(glue("{cleandata}/link1point5_wtnc.csv"))
-link2       <- read_csv(glue("{cleandata}/link2_swnt.csv"))
-link3       <- read_csv(glue("{cleandata}/link3_mwnt.csv"))
+# samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
+# countysumm  <- read_csv(glue("{cleandata}/countysumm_newmatch.csv")) # county X year-level stats (most analysis uses this)
+# link1       <- read_csv(glue("{cleandata}/link1_swt.csv"))
+# link1point5 <- read_csv(glue("{cleandata}/link1point5_wtnc.csv"))
+# link2       <- read_csv(glue("{cleandata}/link2_swnt.csv"))
+# link3       <- read_csv(glue("{cleandata}/link3_mwnt.csv"))
+# 
+# link1sec       <- read_csv(glue("{cleandata}/link1_sws.csv"))
+# link2sec       <- read_csv(glue("{cleandata}/link2_swns.csv"))
+# link3sec       <- read_csv(glue("{cleandata}/link3_mwns.csv"))
 
 ## run analysis scripts ----
 source("./code/1_descriptives.R")
 source("./code/2_didanalysis.R")
-source("./code/2_cohortanalysis.R") # NOTE: requires duckdb connection
+#source("./code/2_cohortanalysis.R") # NOTE: requires duckdb connection
 
 
 
