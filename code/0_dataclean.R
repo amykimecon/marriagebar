@@ -194,7 +194,7 @@ linkview <-  tbl(con, "linkedall") %>%
 
 # group 1: unmarried women teachers in t-10
 link1 <- linkview %>% 
-  filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 25) %>% 
+  filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>% 
   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
   matching_join(matchlist)
 write_csv(link1, glue("{cleandata}/link1_swt.csv"))
