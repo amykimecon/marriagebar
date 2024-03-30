@@ -9,9 +9,51 @@
 #_____________________________________________________________
 # Also checks: which white collar jobs employed married women?
 
-# for calculations, we use the following estimate from the DiDs:
-# 0.0009/0.006
-did_est <- 0.16 
+# getting effect on probability of being a teacher | MW
+# random sample of treat/ctrl counties
+samp <- neighbor %>% 
+  mutate(ICP = glue("{STATEICP}_{COUNTYICP}"))
+mw_samp <- tbl(con, "censusrawall") %>%
+  addvars_indiv() %>%
+  mutate(ICP = paste0(STATEICP, "_", COUNTYICP)) %>%
+  filter(demgroup == "MW" & ICP %in% 
+           c("40_1630", "40_350", "54_1370", "54_1830", "54_650", "54_1490", "40_1590",
+             "54_550", "48_670", "40_1150", "51_2150", "47_1770", "47_1990", "47_1710", 
+             "47_30", "51_1270", "51_1010", "51_730", "51_50", "51_1690")) %>%
+  collect() 
+
+icp_samp <- c("40_1630", "40_350", "54_1370", "54_1830", "54_650", "54_1490", "40_1590",
+             "54_550", "48_670", "40_1150", "51_2150", "47_1770", "47_1990", "47_1710", 
+             "47_30", "51_1270", "51_1010", "51_730", "51_50", "51_1690")
+# indiv
+did_graph_data(mw_samp %>% addvars_county() %>%
+                 filter(RACE == 1 & AGE >= 18 & AGE <= 64),
+               depvar = "teacher")
+
+reg1 <- lm(data = mw_samp %>% addvars_county() %>%
+             filter(RACE == 1 & AGE >= 18 & AGE <= 64), teacher ~ TREAT*factor(YEAR))
+vcov1 = vcovCL(reg1, type = "HC1")
+
+# weighted county
+did_graph_data(samp %>% filter(ICP %in% icp_samp) %>% mutate(weight = NWHITEMW),
+               depvar = "pct_Teacher_mw")
+reg2 <- lm(data = samp %>% filter(ICP %in% icp_samp), pct_Teacher_mw ~ TREAT*factor(YEAR), weights = NWHITEMW)
+vcov2 = vcovCL(reg2, type = "HC1")
+
+###### IGNORE STANDARD ERRORS FOR NOW (JUST USE OFF THE SHELF) #######
+out_did <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), coefname, years = c(1940, 1950), table = TRUE) #returns list of [model, cov matrix]
+mainreg <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), depvar = "pct_Teacher_mw_1000", table = TRUE)
+mainreg_unw <- did_graph_data(neighbor, depvar = "pct_Teacher_mw")
+
+# est. coef weighted: 0.0009767
+# est. coef unweighted: 0.0012195
+
+# baseline share of wmw teachers
+baseline_mean <- weighted.mean(filter(neighbor, TREAT == 1)$pct_Teacher_mw_1000, filter(neighbor, TREAT == 1)$NWHITEMW)
+
+# est. effect (%)
+did_est_pp <- mainreg$y[mainreg$year == 1940]
+did_est <- did_est_pp/baseline_mean
 
 # get shares of each occ that were MW
 occs <- tbl(con, "censusrawall") %>% 
@@ -50,12 +92,15 @@ occ_crosswalk <- read_csv(glue("{root}/occ1950_codes_raw.csv")) %>%
 # plus some service workers:
   # 730 attendants, hospital or other institution
   # 731 attendants, professional and personal service (nec)
+# other maybes:
+  # 56 librarians
+  # 58 nurses (professional)
 
 # get shares of white MW in occupations likely affected by MBs or not
 x <- occs %>% mutate(share_occ_mw    = n_occ_mw/n_occ,
                      share_occ_sw    = n_occ_sw/n_occ,
                      share_wmw_occ   = n_occ_wmw/NWHITEMW,
-                     mb_occ          = ifelse((OCC1950 == 93) | (OCC1950 >= 300 & OCC1950 < 400), 1, 0),
+                     mb_occ          = ifelse((OCC1950 == 93) | (OCC1950 >= 300 & OCC1950 < 400) | OCC1950 %in% c(730, 731, 56, 58), 1, 0),
                      mb_occ_specific = ifelse(OCC1950 %in% c(301, 302, 305, 350, 390, 93), 1, 0)) %>% 
   left_join(occ_crosswalk, by = c("OCC1950"="code"))
 
@@ -75,7 +120,7 @@ x1 <- x %>%
   group_by(mb_occ_specific, YEAR) %>% 
   summarize(s = sum(share_wmw_occ)) 
 x1
-num                   <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==1930]*did_est 
+num                   <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==1930]*did_est/1000
 denom_mb_occ_specific <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==1950] - x1$s[x1$mb_occ_specific==1 & x1$YEAR==1930] 
 print(paste0("BoTE 1: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ_specific))
 
@@ -84,7 +129,7 @@ x2 <- x %>%
   group_by(mb_occ, YEAR) %>% 
   summarize(s = sum(share_wmw_occ)) 
 x2
-num                   <- x2$s[x2$mb_occ==1 & x2$YEAR==1930]*did_est
+num                   <- x2$s[x2$mb_occ==1 & x2$YEAR==1930]*did_est/1000
 denom_mb_occ          <- x2$s[x2$mb_occ==1 & x2$YEAR==1950] - x2$s[x2$mb_occ==1 & x2$YEAR==1930] 
 print(paste0("BoTE 2: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ))
 

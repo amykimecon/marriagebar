@@ -170,6 +170,7 @@ countysumm <- countysumm_raw %>%
          pct_workers_Teacher   = num_Teacher/NWHITEWORK, #percentage of workers that are teachers 
          pct_workers_Secretary = num_Secretary/NWHITEWORK, #percentage of workers that are secretaries
          pct_Teacher_mw        = num_mw_Teacher/NWHITEMW, #percentage of white married women that are teachers
+         pct_Teacher_mw_1000   = pct_Teacher_mw*1000,
          pct_Teacher_sw        = num_sw_Teacher/NWHITESW, #percentage of white unmarried women that are teachers
          teacher_ratio         = WHITESCHOOLPOP/num_Teacher #ratio of number of teachers to white school-aged pop
          ) # %>% 
@@ -255,3 +256,5 @@ write_csv(link3sec, glue("{cleandata}/link3_mwns.csv"))
 dbDisconnect(con, shutdown = TRUE)
 # close log ----
 sink()
+
+

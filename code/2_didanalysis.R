@@ -64,28 +64,31 @@ ses            <- list()
 sharereg_means <- c() #dep var mean in 1930
 # prepare table inputs
 i = 1
-for (coefname in c("pct_mw_Teacher","pct_m_Teacher","pct_sw_Teacher", "num_Teacher")){
-  out_did        <- did_graph_data(neighbor, coefname, years = c(1940, 1950), table = TRUE) #returns list of [model, cov matrix]
+for (coefname in c("pct_mw_Teacher","pct_m_Teacher","pct_sw_Teacher", "num_Teacher", "pct_Teacher_mw_1000")){
+  out_did        <- did_graph_data(neighbor, coefname, table = TRUE) #returns list of [model, cov matrix]
+  if (coefname == "pct_Teacher_mw_1000"){
+    out_did <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), coefname, table = TRUE) #returns list of [model, cov matrix]
+  }
   models[[i]]    <- out_did[[1]]
   ses[[i]]       <- sqrt(diag(out_did[[2]]))
   sharereg_means <- c(sharereg_means, mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]]))
   i = i + 1
 }
-# gen table
-stargazer(models, se=ses, keep = c("TREATx1940", "TREATx1950"),#omit = c("Constant","cluster*", "factor*"), 
-          out = glue("./tables/shareregs.tex"),
-          float = FALSE,
-          keep.stat = c('n','adj.rsq'),
-          dep.var.caption = "Dependent Variable:",
-          dep.var.labels.include = FALSE,
-          column.labels = c("\\% Teach Mar. Wom.", "\\% Teach Men", 
-                            "\\% Teach Unmar. Wom.","\\# Teachers"),
-          column.separate = c(1,1,1,1),
-          covariate.labels = c("Treated $\\times$ 1940 ($\\gamma_{1940}^{DD}$)",
-                               "Treated $\\times$ 1950 ($\\gamma_{1950}^{DD}$)"),
-          add.lines = list(c("Dep. Var. 1930 Treated Mean", formatC(sharereg_means))),
-          table.layout = "=lc#-t-as=")
-
+  # gen table
+  stargazer(models, se=ses, keep = c("TREATx1940", "TREATx1950"),#omit = c("Constant","cluster*", "factor*"), 
+            out = glue("./tables/shareregs.tex"),
+            float = FALSE,
+            keep.stat = c('n','adj.rsq'),
+            dep.var.caption = "Dependent Variable:",
+            dep.var.labels.include = FALSE,
+            column.labels = c("\\% Teach Mar. Wom.", "\\% Teach Men", 
+                              "\\% Teach Unmar. Wom.","\\# Teachers", "MW Teach/1000 MW"),
+            column.separate = c(1,1,1,1,1),
+            covariate.labels = c("Treated $\\times$ 1940 ($\\gamma_{1940}^{DD}$)",
+                                 "Treated $\\times$ 1950 ($\\gamma_{1950}^{DD}$)"),
+            add.lines = list(c("Dep. Var. 1930 Treated Mean", formatC(sharereg_means))),
+            table.layout = "=lc#-t-as=")
+  
 
 #________________________________________________________
 # RESULT 2: TRANSITION PROBABILITIES W/ LINKED DATA ----
