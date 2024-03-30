@@ -21,6 +21,7 @@ test<- allyears_raw_samp %>%
 ggplot(test %>% filter(white==1), aes(x=YEAR, y=lfp, group=demgroup, col=demgroup)) + 
   geom_point()
 
+# plot: time series of LFP for married/unmarried white/non-white women
 data_to_plot <- test %>% 
   filter(demgroup!="Men") %>% 
   mutate(women_group = ifelse(demgroup=="Married Women" & white==1, "Married, White", 

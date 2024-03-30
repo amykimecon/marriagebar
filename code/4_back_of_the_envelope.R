@@ -3,6 +3,9 @@
 # contribute to the increase in MW's LFP?)
 # 2024/03
   
+# open log ----
+sink("./logs/log_4_back_of_the_envelope.log", append=FALSE)
+print("***************** RUNNING: 4_back_of_the_envelope *****************\n\n")
 
 #____________________________________________________________
 # MAIN EFFECT ----
@@ -104,6 +107,12 @@ x <- occs %>% mutate(share_occ_mw    = n_occ_mw/n_occ,
                      mb_occ_specific = ifelse(OCC1950 %in% c(301, 302, 305, 350, 390, 93), 1, 0)) %>% 
   left_join(occ_crosswalk, by = c("OCC1950"="code"))
 
+# investigate: shares of white MW in occupations that had high shares of single women in 1930
+occs_high_share_sw_1930 <- x %>% 
+  filter(YEAR==1930) %>% 
+  filter(share_occ_sw >= 0.66 & share_occ_mw < 0.20) %>%
+  View()
+
 # back of the envelope: how much did introducing employment protections/removing
 # MBs contribute to the rise in (white) married women's LFP in white collar jobs? 
 # 
@@ -133,11 +142,6 @@ num                   <- x2$s[x2$mb_occ==1 & x2$YEAR==1930]*did_est/1000
 denom_mb_occ          <- x2$s[x2$mb_occ==1 & x2$YEAR==1950] - x2$s[x2$mb_occ==1 & x2$YEAR==1930] 
 print(paste0("BoTE 2: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ))
 
-# get shares of white MW in occupations that had high shares of single women in 1930
-occs_high_share_sw_1930 <- x %>% 
-  filter(YEAR==1930) %>% 
-  filter(share_occ_sw >= 0.66 & share_occ_mw < 0.20) %>%
-  View()
 
 
 
@@ -154,14 +158,23 @@ y <- countysumm_gen %>% filter(FIPS %in% mainsamp_list)
 
 # get counts of SWT (county-yr means and yr-treat totals) for...
 # ...linked sample
-link1 %>% filter(mainsamp == 1) %>% 
+y_swt_link <- link1 %>% 
+  filter(mainsamp == 1) %>% 
   group_by(YEAR, TREAT) %>% 
   summarize(tot_nlink = sum(nlink),
             across(c(nlink, pct_mw, pct_mwt, pct_mwnilf, pct_swt, pct_swnilf), mean))
+y_swt_link 
+count_swt_link_cty <- y_swt_link$nlink[y_swt_link$YEAR==1930 & y_swt_link$TREAT==1]
+count_swt_link_tot <- y_swt_link$tot_nlink[y_swt_link$YEAR==1930 & y_swt_link$TREAT==1]
+
 # ...full sample 
-y %>% group_by(YEAR, TREAT) %>% 
+y_swt_full <- y %>% 
+  group_by(YEAR, TREAT) %>% 
   summarize(nswt     = mean(N_SWT), 
             tot_nswt = sum(N_SWT))
+y_swt_full 
+count_swt_full_cty <- y_swt_full$nswt[y_swt_full$YEAR==1930 & y_swt_full$TREAT==1]
+count_swt_full_tot <- y_swt_full$tot_nswt[y_swt_full$YEAR==1930 & y_swt_full$TREAT==1]
 
 # get DiD coefficient: effect of lifting MB on Pr(MWT in 10 yrs) for SWT
 coef <- did_graph_data(link1 %>% filter(neighbor_samp == 1 & mainsamp == 1), depvar = "pct_mwt", years = c(1920, 1940))
@@ -169,12 +182,12 @@ eff_swt = coef$y[2] # 0.019636
 
 # BoTE: apply DiD estimate to base counts of SWT in 1930
 print("BoTE: Est. nr. of SWT who -> MWT in treated counties, using linked sample counts: ")
-print(paste0(".. per county: ", eff_swt*36))    
-print(paste0(".. in total: ",   eff_swt*7612))   
+print(paste0(".. per county: ", eff_swt*count_swt_link_cty))    
+print(paste0(".. in total: ",   eff_swt*count_swt_link_tot))   
 
 print("BoTE: Est. nr. of SWT who -> MWT in treated counties, using full sample counts: ")
-print(paste0(".. per county: ", eff_swt*90))    
-print(paste0(".. in total: ",   eff_swt*19368))   
+print(paste0(".. per county: ", eff_swt*count_swt_fullsamp_cty))    
+print(paste0(".. in total: ",   eff_swt*count_swt_fullsamp_tot))   
 
 
 
@@ -183,14 +196,23 @@ print(paste0(".. in total: ",   eff_swt*19368))
 
 # get counts of MWNT (county-yr means and yr-treat totals) for...
 # ...linked sample
-link3 %>% filter(mainsamp == 1) %>% 
+y_mwnt_link <- link3 %>% 
+  filter(mainsamp == 1) %>% 
   group_by(YEAR, TREAT) %>% 
   summarize(tot_nlink = sum(nlink),
             across(c(nlink, pct_mw, pct_mwt, pct_mwnt, pct_mwnilf), mean))
+y_mwnt_link
+count_mwnt_link_cty <- y_mwnt_link$nlink[y_mwnt_link$YEAR==1930 & y_mwnt_link$TREAT==1]
+count_mwnt_link_tot <- y_mwnt_link$tot_nlink[y_mwnt_link$YEAR==1930 & y_mwnt_link$TREAT==1]
+
 # ...full sample
-y %>% group_by(YEAR, TREAT) %>% 
-  summarize(nmwnt    = mean(N_MWNT), 
-            tot_nswt = sum(N_MWNT))
+y_mwnt_full <- y %>% 
+  group_by(YEAR, TREAT) %>% 
+  summarize(nmwnt     = mean(N_MWNT), 
+            tot_nmwnt = sum(N_MWNT))
+y_mwnt_full 
+count_mwnt_full_cty <- y_mwnt_full$nmwnt[y_mwnt_full$YEAR==1930 & y_mwnt_full$TREAT==1]
+count_mwnt_full_tot <- y_mwnt_full$tot_nmwnt[y_mwnt_full$YEAR==1930 & y_mwnt_full$TREAT==1]
 
 # get DiD coef
 coef <- did_graph_data(link3 %>% filter(neighbor_samp == 1 & mainsamp == 1), depvar = "pct_mwt", years = c(1920, 1940))
@@ -198,12 +220,12 @@ eff_mwnt <- coef$y[2]
 
 # BoTE: apply DiD estimate to base counts of MWNT in 1930
 print("BoTE: Est. nr. of MWNT who -> MWT in treated counties, using linked sample counts: ")
-print(paste0(".. per county: ", eff_mwnt*2157))    
-print(paste0(".. in total: ",   eff_mwnt*468142))   
+print(paste0(".. per county: ", eff_mwnt*count_mwnt_link_cty))     # 2157
+print(paste0(".. in total: ",   eff_mwnt*count_mwnt_link_tot))   # 468142
 
 print("BoTE: Est. nr. of MWNT who -> MWT in treated counties, using full sample counts: ")
-print(paste0(".. per county: ", eff_mwnt*3495))    
-print(paste0(".. in total: ",   eff_mwnt*751501))   
+print(paste0(".. per county: ", eff_mwnt*count_mwnt_full_cty))    #3495
+print(paste0(".. in total: ",   eff_mwnt*count_mwnt_full_tot))   #751501
 
 
 
@@ -221,3 +243,5 @@ print(paste0(".. in total: ",   eff_mwnt*751501))
 countysumm %>% filter(mainsamp == 1) %>%
   group_by(YEAR, TREAT) %>% 
   summarize(num = sum(num_Teacher))
+
+sink()
