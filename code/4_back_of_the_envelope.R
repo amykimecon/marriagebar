@@ -2,18 +2,24 @@
 # (How much did the removal of marriage-related institutional barriers
 # contribute to the increase in MW's LFP?)
 # 2024/03
-
+  
 
 #____________________________________________________________
 # MAIN EFFECT ----
 #_____________________________________________________________
 # Also checks: which white collar jobs employed married women?
 
+# for calculations, we use the following estimate from the DiDs:
+# 0.0009/0.006
+did_est <- 0.16 
+
 # get shares of each occ that were MW
 occs <- tbl(con, "censusrawall") %>% 
   addvars_indiv() %>% 
   filter(YEAR == 1930 | YEAR == 1950) %>%
+  group_by(YEAR) %>% 
   mutate(NWHITEMW = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0))) %>%
+  ungroup() %>% 
   group_by(OCC1950, YEAR) %>%
   summarize(n_occ     = sum(ifelse(AGE >= 18 & AGE <= 64, 1, 0)),
             NWHITEMW  = mean(NWHITEMW),
@@ -50,26 +56,43 @@ x <- occs %>% mutate(share_occ_mw    = n_occ_mw/n_occ,
                      share_occ_sw    = n_occ_sw/n_occ,
                      share_wmw_occ   = n_occ_wmw/NWHITEMW,
                      mb_occ          = ifelse((OCC1950 == 93) | (OCC1950 >= 300 & OCC1950 < 400), 1, 0),
-                     mb_occ_specific = ifelse(OCC1950 %in% c(301, 302, 305, 350, 390, 730, 731, 93), 1, 0)) %>%
+                     mb_occ_specific = ifelse(OCC1950 %in% c(301, 302, 305, 350, 390, 93), 1, 0)) %>% 
   left_join(occ_crosswalk, by = c("OCC1950"="code"))
-# see head: waitresses !!
 
 # back of the envelope: how much did introducing employment protections/removing
 # MBs contribute to the rise in (white) married women's LFP in white collar jobs? 
+# 
+# # get share of teachers in 1930 who are MW
+# x_teach <- occs %>% 
+#   filter(OCC1950==93) %>% 
+#   mutate(share_occ_mw    = n_occ_mw/n_occ,
+#          share_occ_sw    = n_occ_sw/n_occ,
+#          share_wmw_occ   = n_occ_wmw/NWHITEMW)
+# x_teach
 
 ## upper bound: denominator includes only WMW growth in likely MB-specific occupations
-x %>% group_by(mb_occ_specific, YEAR) %>% 
+x1 <- x %>% 
+  group_by(mb_occ_specific, YEAR) %>% 
   summarize(s = sum(share_wmw_occ)) 
-num                   <- 1.7*0.2        # from DiD estimate
-denom_mb_occ_specific <- 0.0286-0.00713 # from summarize above
-print(paste0("UB BoTE: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ_specific))
+x1
+num                   <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==1930]*did_est 
+denom_mb_occ_specific <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==1950] - x1$s[x1$mb_occ_specific==1 & x1$YEAR==1930] 
+print(paste0("BoTE 1: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ_specific))
 
 ## lower bound: denominator includes WMW growth in all clerical work occupations
-x %>% group_by(mb_occ, YEAR) %>% 
+x2 <- x %>% 
+  group_by(mb_occ, YEAR) %>% 
   summarize(s = sum(share_wmw_occ)) 
-num                   <- 1.7*0.2       # from DiD estimate
-denom_mb_occ          <- 0.0391-0.0100 # from summarize above
-print(paste0("LB BoTE: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ))
+x2
+num                   <- x2$s[x2$mb_occ==1 & x2$YEAR==1930]*did_est
+denom_mb_occ          <- x2$s[x2$mb_occ==1 & x2$YEAR==1950] - x2$s[x2$mb_occ==1 & x2$YEAR==1930] 
+print(paste0("BoTE 2: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ))
+
+# get shares of white MW in occupations that had high shares of single women in 1930
+occs_high_share_sw_1930 <- x %>% 
+  filter(YEAR==1930) %>% 
+  filter(share_occ_sw >= 0.66 & share_occ_mw < 0.20) %>%
+  View()
 
 
 
