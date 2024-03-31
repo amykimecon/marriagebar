@@ -13,10 +13,10 @@ test<- allyears_raw_samp %>%
          hs_above   = ifelse(EDUC >= 6, 1, 0),
          coll_above = ifelse(EDUC >= 7, 1, 0),
          worker     = ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, 1, 0),
-         demgroup_coll = case_when(demgroup=="Unmarried Women" & coll_above==1 ~ "SW, College",
+         demgroup_coll = case_when( demgroup=="Unmarried Women" & coll_above==1 ~ "SW, College",
                                     demgroup=="Unmarried Women" & coll_above==0 ~ "SW, Less than college",
                                     demgroup=="Married Women"   & coll_above==1 ~ "MW, College",
-                                    demgroup=="Mmarried Women"  & coll_above==0 ~ "MW, Less than college",
+                                    demgroup=="Married Women"   & coll_above==0 ~ "MW, Less than college",
                                     TRUE ~ "Men")) %>%
   group_by(YEAR, white, demgroup_coll) %>%
   mutate(pop     = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)),
@@ -25,7 +25,7 @@ test<- allyears_raw_samp %>%
             pop     = mean(pop),
             lfp     = working/pop) 
 
-# plot: Time series of LFP by married/unmarried women (and men)
+# plot: Time series of LFP by white married/unmarried women (and men)
 ggplot(test %>% filter(white==1), aes(x=YEAR, y=lfp, group=demgroup_coll, col=demgroup_coll)) + 
   geom_point()
 
@@ -33,14 +33,14 @@ ggplot(test %>% filter(white==1), aes(x=YEAR, y=lfp, group=demgroup_coll, col=de
 data_to_plot <- test %>% 
   filter(demgroup_coll!="Men") %>% 
   mutate(women_group = case_when(# white women
-                                 demgroup_coll=="MW, College" & white==1 ~ "MW, College, White", 
+                                 demgroup_coll=="MW, College"           & white==1 ~ "MW, College, White", 
                                  demgroup_coll=="MW, Less than college" & white==1 ~ "MW, Less than college, White",
-                                 demgroup_coll=="SW, College" & white==1 ~ "SW, College, White", 
+                                 demgroup_coll=="SW, College"           & white==1 ~ "SW, College, White", 
                                  demgroup_coll=="SW, Less than college" & white==1 ~ "SW, Less than college, White",
                                  # non-white women
-                                 demgroup_coll=="MW, College" & white==0 ~ "MW, College, Non-white", 
+                                 demgroup_coll=="MW, College"           & white==0 ~ "MW, College, Non-white", 
                                  demgroup_coll=="MW, Less than college" & white==0 ~ "MW, Less than college, Non-white",
-                                 demgroup_coll=="SW, College" & white==0 ~ "SW, College, Non-white", 
+                                 demgroup_coll=="SW, College"           & white==0 ~ "SW, College, Non-white", 
                                  TRUE ~ "SW, Less than college, Non-white")) 
          
 ggplot(data_to_plot, aes(x=YEAR, y=lfp, group=women_group, col=women_group)) + 
