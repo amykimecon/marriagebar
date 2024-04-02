@@ -71,7 +71,13 @@ for (coefname in c("pct_mw_Teacher","pct_m_Teacher","pct_sw_Teacher", "num_Teach
   }
   models[[i]]    <- out_did[[1]]
   ses[[i]]       <- sqrt(diag(out_did[[2]]))
-  sharereg_means <- c(sharereg_means, mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]]))
+  
+  if (coefname == "pct_Teacher_mw_1000"){
+    sharereg_means <- c(sharereg_means, weighted.mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]],filter(neighbor, YEAR == 1930 & TREAT == 1)$NWHITEMW))
+  }
+  else{
+    sharereg_means <- c(sharereg_means, mean(filter(neighbor, YEAR == 1930 & TREAT == 1)[[coefname]]))
+  }
   i = i + 1
 }
   # gen table
@@ -228,7 +234,7 @@ stargazer(models2, se=ses2, omit = c("Constant","cluster*", "factor*", "Year*"),
           table.layout = "=lc#-t-as=")
 
 stargazer(models3, se=ses3, omit = c("Constant","cluster*", "factor*", "Year*"),
-          out = glue("./tables/linkregs_mwnt.tex"),
+          out = glue("./tables/linkregs_mwnilf.tex"),
           float = FALSE,
           keep.stat = c('n','adj.rsq'),
           dep.var.caption = "Dep. Var.: fill in by panel",

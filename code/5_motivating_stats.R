@@ -4,6 +4,8 @@
 
 
 # CHECK 1 : what share of the rise in MW LFP came from educated WMW? ----
+allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
+
 test<- allyears_raw_samp %>% 
   mutate(demgroup   = case_when(SEX == 1 ~ "Men",
                                 SEX == 2 & (MARST == 6 | MARST == 3 | MARST == 4 | MARST == 5) ~ "Unmarried Women",
@@ -17,7 +19,10 @@ test<- allyears_raw_samp %>%
                                     demgroup=="Unmarried Women" & coll_above==0 ~ "SW, Less than college",
                                     demgroup=="Married Women"   & coll_above==1 ~ "MW, College",
                                     demgroup=="Married Women"   & coll_above==0 ~ "MW, Less than college",
-                                    TRUE ~ "Men")) %>%
+                                    TRUE ~ "Men"),
+         demgroup_coll_all = case_when(demgroup == "Married Women" & coll_above == 1 ~ "MW college",
+                                       demgroup == "Unmarried Women" & coll_above == 1 ~ "SW college",
+                                       demgroup == "Men" & coll_above == 1 ~ "Men college")) %>%
   group_by(YEAR, white, demgroup_coll) %>%
   mutate(pop     = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)),
          working = sum(ifelse(worker==1, PERWT, 0))) %>% 
@@ -26,7 +31,7 @@ test<- allyears_raw_samp %>%
             lfp     = working/pop) 
 
 # plot: Time series of LFP by white married/unmarried women (and men)
-ggplot(test %>% filter(white==1), aes(x=YEAR, y=lfp, group=demgroup_coll, col=demgroup_coll)) + 
+ggplot(test %>% filter(white==1), aes(x=YEAR, y=lfp, group=demgroup_coll_all, col=demgroup_coll_all)) + 
   geom_point()
 
 # plot: time series of LFP for married/unmarried white/non-white women

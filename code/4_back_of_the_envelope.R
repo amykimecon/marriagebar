@@ -10,58 +10,29 @@ print("***************** RUNNING: 4_back_of_the_envelope *****************\n\n")
 #____________________________________________________________
 # MAIN EFFECT ----
 #_____________________________________________________________
-# Also checks: which white collar jobs employed married women?
-
 # getting effect on probability of being a teacher | MW
-# random sample of treat/ctrl counties
-samp <- neighbor %>% 
-  mutate(ICP = glue("{STATEICP}_{COUNTYICP}"))
-mw_samp <- tbl(con, "censusrawall") %>%
-  addvars_indiv() %>%
-  mutate(ICP = paste0(STATEICP, "_", COUNTYICP)) %>%
-  filter(demgroup == "MW" & ICP %in% 
-           c("40_1630", "40_350", "54_1370", "54_1830", "54_650", "54_1490", "40_1590",
-             "54_550", "48_670", "40_1150", "51_2150", "47_1770", "47_1990", "47_1710", 
-             "47_30", "51_1270", "51_1010", "51_730", "51_50", "51_1690")) %>%
-  collect() 
-
-icp_samp <- c("40_1630", "40_350", "54_1370", "54_1830", "54_650", "54_1490", "40_1590",
-             "54_550", "48_670", "40_1150", "51_2150", "47_1770", "47_1990", "47_1710", 
-             "47_30", "51_1270", "51_1010", "51_730", "51_50", "51_1690")
-# indiv
-did_graph_data(mw_samp %>% addvars_county() %>%
-                 filter(RACE == 1 & AGE >= 18 & AGE <= 64),
-               depvar = "teacher")
-
-reg1 <- lm(data = mw_samp %>% addvars_county() %>%
-             filter(RACE == 1 & AGE >= 18 & AGE <= 64), teacher ~ TREAT*factor(YEAR))
-vcov1 = vcovCL(reg1, type = "HC1")
-
-# weighted county
-did_graph_data(samp %>% filter(ICP %in% icp_samp) %>% mutate(weight = NWHITEMW),
-               depvar = "pct_Teacher_mw")
-reg2 <- lm(data = samp %>% filter(ICP %in% icp_samp), pct_Teacher_mw ~ TREAT*factor(YEAR), weights = NWHITEMW)
-vcov2 = vcovCL(reg2, type = "HC1")
-
-###### IGNORE STANDARD ERRORS FOR NOW (JUST USE OFF THE SHELF) #######
-out_did <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), coefname, years = c(1940, 1950), table = TRUE) #returns list of [model, cov matrix]
-mainreg <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), depvar = "pct_Teacher_mw_1000", table = TRUE)
+mainreg <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), depvar = "pct_Teacher_mw_1000")
 mainreg_unw <- did_graph_data(neighbor, depvar = "pct_Teacher_mw")
 
 # est. coef weighted: 0.0009767
 # est. coef unweighted: 0.0012195
 
 # baseline share of wmw teachers
-baseline_mean <- weighted.mean(filter(neighbor, TREAT == 1)$pct_Teacher_mw_1000, filter(neighbor, TREAT == 1)$NWHITEMW)
+baseline_mean <- weighted.mean(filter(neighbor, TREAT == 1 & YEAR == 1930)$pct_Teacher_mw_1000, filter(neighbor, YEAR == 1930 & TREAT == 1)$NWHITEMW)
 
 # est. effect (%)
 did_est_pp <- mainreg$y[mainreg$year == 1940]
 did_est <- did_est_pp/baseline_mean
+print(did_est)
+
+# initializing base and end years
+base_yr = 1940
+end_yr = 1950
 
 # get shares of each occ that were MW
 occs <- tbl(con, "censusrawall") %>% 
   addvars_indiv() %>% 
-  filter(YEAR == 1930 | YEAR == 1950) %>%
+  filter(YEAR == base_yr | YEAR == end_yr) %>%
   group_by(YEAR) %>% 
   mutate(NWHITEMW = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0))) %>%
   ungroup() %>% 
@@ -107,9 +78,9 @@ x <- occs %>% mutate(share_occ_mw    = n_occ_mw/n_occ,
                      mb_occ_specific = ifelse(OCC1950 %in% c(301, 302, 305, 350, 390, 93), 1, 0)) %>% 
   left_join(occ_crosswalk, by = c("OCC1950"="code"))
 
-# investigate: shares of white MW in occupations that had high shares of single women in 1930
-occs_high_share_sw_1930 <- x %>% 
-  filter(YEAR==1930) %>% 
+# investigate: shares of white MW in occupations that had high shares of single women in base yr
+occs_high_share_sw_base <- x %>% 
+  filter(YEAR==base_yr) %>% 
   filter(share_occ_sw >= 0.66 & share_occ_mw < 0.20) %>%
   View()
 
@@ -124,25 +95,42 @@ occs_high_share_sw_1930 <- x %>%
 #          share_wmw_occ   = n_occ_wmw/NWHITEMW)
 # x_teach
 
-## upper bound: denominator includes only WMW growth in likely MB-specific occupations
+## defn 1: includes only WMW growth in likely MB-specific occupations
 x1 <- x %>% 
   group_by(mb_occ_specific, YEAR) %>% 
   summarize(s = sum(share_wmw_occ)) 
 x1
-num                   <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==1930]*did_est/1000
-denom_mb_occ_specific <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==1950] - x1$s[x1$mb_occ_specific==1 & x1$YEAR==1930] 
+num                   <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==base_yr]*did_est
+denom_mb_occ_specific <- x1$s[x1$mb_occ_specific==1 & x1$YEAR==end_yr] - x1$s[x1$mb_occ_specific==1 & x1$YEAR==base_yr] 
 print(paste0("BoTE 1: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ_specific))
 
-## lower bound: denominator includes WMW growth in all clerical work occupations
+## defn 2: includes WMW growth in all clerical work occupations
 x2 <- x %>% 
   group_by(mb_occ, YEAR) %>% 
   summarize(s = sum(share_wmw_occ)) 
 x2
-num                   <- x2$s[x2$mb_occ==1 & x2$YEAR==1930]*did_est/1000
-denom_mb_occ          <- x2$s[x2$mb_occ==1 & x2$YEAR==1950] - x2$s[x2$mb_occ==1 & x2$YEAR==1930] 
+num                   <- x2$s[x2$mb_occ==1 & x2$YEAR==base_yr]*did_est
+denom_mb_occ          <- x2$s[x2$mb_occ==1 & x2$YEAR==end_yr] - x2$s[x2$mb_occ==1 & x2$YEAR==base_yr] 
 print(paste0("BoTE 2: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_mb_occ))
 
-
+## defn 3: uses numerator from defn 2 (all clerical work) but denominator is growth in college-educ WMW LFP
+allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
+wmw_samp <- allyears_raw_samp %>%
+  mutate(demgroup = case_when(SEX == 1 ~ "M", #man
+                              SEX == 2 & MARST != 1 & MARST != 2 ~ "SW", #single/divorced/widowed/separated woman
+                              TRUE ~ "MW"), #married woman
+         worker = ifelse(YEAR == 1900, 
+                         ifelse(OCC1950 != 999 & AGE >= 18 & AGE <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
+                         ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), #otherwise, those in LABFORCE 
+         teacher = ifelse(YEAR == 1900,
+                          ifelse(OCC1950 == 93 & worker == 1, 1, 0), #in 1900, no CLASSWKR
+                          ifelse(OCC1950 == 93 & CLASSWKR == 2 & worker == 1, 1, 0)),
+         coll_above = ifelse(EDUC >= 7, 1, 0)) %>%
+  filter(demgroup == "MW" & RACE == 1 & coll_above == 1) %>%
+  group_by(YEAR) %>%
+  summarize(lfp = sum(ifelse(worker == 1, PERWT, 0))/sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)))
+denom_wmw_coll <- wmw_samp$lfp[wmw_samp$YEAR == end_yr] - wmw_samp$lfp[wmw_samp$YEAR == base_yr]
+print(paste0("BoTE 3: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_wmw_coll))
 
 
 #____________________________________________________________
@@ -186,8 +174,8 @@ print(paste0(".. per county: ", eff_swt*count_swt_link_cty))
 print(paste0(".. in total: ",   eff_swt*count_swt_link_tot))   
 
 print("BoTE: Est. nr. of SWT who -> MWT in treated counties, using full sample counts: ")
-print(paste0(".. per county: ", eff_swt*count_swt_fullsamp_cty))    
-print(paste0(".. in total: ",   eff_swt*count_swt_fullsamp_tot))   
+print(paste0(".. per county: ", eff_swt*count_swt_full_cty))    
+print(paste0(".. in total: ",   eff_swt*count_swt_full_tot))   
 
 
 
@@ -220,8 +208,8 @@ eff_mwnt <- coef$y[2]
 
 # BoTE: apply DiD estimate to base counts of MWNT in 1930
 print("BoTE: Est. nr. of MWNT who -> MWT in treated counties, using linked sample counts: ")
-print(paste0(".. per county: ", eff_mwnt*count_mwnt_link_cty))     # 2157
-print(paste0(".. in total: ",   eff_mwnt*count_mwnt_link_tot))   # 468142
+print(paste0(".. per county: ", eff_mwnt*count_mwnt_link_cty))     # 2018
+print(paste0(".. in total: ",   eff_mwnt*count_mwnt_link_tot))   # 437888
 
 print("BoTE: Est. nr. of MWNT who -> MWT in treated counties, using full sample counts: ")
 print(paste0(".. per county: ", eff_mwnt*count_mwnt_full_cty))    #3495
@@ -243,5 +231,36 @@ print(paste0(".. in total: ",   eff_mwnt*count_mwnt_full_tot))   #751501
 countysumm %>% filter(mainsamp == 1) %>%
   group_by(YEAR, TREAT) %>% 
   summarize(num = sum(num_Teacher))
+
+## TESTING IF REG + POP WEIGHTS IS EQUIV TO INDIV REGRESSION
+# random sample of treat/ctrl counties
+samp <- neighbor %>% 
+  mutate(ICP = glue("{STATEICP}_{COUNTYICP}"))
+mw_samp <- tbl(con, "censusrawall") %>%
+  addvars_indiv() %>%
+  mutate(ICP = paste0(STATEICP, "_", COUNTYICP)) %>%
+  filter(demgroup == "MW" & ICP %in% 
+           c("40_1630", "40_350", "54_1370", "54_1830", "54_650", "54_1490", "40_1590",
+             "54_550", "48_670", "40_1150", "51_2150", "47_1770", "47_1990", "47_1710", 
+             "47_30", "51_1270", "51_1010", "51_730", "51_50", "51_1690")) %>%
+  collect() 
+
+icp_samp <- c("40_1630", "40_350", "54_1370", "54_1830", "54_650", "54_1490", "40_1590",
+              "54_550", "48_670", "40_1150", "51_2150", "47_1770", "47_1990", "47_1710", 
+              "47_30", "51_1270", "51_1010", "51_730", "51_50", "51_1690")
+# indiv
+did_graph_data(mw_samp %>% addvars_county() %>%
+                 filter(RACE == 1 & AGE >= 18 & AGE <= 64),
+               depvar = "teacher")
+
+reg1 <- lm(data = mw_samp %>% addvars_county() %>%
+             filter(RACE == 1 & AGE >= 18 & AGE <= 64), teacher ~ TREAT*factor(YEAR))
+vcov1 = vcovCL(reg1, type = "HC1")
+
+# weighted county
+did_graph_data(samp %>% filter(ICP %in% icp_samp) %>% mutate(weight = NWHITEMW),
+               depvar = "pct_Teacher_mw")
+reg2 <- lm(data = samp %>% filter(ICP %in% icp_samp), pct_Teacher_mw ~ TREAT*factor(YEAR), weights = NWHITEMW)
+vcov2 = vcovCL(reg2, type = "HC1")
 
 sink()

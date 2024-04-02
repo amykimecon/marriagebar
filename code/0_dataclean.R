@@ -219,12 +219,13 @@ link2 <- linkview %>%
 write_csv(link2, glue("{cleandata}/link2_swnt.csv"))
 #!#! CHECKED 
 
-# group 3: married women non-teachers in pre-period
+# group 3: married women not in labor force in pre-period
 link3 <- linkview %>% 
-  filter(teacher_base == 0 & demgroup_base == "MW" & AGE_base <= 50 & RACE_base == 1) %>% 
+  filter(LABFORCE_base == 1 & demgroup_base == "MW" & AGE_base <= 50 & AGE_base >= 18 & RACE_base == 1) %>% 
   summlinks() %>%
   matching_join(matchlist)
-write_csv(link3, glue("{cleandata}/link3_mwnt.csv"))
+write_csv(link3, glue("{cleandata}/link3_mwnilf.csv"))
+#write_csv(link3, glue("{cleandata}/link3_mwnt.csv"))
 #!#! CHECKED 
 
 #________________________________________________________
@@ -247,7 +248,7 @@ write_csv(link2sec, glue("{cleandata}/link2_swns.csv"))
 
 # group 3: married women non-secretaries in pre-period
 link3sec <- linkview %>% 
-  filter(secretary_base == 0 & demgroup_base == "MW" & AGE_base <= 50 & RACE_base == 1) %>% 
+  filter(LABFORCE_base == 1 & demgroup_base == "MW" & AGE_base <= 50 & AGE_base >= 18 & RACE_base == 1) %>% 
   summlinks_sec() %>%
   matching_join(matchlist)
 write_csv(link3sec, glue("{cleandata}/link3_mwns.csv"))

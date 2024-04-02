@@ -59,7 +59,7 @@ countysumm  <- read_csv(glue("{cleandata}/countysumm_newmatch.csv")) # county X 
 link1       <- read_csv(glue("{cleandata}/link1_swt.csv"))
 link1point5 <- read_csv(glue("{cleandata}/link1point5_wtnc.csv"))
 link2       <- read_csv(glue("{cleandata}/link2_swnt.csv"))
-link3       <- read_csv(glue("{cleandata}/link3_mwnt.csv"))
+link3       <- read_csv(glue("{cleandata}/link3_mwnilf.csv"))
 
 link1sec       <- read_csv(glue("{cleandata}/link1_sws.csv"))
 link2sec       <- read_csv(glue("{cleandata}/link2_swns.csv"))
