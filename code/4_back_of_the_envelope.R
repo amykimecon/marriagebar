@@ -10,6 +10,8 @@ print("***************** RUNNING: 4_back_of_the_envelope *****************\n\n")
 #____________________________________________________________
 # MAIN EFFECT ----
 #_____________________________________________________________
+## est DiD coef on Pr(teacher | MW) ----
+
 # getting effect on probability of being a teacher | MW
 mainreg <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), depvar = "pct_Teacher_mw_1000")
 mainreg_unw <- did_graph_data(neighbor, depvar = "pct_Teacher_mw")
@@ -28,6 +30,10 @@ print(did_est)
 # initializing base and end years
 base_yr = 1940
 end_yr = 1950
+
+
+
+## identify MB occs ----
 
 # get shares of each occ that were MW
 occs <- tbl(con, "censusrawall") %>% 
@@ -84,6 +90,8 @@ occs_high_share_sw_base <- x %>%
   filter(share_occ_sw >= 0.66 & share_occ_mw < 0.20) %>%
   View()
 
+
+## BoTE ----
 # back of the envelope: how much did introducing employment protections/removing
 # MBs contribute to the rise in (white) married women's LFP in white collar jobs? 
 # 
@@ -134,7 +142,7 @@ print(paste0("BoTE 3: Contr. of MB to rise in WMW's LFP in white collar work: ",
 
 
 #____________________________________________________________
-# MECHANISM MAGNITUDES (SHARE SWT -> MWT vs SHARE MWNT -> MWT) ----
+# MECHANISM MAGNITUDES (SHARE SWT -> MWT vs SHARE MWNILF -> MWT) ----
 #____________________________________________________________
 
 ## share SWT -> MWT ----
@@ -168,52 +176,53 @@ count_swt_full_tot <- y_swt_full$tot_nswt[y_swt_full$YEAR==1930 & y_swt_full$TRE
 coef <- did_graph_data(link1 %>% filter(neighbor_samp == 1 & mainsamp == 1), depvar = "pct_mwt", years = c(1920, 1940))
 eff_swt = coef$y[2] # 0.019636 
 
-# BoTE: apply DiD estimate to base counts of SWT in 1930
-print("BoTE: Est. nr. of SWT who -> MWT in treated counties, using linked sample counts: ")
+# Apply DiD estimate to base counts of SWT in 1930
+print(" Est. nr. of SWT who -> MWT in treated counties, using linked sample counts: ")
 print(paste0(".. per county: ", eff_swt*count_swt_link_cty))    
 print(paste0(".. in total: ",   eff_swt*count_swt_link_tot))   
 
-print("BoTE: Est. nr. of SWT who -> MWT in treated counties, using full sample counts: ")
+print("Est. nr. of SWT who -> MWT in treated counties, using full sample counts: ")
 print(paste0(".. per county: ", eff_swt*count_swt_full_cty))    
 print(paste0(".. in total: ",   eff_swt*count_swt_full_tot))   
 
 
 
-## share MWNT -> MWT ----
-# MWNT (married women non teachers under age 50, white)
+## share MWNILF -> MWT ----
+# MWNILF (married women non teachers under age 50, white)
 
-# get counts of MWNT (county-yr means and yr-treat totals) for...
+# get counts of MWNILF (county-yr means and yr-treat totals) for...
 # ...linked sample
-y_mwnt_link <- link3 %>% 
+link3_mwnilf <- read_csv(glue("{cleandata}/link3_mwnilf.csv"))
+y_mwnilf_link <- link3_mwnilf %>% 
   filter(mainsamp == 1) %>% 
   group_by(YEAR, TREAT) %>% 
   summarize(tot_nlink = sum(nlink),
             across(c(nlink, pct_mw, pct_mwt, pct_mwnt, pct_mwnilf), mean))
-y_mwnt_link
-count_mwnt_link_cty <- y_mwnt_link$nlink[y_mwnt_link$YEAR==1930 & y_mwnt_link$TREAT==1]
-count_mwnt_link_tot <- y_mwnt_link$tot_nlink[y_mwnt_link$YEAR==1930 & y_mwnt_link$TREAT==1]
+y_mwnilf_link
+count_mwnilf_link_cty <- y_mwnilf_link$nlink[y_mwnilf_link$YEAR==1930 & y_mwnilf_link$TREAT==1]
+count_mwnilf_link_tot <- y_mwnilf_link$tot_nlink[y_mwnilf_link$YEAR==1930 & y_mwnilf_link$TREAT==1]
 
 # ...full sample
-y_mwnt_full <- y %>% 
+y_mwnilf_full <- y %>% 
   group_by(YEAR, TREAT) %>% 
-  summarize(nmwnt     = mean(N_MWNT), 
-            tot_nmwnt = sum(N_MWNT))
-y_mwnt_full 
-count_mwnt_full_cty <- y_mwnt_full$nmwnt[y_mwnt_full$YEAR==1930 & y_mwnt_full$TREAT==1]
-count_mwnt_full_tot <- y_mwnt_full$tot_nmwnt[y_mwnt_full$YEAR==1930 & y_mwnt_full$TREAT==1]
+  summarize(nmwnilf     = mean(N_MWNILF), 
+            tot_nmwnilf = sum(N_MWNILF))
+y_mwnilf_full 
+count_mwnilf_full_cty <- y_mwnilf_full$nmwnilf[y_mwnilf_full$YEAR==1930 & y_mwnilf_full$TREAT==1]
+count_mwnilf_full_tot <- y_mwnilf_full$tot_nmwnilf[y_mwnilf_full$YEAR==1930 & y_mwnilf_full$TREAT==1]
 
 # get DiD coef
-coef <- did_graph_data(link3 %>% filter(neighbor_samp == 1 & mainsamp == 1), depvar = "pct_mwt", years = c(1920, 1940))
-eff_mwnt <- coef$y[2]
+coef <- did_graph_data(link3_mwnilf %>% filter(neighbor_samp == 1 & mainsamp == 1), depvar = "pct_mwt", years = c(1920, 1940))
+eff_mwnilf <- coef$y[2]
 
-# BoTE: apply DiD estimate to base counts of MWNT in 1930
-print("BoTE: Est. nr. of MWNT who -> MWT in treated counties, using linked sample counts: ")
-print(paste0(".. per county: ", eff_mwnt*count_mwnt_link_cty))     # 2018
-print(paste0(".. in total: ",   eff_mwnt*count_mwnt_link_tot))   # 437888
+# apply DiD estimate to base counts of MWNT in 1930
+print(" Est. nr. of MWNILF who -> MWT in treated counties, using linked sample counts: ")
+print(paste0(".. per county: ", eff_mwnilf*count_mwnilf_link_cty))     # 2018
+print(paste0(".. in total: ",   eff_mwnilf*count_mwnilf_link_tot))     # 437888
 
-print("BoTE: Est. nr. of MWNT who -> MWT in treated counties, using full sample counts: ")
-print(paste0(".. per county: ", eff_mwnt*count_mwnt_full_cty))    #3495
-print(paste0(".. in total: ",   eff_mwnt*count_mwnt_full_tot))   #751501
+print("Est. nr. of MWNILF who -> MWT in treated counties, using full sample counts: ")
+print(paste0(".. per county: ", eff_mwnilf*count_mwnilf_full_cty))    # 3188
+print(paste0(".. in total: ",   eff_mwnilf*count_mwnilf_full_tot))    # 685361
 
 
 

@@ -76,7 +76,8 @@ countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
               sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2, 1, 0)), #share adult women aged 18-40 married
             PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)), #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
             N_SWT           = sum(ifelse(RACE == 1 & teacher == 1 & demgroup == "SW" & AGE <= 40, 1, 0)),
-            N_MWNT           = sum(ifelse(RACE == 1 & teacher == 0 & demgroup == "MW" & AGE <= 50, 1, 0))
+            N_MWNT          = sum(ifelse(RACE == 1 & teacher == 0 & demgroup == "MW" & AGE <= 50, 1, 0)),
+            N_MWNILF        = sum(ifelse(RACE == 1 & worker == 0 & demgroup == "MW" & AGE <= 50, 1, 0))
             ) %>%
   collect() %>%
   addvars_county() #adding county-level variables (treatment status, FIPS codes, etc.)
