@@ -603,13 +603,13 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
       else{ # the observed ymin/ymax are outside of said bounds
         print("Warning: ymin/ymax out of bounds") ##! changed from "Error" just so that it doesn't seem like a calc was wrong!
         graph_out <- graph_out + geom_text(aes(x = 1935.5, 
-                                               y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, 
+                                               y = min(y_lb) + (max(y_ub) - min(y_lb))/10, 
                                                label = "Marriage Bars \n Removed"), color = "#656565") 
       }
     }
     else{ # no ymin/ymax bound was specified
       graph_out <- graph_out + geom_text(aes(x = 1935.5, 
-                                             y = min(did_data$y_lb) + (max(did_data$y_ub) - min(did_data$y_lb))/10, 
+                                             y = min(y_lb) + (max(y_ub) - min(y_lb))/10, 
                                              label = "Marriage Bars \n Removed"), color = "#656565") 
     }
     # save graphs

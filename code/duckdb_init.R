@@ -10,9 +10,9 @@
 sink("./logs/log_duckdb_init.txt", append=FALSE)
 
 # creating connection to duckdb database ----
-#con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
 #for Carolyn, in case connection on Dropbox isn't working:
-con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=FALSE) 
+#con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=FALSE) 
 print("*********** Existing tables in database ************")
 dbGetQuery(con, "SHOW TABLES")
 
@@ -23,33 +23,35 @@ print("\n\n*********** IPUMS CENSUS FILES ************\n\n")
 for (year in seq(1910,1950,10)){
   # reading in census CSV and creating/replacing initial table
   tic(glue("Create or replace table censusraw{year}..."))
-  dbExecute(con, glue("CREATE OR REPLACE TABLE censusraw{year} AS 
+  dbExecute(con, glue("CREATE OR REPLACE TABLE censusraw{year} AS
                         FROM read_csv_auto ('{rawdata}/census_{year}.csv')"))
   toc()
-  
+
   # creating temporary spouse database
   tic(glue("Create temp spouse database for censusraw{year}..."))
   dbExecute(con, glue("CREATE OR REPLACE TEMP TABLE censusrawspouse{year} AS
-                        SELECT SERIAL, PERNUM AS SPLOC, 
-                          OCCSCORE AS OCCSCORE_SP, OCC1950 AS OCC1950_SP, 
+                        SELECT SERIAL, PERNUM AS SPLOC,
+                          OCCSCORE AS OCCSCORE_SP, OCC1950 AS OCC1950_SP,
                           AGE AS AGE_SP, RACE AS RACE_SP, SEX AS SEX_SP,
                           CLASSWKR AS CLASSWKR_SP, LABFORCE AS LABFORCE_SP
                         FROM censusraw{year}"))
   toc()
 
-  # spouse linking: left join of census raw with itself by serial (same household id) 
+  # spouse linking: left join of census raw with itself by serial (same household id)
   # and by spousenum = personnum (spousenum ids the person number of one's spouse)
   tic(glue("Link spouses for censusraw{year}..."))
-  dbExecute(con, glue("CREATE OR REPLACE TABLE censusraw{year} AS 
-                        SELECT * FROM censusraw{year} 
-                          LEFT JOIN censusrawspouse{year} 
+  dbExecute(con, glue("CREATE OR REPLACE TABLE censusraw{year} AS
+                        SELECT * FROM censusraw{year}
+                          LEFT JOIN censusrawspouse{year}
                           USING (SERIAL, SPLOC)"))
   toc()
   
   # editing to include year if not already in table
-  if (dbGetQuery(con, glue("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'censusraw{year}' AND COLUMN_NAME = 'YEAR'")) == 1){
+  if (dbGetQuery(con, glue("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'censusraw{year}' AND COLUMN_NAME = 'YEAR'")) == 0){
+    tic(glue("Adding YEAR variable..."))
     dbExecute(con, glue("ALTER TABLE censusraw{year} ADD COLUMN YEAR INTEGER"))
     dbExecute(con, glue("UPDATE censusraw{year} SET YEAR = {year}"))
+    toc()
   }
 }
 
@@ -105,7 +107,7 @@ for (linkyear in seq(1920,1940,10)){
       dbExecute(con, glue("ALTER TABLE linked{linkyear} 
                             RENAME COLUMN {colname} TO {colname}_base"))
       dbExecute(con, glue("ALTER TABLE linked{linkyear} 
-                            RENAME COLUMN '{colname}:1' TO {colname}_link"))
+                            RENAME COLUMN '{colname}_1' TO {colname}_link"))
     }
     else{
       dbExecute(con, glue("ALTER TABLE linked{linkyear} 
@@ -126,4 +128,5 @@ toc()
 # closing database ----
 dbDisconnect(con, shutdown = TRUE)
 # close log ----
-sink()
+sink(NULL)
+

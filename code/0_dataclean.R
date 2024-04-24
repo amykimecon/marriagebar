@@ -55,6 +55,8 @@ countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
             NWHITEWORK      = sum(ifelse(worker == 1 & RACE == 1, 1, 0)), #number of white workers
             NWHITEMW        = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white married women
             NWHITESW        = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white unmarried women
+            NWHITESW_YOUNG  = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 25, 1, 0)), # number of white unmarried women 18-25
+            NWHITESW_MID    = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE > 25 & AGE <= 35, 1, 0)), # number of white unmarried women 26-35
             URBAN           = sum(ifelse(URBAN == 2, 1, 0))/n(), #percent of county living in urban area
             PCT_WHITE       = sum(ifelse(RACE == 1, 1, 0))/n(), # percent of county that is white
             WHITESCHOOLPOP  = sum(ifelse(RACE == 1 & AGE <= 18 & AGE >= 6, 1, 0)), #white schoolage population
@@ -93,6 +95,8 @@ countysumm_occ <- tbl(con, "censusrawall") %>%
   summarize(num              = n(), # number of teachers (or secretaries)
             num_mw           = sum(ifelse(demgroup == "MW", 1, 0)), #num of teachers MW
             num_sw           = sum(ifelse(demgroup == "SW", 1, 0)), #num of teachers SW
+            num_sw_young     = sum(ifelse(demgroup == "SW" & AGE <= 25, 1, 0)), #num of teachers SW
+            num_sw_mid       = sum(ifelse(demgroup == "SW" & AGE > 25 & AGE <= 35, 1, 0)), #num of teachers SW
             num_m            = sum(ifelse(demgroup == "M", 1, 0)), #num of teachers M
             pct_mw           = sum(ifelse(demgroup == "MW", 1, 0))/n(), #share of teachers MW
             pct_sw           = sum(ifelse(demgroup == "SW", 1, 0))/n(), #share of teachers SW
@@ -173,6 +177,11 @@ countysumm <- countysumm_raw %>%
          pct_Teacher_mw        = num_mw_Teacher/NWHITEMW, #percentage of white married women that are teachers
          pct_Teacher_mw_1000   = pct_Teacher_mw*1000,
          pct_Teacher_sw        = num_sw_Teacher/NWHITESW, #percentage of white unmarried women that are teachers
+         pct_Teacher_sw_1000   = pct_Teacher_sw*1000,
+         pct_Teacher_sw_young  = num_sw_young_Teacher/NWHITESW_YOUNG,
+         pct_Teacher_sw_young_1000   = pct_Teacher_sw_young*1000,
+         pct_Teacher_sw_mid  = num_sw_mid_Teacher/NWHITESW_MID,
+         pct_Teacher_sw_mid_1000   = pct_Teacher_sw_mid*1000,
          teacher_ratio         = WHITESCHOOLPOP/num_Teacher #ratio of number of teachers to white school-aged pop
          ) # %>% 
   # #helper function to match individual counties to specific states in order to 
@@ -190,7 +199,7 @@ write_csv(countysumm, glue("{cleandata}/countysumm_newmatch.csv"))
 linkview <-  tbl(con, "linkedall") %>% 
   addvars_indiv_linked() %>%
   mutate(NCHILD_base = `NCHILD`, 
-         NCHILD_link = `NCHILD:1`) %>% #temporary while NCHILD isn't explicitly relabelled in duckdb
+         NCHILD_link = `NCHILD_1`) %>% #temporary while NCHILD isn't explicitly relabelled in duckdb
   dplyr::select(c(ends_with("_base"),ends_with("_link"))) %>% #only keeping variables that have been selected (see duckdb_init)
   filter(SEX_base == SEX_link & RACE_base == RACE_link &  #only keeping links with consistent sex and race (drops 1.2% of links)
            AGE_base <= AGE_link - 5 & AGE_base >= AGE_link - 15) #and consistent age (age in base year 5-15 years less than age in link year) -- drops an additional 2.2% of links
@@ -212,9 +221,9 @@ link1point5 <- linkview %>%
 write_csv(link1point5, glue("{cleandata}/link1point5_wtnc.csv"))
 #!#! CHECKED
 
-# group 2: unmarried women non-teachers in pre-period
+# group 2: unmarried women not in labor force in pre-period
 link2 <- linkview %>% 
-  filter(teacher_base == 0 & demgroup_base == "SW" & AGE_base <= 20 & AGE_base >= 10 & RACE_base == 1) %>% 
+  filter(LABFORCE_base == 0 & demgroup_base == "SW" & AGE_base <= 20 & AGE_base >= 10 & RACE_base == 1) %>% 
   summlinks() %>%
   matching_join(matchlist)
 write_csv(link2, glue("{cleandata}/link2_swnt.csv"))
