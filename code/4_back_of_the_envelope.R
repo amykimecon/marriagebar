@@ -20,14 +20,15 @@ neighbor   <- countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1)
 ## est DiD coef on Pr(teacher | MW) ----
 
 # getting effect on probability of being a teacher | MW
-mainreg <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), depvar = "pct_Teacher_mw_1000")
-mainreg_unw <- did_graph_data(neighbor, depvar = "pct_Teacher_mw")
+mainreg     <- did_graph_data(neighbor %>% mutate(weight = NWHITEMW), depvar = "pct_Teacher_mw_1000")
+mainreg_unw <- did_graph_data(neighbor,                               depvar = "pct_Teacher_mw")
 
-# est. coef weighted: 0.0009767
+# est. coef weighted: 0.0009767 !! Where does this come from? 
 # est. coef unweighted: 0.0012195
 
 # baseline share of wmw teachers
-baseline_mean <- weighted.mean(filter(neighbor, TREAT == 1 & YEAR == 1930)$pct_Teacher_mw_1000, filter(neighbor, YEAR == 1930 & TREAT == 1)$NWHITEMW)
+baseline_mean <- weighted.mean(filter(neighbor, TREAT == 1 & YEAR == 1930)$pct_Teacher_mw_1000, 
+                               filter(neighbor, TREAT == 1 & YEAR == 1930)$NWHITEMW)
 
 # est. effect (%)
 did_est_pp <- mainreg$y[mainreg$year == 1940]
@@ -36,36 +37,37 @@ print(did_est)
 
 # initializing base and end years
 base_yr = 1940
-end_yr = 1950
+end_yr  = 1950
 
 
 ## identify MB occs ----
 
 # get shares of each occ that were MW, coll, in LF
+# NOTE: OCCs includes 999, which is not employed
 occs <- tbl(con, "censusrawall") %>% 
   addvars_indiv() %>% 
   filter(YEAR == base_yr | YEAR == end_yr) %>%
   group_by(OCC1950, YEAR) %>%
-  summarize(n_occ_wmw = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), #num white MW in each occ
-            n_emp_wmw = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & LABFORCE == 2, 1, 0)), #num of white MW in labor force in each occ
+  summarize(n_occ_wmw      = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), #num white MW in each occ
+            n_emp_wmw      = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & LABFORCE == 2, 1, 0)), #num of white MW in labor force in each occ
             n_occ_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7, 1, 0)), # num white MW w some college in each occ
             n_emp_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7 & LABFORCE == 2, 1, 0)), #num of white MW w some college in LF in each occ
             ) %>%
   ungroup() %>%
   group_by(YEAR) %>% 
-  mutate(NWHITEMW = sum(n_occ_wmw), # total num white MW
-         NWHITEMW_coll = sum(n_occ_wmw_coll), # total num white MW w some college
-         NWHITEMW_LF = sum(n_emp_wmw),
+  mutate(NWHITEMW         = sum(n_occ_wmw), # total num white MW
+         NWHITEMW_coll    = sum(n_occ_wmw_coll), # total num white MW w some college
+         NWHITEMW_LF      = sum(n_emp_wmw),
          NWHITEMW_LF_coll = sum(n_emp_wmw_coll)
          ) %>%
   ungroup() %>% 
   collect() %>% #grouping into specific occupation groups
   mutate(share_occ_wmw_coll = n_occ_wmw_coll/n_occ_wmw,
-                       share_wmw_occ   = n_occ_wmw/NWHITEMW,
-                       share_wmw_coll_occ = n_occ_wmw/NWHITEMW_coll,
-                       mb_occ          = ifelse((OCC1950 == 93) | (OCC1950 >= 300 & OCC1950 < 400) | OCC1950 %in% c(730, 731, 56, 58), 1, 0),
-                       mb_occ_specific = ifelse(OCC1950 %in% c(301, 302, 305, 350, 390, 93), 1, 0),
-                       whitecollar_occ = ifelse(OCC1950 < 500 & !(OCC1950 %in% c(100,123)), 1, 0))
+         share_wmw_occ      = n_occ_wmw/NWHITEMW,
+         share_wmw_coll_occ = n_occ_wmw_coll/NWHITEMW_coll,
+         mb_occ             = ifelse((OCC1950 == 93) | (OCC1950 >= 300 & OCC1950 < 400) | OCC1950 %in% c(730, 731, 56, 58), 1, 0),
+         mb_occ_specific    = ifelse(OCC1950 %in% c(301, 302, 305, 350, 390, 93), 1, 0),
+         whitecollar_occ    = ifelse(OCC1950 < 500 & !(OCC1950 %in% c(100,123)), 1, 0))
 
 ## BoTE ----
 # back of the envelope: how much did introducing employment protections/removing
@@ -103,20 +105,28 @@ print(glue("BoTE Numerator 3: MB-induced rise in college educated WMW's LFP in c
 ### Denominators ----
 
 ## defn 1: WMW growth in MB specific occupations
-denom_mb_occ_specific <- mb_spec$s[mb_spec$mb_occ_specific==1 & mb_spec$YEAR==end_yr] - mb_spec$s[mb_spec$mb_occ_specific==1 & mb_spec$YEAR==base_yr] 
+denom_mb_occ_specific <- mb_spec$s[mb_spec$mb_occ_specific==1 & mb_spec$YEAR==end_yr] - 
+                         mb_spec$s[mb_spec$mb_occ_specific==1 & mb_spec$YEAR==base_yr] 
 print(glue("BoTE Denominator 1: Total Actual Rise in WMW's LFP in MB-specific occupations: {round(denom_mb_occ_specific*100,4)}%"))
 
 ## defn 2: WMW growth in all clerical occupations
-denom_mb_occ_gen <- mb_gen$s[mb_gen$mb_occ==1 & mb_gen$YEAR==end_yr] - mb_gen$s[mb_gen$mb_occ==1 & mb_gen$YEAR==base_yr] 
+denom_mb_occ_gen <- mb_gen$s[mb_gen$mb_occ==1 & mb_gen$YEAR==end_yr] - 
+                    mb_gen$s[mb_gen$mb_occ==1 & mb_gen$YEAR==base_yr] 
 print(glue("BoTE Denominator 2: Total Actual Rise in WMW's LFP in clerical occupations: {round(denom_mb_occ_gen*100,4)}%"))
 
 ## defn 3: WMW growth in all white-collar occupations
-whitecollar <- occs %>% group_by(whitecollar_occ, YEAR) %>% summarize(s = sum(share_wmw_occ))
-denom_whitecollar <- whitecollar$s[whitecollar$whitecollar_occ==1 & whitecollar$YEAR==end_yr] - whitecollar$s[whitecollar$whitecollar_occ==1 & whitecollar$YEAR==base_yr] 
+whitecollar <- occs %>% 
+  group_by(whitecollar_occ, YEAR) %>% 
+  summarize(s = sum(share_wmw_occ))
+
+denom_whitecollar <- whitecollar$s[whitecollar$whitecollar_occ==1 & whitecollar$YEAR==end_yr] - 
+                     whitecollar$s[whitecollar$whitecollar_occ==1 & whitecollar$YEAR==base_yr] 
 print(glue("BoTE Denominator 3: Total Actual Rise in WMW's LFP in all white-collar occupations: {round(denom_whitecollar*100,4)}%"))
 
 ## defn 4: college educ WMW growth in LFP
-coll_lfp <- occs %>% group_by(YEAR) %>% summarize(lfp = sum(n_emp_wmw_coll)/sum(n_occ_wmw_coll))
+coll_lfp <- occs %>% 
+  group_by(YEAR) %>% 
+  summarize(lfp = sum(n_emp_wmw_coll)/sum(n_occ_wmw_coll))
 denom_coll <- coll_lfp$lfp[coll_lfp$YEAR == end_yr] - coll_lfp$lfp[coll_lfp$YEAR == base_yr]
 print(glue("BoTE Denominator 4: Total Actual Rise in all college-educated WMW's LFP: {round(denom_coll*100,4)}%"))
 
@@ -124,13 +134,15 @@ print(glue("BoTE Denominator 4: Total Actual Rise in all college-educated WMW's 
 print(glue("BoTE 1: MB share of rise in white collar jobs: {round(100*num_mb_occ_gen/denom_whitecollar,4)}%"))
 print(glue("BoTE 2: MB share of rise in college-educated LFP: {round(100*num_mb_occ_gen_educ/denom_coll,4)}%"))
 
+## !! STOPPED HERE 
 ## defn 2.5: includes WMW growth in all white collar occupations
 x2_5 <- x %>% 
   group_by(whitecollar_occ, YEAR) %>% 
   summarize(s = sum(share_wmw_occ)) 
 x2_5
-num_whitecollar                   <- x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==base_yr]*did_est
-denom_whitecollar          <- x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==end_yr] - x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==base_yr] 
+num_whitecollar    <- x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==base_yr]*did_est
+denom_whitecollar  <- x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==end_yr] - 
+                      x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==base_yr] 
 print(paste0("BoTE 2.5: Contr. of MB to rise in WMW's LFP in white collar work: ", num_clerical/denom_whitecollar))
 
 ## defn 3: uses numerator from defn 2 (all clerical work) but denominator is growth in college-educ WMW LFP
