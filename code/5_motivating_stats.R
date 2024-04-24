@@ -19,7 +19,7 @@ test_base <- allyears_raw_samp %>%
                                     demgroup=="Married Women"   & coll_above==1 ~ "MW, College",
                                     demgroup=="Married Women"   & coll_above==0 ~ "MW, Less than college",
                                     demgroup=="Men"             & coll_above==1 ~ "Men, College",
-                                    TRUE ~ "Men, Less than college")) 
+                                    TRUE ~ "Men, Less than college"))
 
 
 #___________________________________________________
@@ -39,7 +39,7 @@ check0 <- test_base %>%
             share_swc  = mean(share_swc),
             share_mwlc = mean(share_mwlc),
             share_swlc = mean(share_swlc))
-check0
+check0 # SUMMARY STAT IN INTRO: 16% LFP for MW with College in 2020
 
 
 #______________________________________________________
@@ -121,6 +121,8 @@ check2p5 <- test_base %>%
             pop     = mean(pop),
             lfp     = working/pop) 
          
+print(check2p5 %>% filter(women_group=="MW, College, White")) # SUMMARY STAT IN INTRO
+
 ggplot(check2p5, aes(x=YEAR, y=lfp, group=women_group, col=women_group)) + 
   geom_point(size = 3) + geom_line() + 
   theme_minimal() + 
