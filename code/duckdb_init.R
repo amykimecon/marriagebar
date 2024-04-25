@@ -10,7 +10,7 @@
 sink("./logs/log_duckdb_init.txt", append=FALSE)
 
 # creating connection to duckdb database ----
-con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only = FALSE)
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only = TRUE)
 #for Carolyn, in case connection on Dropbox isn't working:
 #con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=FALSE) 
 print("*********** Existing tables in database ************")

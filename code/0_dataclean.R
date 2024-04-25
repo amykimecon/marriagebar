@@ -14,33 +14,24 @@ con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
 # 1% SAMPLE 1910-2000: GROUPING BY YEAR ----
 #________________________________________________________
 print("\n\n***** writing 1% sample 1910-2000, grouping by year *****\n\n")
-## reading in raw data
-allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
 
 # grouping by year and demographic group
-samp_byyear <- allyears_raw_samp %>% 
+samp_byyear <- tbl(con, "allyears_raw_samp") %>%
   #defining person-level variables
   mutate(demgroup   = case_when(SEX == 1 ~ "Men",
                               SEX == 2 & (MARST == 6 | MARST == 3 | MARST == 4 | MARST == 5) ~ "Unmarried Women",
                               TRUE ~ "Married Women")) %>%
-  lf_summ_demgroup(wide = FALSE, outvars = c("lfp", "pctlf", "teachshare", "pctteach"), white = TRUE)
+  lf_summ_demgroup(wide = FALSE, outvars = c("lfp", "pctlf", "teachshare", "pctteach")) %>%
+  collect()
 
 write_csv(samp_byyear, glue("{cleandata}/samp_byyear.csv"))
 #!#! CHECKED 
 
 # grouping by year and demographic x college group
-samp_byyear_coll <- allyears_raw_samp %>% 
-  mutate(demgroup_old   = case_when(SEX == 1 ~ "Men",
-                                SEX == 2 & (MARST == 6 | MARST == 3 | MARST == 4 | MARST == 5) ~ "Unmarried Women",
-                                TRUE ~ "Married Women"),
-         coll_above = ifelse(EDUC >= 7, 1, 0),
-         demgroup = case_when( demgroup_old=="Unmarried Women" & coll_above==1 ~ "SW, College",
-                                    demgroup_old=="Unmarried Women" & coll_above==0 ~ "SW, Less than college",
-                                    demgroup_old=="Married Women"   & coll_above==1 ~ "MW, College",
-                                    demgroup_old=="Married Women"   & coll_above==0 ~ "MW, Less than college",
-                                    demgroup_old=="Men"             & coll_above==1 ~ "Men, College",
-                                    TRUE ~ "Men, Less than college")) %>%
-  lf_summ_demgroup(wide = FALSE, white = TRUE)
+samp_byyear_coll <- tbl(con, "allyears_raw_samp") %>%
+  mutate(demgroup = case_when(SEX == 2 & (MARST == 1 | MARST == 2) & RACE == 1 & EDUC %in% c(7, 8, 9, 10, 11) ~ "WMW, College",
+                              TRUE ~ "Other")) %>%
+  lf_summ_demgroup(wide = FALSE) %>% collect()
 
 write_csv(samp_byyear_coll, glue("{cleandata}/samp_byyear_coll.csv"))
 

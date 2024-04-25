@@ -50,8 +50,8 @@ occs <- tbl(con, "censusrawall") %>%
   group_by(OCC1950, YEAR) %>%
   summarize(n_occ_wmw      = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), #num white MW in each occ
             n_emp_wmw      = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & LABFORCE == 2, 1, 0)), #num of white MW in labor force in each occ
-            n_occ_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7, 1, 0)), # num white MW w some college in each occ
-            n_emp_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7 & LABFORCE == 2, 1, 0)), #num of white MW w some college in LF in each occ
+            n_occ_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7 & EDUC <= 11, 1, 0)), # num white MW w some college in each occ
+            n_emp_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7 & EDUC <= 11 & LABFORCE == 2, 1, 0)), #num of white MW w some college in LF in each occ
             ) %>%
   ungroup() %>%
   group_by(YEAR) %>% 

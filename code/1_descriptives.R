@@ -11,7 +11,7 @@ sink("./logs/log_1_descriptives.txt", append=FALSE)
 con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
 wmw_coll_lfp_1940 <- tbl(con, "censusrawall") %>% 
   addvars_indiv() %>%
-  filter(YEAR == 1940 & RACE == 1 & demgroup == "MW" & AGE >= 18 & AGE <= 64 & EDUC >= 7) %>%
+  filter(YEAR == 1940 & RACE == 1 & demgroup == "MW" & AGE >= 18 & AGE <= 64 & EDUC >= 7 & EDUC <= 11) %>%
   mutate(group = 1) %>% group_by(group) %>%
   summarize(lfp = sum(worker)/n()) %>% collect()
 print(glue("1940 LFP of White Married Women with at least some college: {round(wmw_coll_lfp_1940$lfp[1]*100,2)}%"))
@@ -19,12 +19,11 @@ print(glue("1940 LFP of White Married Women with at least some college: {round(w
 dbDisconnect(con, shutdown = TRUE)
 
 ## 2020 LFP of WMW w/ college (from ACS) ----
-wmw_coll_lfp_2020 <- filter(samp_byyear_coll, demgroup == "MW, College" & YEAR == 2020)
+wmw_coll_lfp_2020 <- filter(samp_byyear_coll, demgroup == "WMW, College" & YEAR == 2020)
 print(glue("2020 LFP of White Married Women with at least some college: {round(wmw_coll_lfp_2020$lfp*100,2)}%"))
 
 ## 2020 Share LF WMW w/ college (from ACS) ----
 print(glue("2020 LF Share of White Married Women with at least some college: {round(wmw_coll_lfp_2020$pctlf*100,2)}%"))
-
 
 ## figure: share workers male/single fem/married fem over time ----
 fig1a_demogtrends_workers <- ggplot(data = samp_byyear, 

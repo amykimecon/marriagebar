@@ -191,11 +191,7 @@ retailsales <- function(dataset){
 # for each year x demgroup, computes share of LF that is in demgroup and share of demgroup that is in LF,
 #   and also computes share of teachers that are in demgroup and share of demgroup that are teachers
 #   if wide = TRUE, returns year-level dataset, with demgroup x variable in columns
-lf_summ_demgroup <- function(dataset, outvars = c("lfp", "pctlf"), wide = TRUE, white = TRUE){
-  if (white == TRUE){
-    dataset <- dataset %>% filter(RACE == 1)
-  }
-  
+lf_summ_demgroup <- function(dataset, outvars = c("lfp", "pctlf"), wide = TRUE){
   outdata <- dataset %>% 
     group_by(YEAR, demgroup) %>%
     summarize(pop = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)), #population of demgroup x year
