@@ -31,11 +31,13 @@ check0 <- test_base %>%
   mutate(workingpop = sum(ifelse(worker==1, PERWT, 0)),
          share_men  = sum(ifelse(demgroup=="Men" & worker==1, PERWT, 0))/workingpop,
          share_mwc  = sum(ifelse(demgroup_coll=="MW, College" & worker==1, PERWT, 0))/workingpop,
+         share_mwcw  = sum(ifelse(demgroup_coll=="MW, College" & worker==1 & white==1, PERWT, 0))/workingpop,
          share_swc  = sum(ifelse(demgroup_coll=="SW, College" & worker==1, PERWT, 0))/workingpop,
          share_mwlc = sum(ifelse(demgroup_coll=="MW, Less than college" & worker==1, PERWT, 0))/workingpop,
          share_swlc = sum(ifelse(demgroup_coll=="SW, Less than college" & worker==1, PERWT, 0))/workingpop) %>% 
   summarize(share_men  = mean(share_men),
             share_mwc  = mean(share_mwc),
+            share_mwcw  = mean(share_mwcw),
             share_swc  = mean(share_swc),
             share_mwlc = mean(share_mwlc),
             share_swlc = mean(share_swlc))
@@ -90,6 +92,7 @@ check2 <- test_base %>%
   summarize(working = mean(working),
             pop     = mean(pop),
             lfp     = working/pop) 
+print(check2 %>% filter(demgroup_coll=="Men, College"))
 
 ggplot(check2, aes(x=YEAR, y=lfp, group=demgroup_coll, col=demgroup_coll)) + 
   geom_point()
