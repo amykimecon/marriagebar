@@ -5,6 +5,8 @@
 #___________________________________________________
 # set up base dataset ----
 #___________________________________________________
+allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
+
 test_base <- allyears_raw_samp %>% 
   mutate(demgroup   = case_when(SEX == 1 ~ "Men",
                                 SEX == 2 & (MARST == 6 | MARST == 3 | MARST == 4 | MARST == 5) ~ "Unmarried Women",
@@ -43,12 +45,21 @@ check0 <- test_base %>%
             share_swlc = mean(share_swlc))
 check0 # SUMMARY STAT IN INTRO: 16% LFP for MW with College in 2020
 
+#___________________________________________________
+# CHECK 1: LFP of college-educated MW? ----
+#___________________________________________________
+check1 <- test_base %>% 
+  filter(YEAR >= 1940) %>% # labforce data is different before 1940
+  group_by(YEAR) %>% 
+  summarize(lfp_mwc  = sum(ifelse(demgroup_coll=="MW, College" & worker==1, PERWT, 0))/sum(ifelse(demgroup_coll == "MW, College", PERWT, 0)))
+check1
+
 
 #______________________________________________________
-# CHECK 1, BY RACE: % of rise in MW LFP came from WMW ----
+# CHECK 2, BY RACE: % of rise in MW LFP came from WMW ----
 #______________________________________________________
 # plot: Time series of LFP for married/unmarried women/men, WHITE ONLY
-check1 <- test_base %>% 
+check2 <- test_base %>% 
   filter(white==1) %>% 
   group_by(YEAR, demgroup) %>%
   mutate(pop     = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)),
@@ -57,12 +68,12 @@ check1 <- test_base %>%
             pop     = mean(pop),
             lfp     = working/pop) 
 
-ggplot(check1, aes(x=YEAR, y=lfp, group=demgroup, col=demgroup)) + 
+ggplot(check2, aes(x=YEAR, y=lfp, group=demgroup, col=demgroup)) + 
   geom_point()
 
 
 # plot: time series of LFP for married/unmarried women BY RACE 
-check1p5 <- test_base %>% 
+check2p5 <- test_base %>% 
   filter(demgroup!="Men") %>% 
   mutate(women_group = case_when(demgroup=="Married Women"   & white==1 ~ "Married, White", 
                                  demgroup=="Married Women"   & white==0 ~ "Married, Non-White",
@@ -75,17 +86,17 @@ check1p5 <- test_base %>%
             pop     = mean(pop),
             lfp     = working/pop) 
 
-ggplot(check1p5, aes(x=YEAR, y=lfp, group=women_group, col=women_group)) + 
+ggplot(check2p5, aes(x=YEAR, y=lfp, group=women_group, col=women_group)) + 
   geom_point(size = 3) + geom_line() + 
   theme_minimal() + 
   scale_x_continuous(limits=c(1900, 2000), breaks=seq(1900, 2000, 10))
 
 
 #______________________________________________________
-# CHECK 2, BY RACE+EDUC: % of rise in MW LFP from educated WMW ----
+# CHECK 3, BY RACE+EDUC: % of rise in MW LFP from educated WMW ----
 #______________________________________________________
 # plot: Time series of LFP by married/unmarried women/men BY EDUC
-check2 <- test_base %>% 
+check3 <- test_base %>% 
   group_by(YEAR, demgroup_coll) %>%
   mutate(pop     = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)),
          working = sum(ifelse(worker==1, PERWT, 0))) %>% 
@@ -94,11 +105,11 @@ check2 <- test_base %>%
             lfp     = working/pop) 
 print(check2 %>% filter(demgroup_coll=="Men, College"))
 
-ggplot(check2, aes(x=YEAR, y=lfp, group=demgroup_coll, col=demgroup_coll)) + 
+ggplot(check3, aes(x=YEAR, y=lfp, group=demgroup_coll, col=demgroup_coll)) + 
   geom_point()
 
 # plot: time series of LFP for married/unmarried women BY RACE AND EDUC
-check2p5 <- test_base %>% 
+check3p5 <- test_base %>% 
   filter(demgroup!="Men") %>% 
   mutate(women_group = case_when(
     # white women
@@ -124,11 +135,6 @@ check2p5 <- test_base %>%
             pop     = mean(pop),
             lfp     = working/pop) 
          
-print(check2p5 %>% filter(women_group=="MW, College, White")) # SUMMARY STAT IN INTRO
+print(check3p5 %>% filter(women_group=="MW, College, White")) # SUMMARY STAT IN INTRO
 
-ggplot(check2p5, aes(x=YEAR, y=lfp, group=women_group, col=women_group)) + 
-  geom_point(size = 3) + geom_line() + 
-  theme_minimal() + 
-  scale_x_continuous(limits=c(1900, 2000), breaks=seq(1900, 2000, 10)) +
-  scale_y_continuous(limits=c(0,1))
 

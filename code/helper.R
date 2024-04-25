@@ -187,6 +187,34 @@ retailsales <- function(dataset){
     dplyr::select(-COUNTYTEMP)
 } #!#! CHECKED
 
+# summarizes dataset by year and demgroup: 
+# for each year x demgroup, computes share of LF that is in demgroup and share of demgroup that is in LF,
+#   and also computes share of teachers that are in demgroup and share of demgroup that are teachers
+#   if wide = TRUE, returns year-level dataset, with demgroup x variable in columns
+lf_summ_demgroup <- function(dataset, outvars = c("lfp", "pctlf"), wide = TRUE){
+  outdata <- dataset %>% 
+    group_by(YEAR, demgroup) %>%
+    summarize(pop = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)), #population of demgroup x year
+              numlf= sum(ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0)), #lf size of demgroup x year
+              numteach = sum(ifelse(OCC1950 == 93 & CLASSWKR == 2 & LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0)), #num teachers
+              lfp = sum(ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0))/sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)), #share of group in lf
+              teachshare = sum(ifelse(OCC1950 == 93 & CLASSWKR == 2 & LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0))/sum(ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0)) #share of workers that are teachers in group
+                ) %>%
+    group_by(YEAR) %>%
+    mutate(pctlf = numlf/sum(numlf),# share of lf in demgroup
+           pctteach = numteach/sum(numteach) #share of teachers that are in demgroup
+           ) %>%
+    ungroup()
+  
+  if (wide == TRUE){
+    outdata_wide <- outdata %>%
+      pivot_wider(id_cols = YEAR, names_from = demgroup, values_from = all_of(outvars))
+    return(outdata_wide)
+  }
+  
+  return(outdata)
+}
+
 #________________________
 # LINKING ----
 #________________________

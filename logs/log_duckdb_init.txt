@@ -1,19 +1,12 @@
-           name
-1 censusraw1910
-2 censusraw1920
-3 censusraw1930
-4 censusraw1940
-5 censusraw1950
-6  censusrawall
 [1] "\n\n*********** CENSUS TREE LINKING ************\n\n"
-Create or replace CensusTree linking file for link year 1920...: 95.5 sec elapsed
-Merge CensusTree linking file to base year 1910...: 49.19 sec elapsed
-Merge CensusTree linking file to link year 1920...: 326.85 sec elapsed
-Create or replace CensusTree linking file for link year 1930...: 135.09 sec elapsed
-Merge CensusTree linking file to base year 1920...: 135.03 sec elapsed
-Merge CensusTree linking file to link year 1930...: 747.01 sec elapsed
-Create or replace CensusTree linking file for link year 1940...: 190.79 sec elapsed
-Merge CensusTree linking file to base year 1930...: 265.3 sec elapsed
-Merge CensusTree linking file to link year 1940...: 1795.15 sec elapsed
+Create or replace CensusTree linking file for link year 1920...: 15.338 sec elapsed
+Merge CensusTree linking file to base year 1910...: 155.987 sec elapsed
+Merge CensusTree linking file to link year 1920...: 800.602 sec elapsed
+Create or replace CensusTree linking file for link year 1930...: 29.288 sec elapsed
+Merge CensusTree linking file to base year 1920...: 533.13 sec elapsed
+Merge CensusTree linking file to link year 1930...: 1375.056 sec elapsed
+Create or replace CensusTree linking file for link year 1940...: 38.811 sec elapsed
+Merge CensusTree linking file to base year 1930...: 729.901 sec elapsed
+Merge CensusTree linking file to link year 1940...: 2355.672 sec elapsed
 [1] 204775274
-Concatenating linked datasets...: 4218.78 sec elapsed
+Concatenating linked datasets...: 829.111 sec elapsed

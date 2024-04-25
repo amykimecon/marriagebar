@@ -14,32 +14,26 @@ con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
 # 1% SAMPLE 1910-2000: GROUPING BY YEAR ----
 #________________________________________________________
 print("\n\n***** writing 1% sample 1910-2000, grouping by year *****\n\n")
-## reading in raw data
-allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
 
-# grouping by year
-samp_byyear <- allyears_raw_samp %>% 
+# grouping by year and demographic group
+samp_byyear <- tbl(con, "allyears_raw_samp") %>%
+  #defining person-level variables
   mutate(demgroup   = case_when(SEX == 1 ~ "Men",
                               SEX == 2 & (MARST == 6 | MARST == 3 | MARST == 4 | MARST == 5) ~ "Unmarried Women",
-                              TRUE ~ "Married Women"),
-         teacher    = ifelse(OCC1950 == 93 & CLASSWKR == 2, 1, 0),
-         hs_above   = ifelse(EDUC >= 6, 1, 0),
-         coll_above = ifelse(EDUC >= 7, 1, 0)) %>%
-  group_by(YEAR, demgroup) %>%
-  mutate(pop = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0))) %>%
-  filter(LABFORCE == 2 & AGE >= 18 & AGE <= 64) %>% 
-  summarise(pct_dem_teaching  = sum(ifelse(teacher == 1, PERWT, 0))/sum(PERWT),
-            numlf             = sum(ifelse(LABFORCE == 2, PERWT, 0)),
-            lfp               = numlf/mean(pop),
-            numteachers       = sum(ifelse(teacher == 1,PERWT,0)),
-            pct_coll_teachers = sum(ifelse(teacher == 1 & coll_above == 1, PERWT, 0))/sum(ifelse(coll_above == 1, PERWT, 0))) %>%
-  group_by(YEAR) %>%
-  mutate(pctteachers = numteachers/sum(numteachers),
-         pctlf       = numlf/sum(numlf)) %>% 
-  ungroup()
+                              TRUE ~ "Married Women")) %>%
+  lf_summ_demgroup(wide = FALSE, outvars = c("lfp", "pctlf", "teachshare", "pctteach")) %>%
+  collect()
 
 write_csv(samp_byyear, glue("{cleandata}/samp_byyear.csv"))
 #!#! CHECKED 
+
+# grouping by year and demographic x college group
+samp_byyear_coll <- tbl(con, "allyears_raw_samp") %>%
+  mutate(demgroup = case_when(SEX == 2 & (MARST == 1 | MARST == 2) & RACE == 1 & EDUC %in% c(7, 8, 9, 10, 11) ~ "WMW, College",
+                              TRUE ~ "Other")) %>%
+  lf_summ_demgroup(wide = FALSE) %>% collect()
+
+write_csv(samp_byyear_coll, glue("{cleandata}/samp_byyear_coll.csv"))
 
 #________________________________________________________
 # CROSS-SECTIONAL DATA, GROUPING BY COUNTY ----
@@ -63,6 +57,7 @@ countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
             LFP             = sum(worker)/sum(ifelse(AGE >= 18 & AGE <= 64, 1, 0)), #share of prime age population that is in LF
             LFP_M           = sum(ifelse(worker != 0 & demgroup == "M",  1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "M",  1, 0)), #lfp for men
             LFP_SW          = sum(ifelse(worker != 0 & demgroup == "SW", 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW", 1, 0)), #lfp for single women
+            LFP_WSW         = sum(ifelse(worker != 0 & demgroup == "SW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW" & RACE == 1, 1, 0)), #lfp for white single women
             LFP_MW          = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW", 1, 0)), #lfp for married women
             LFP_WMW         = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW" & RACE == 1, 1, 0)), #lfp for white married women
             PCT_LF_MW       = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are MW

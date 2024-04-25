@@ -5,6 +5,51 @@
 sink("./logs/log_1_descriptives.txt", append=FALSE)
 
 #_________________________________________________
+# MOTIVATING STATS FROM INTRO ----
+#_________________________________________________
+## 1940 LFP of WMW w/ college (from full count) ----
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
+wmw_coll_lfp_1940 <- tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>%
+  filter(YEAR == 1940 & RACE == 1 & demgroup == "MW" & AGE >= 18 & AGE <= 64 & EDUC >= 7 & EDUC <= 11) %>%
+  mutate(group = 1) %>% group_by(group) %>%
+  summarize(lfp = sum(worker)/n()) %>% collect()
+print(glue("1940 LFP of White Married Women with at least some college: {round(wmw_coll_lfp_1940$lfp[1]*100,2)}%"))
+
+dbDisconnect(con, shutdown = TRUE)
+
+## 2020 LFP of WMW w/ college (from ACS) ----
+wmw_coll_lfp_2020 <- filter(samp_byyear_coll, demgroup == "WMW, College" & YEAR == 2020)
+print(glue("2020 LFP of White Married Women with at least some college: {round(wmw_coll_lfp_2020$lfp*100,2)}%"))
+
+## 2020 Share LF WMW w/ college (from ACS) ----
+print(glue("2020 LF Share of White Married Women with at least some college: {round(wmw_coll_lfp_2020$pctlf*100,2)}%"))
+
+## figure: share workers male/single fem/married fem over time ----
+fig1a_demogtrends_workers <- ggplot(data = samp_byyear, 
+                                    aes(x = YEAR, y = pctlf, 
+                                        fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + 
+  geom_area() +
+  xlab("Year") + ylab("Fraction of US Labor Force") + labs(fill = "") + 
+  scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
+  theme_minimal() + theme(legend.position = "bottom") 
+
+## figure: share teachers male/single fem/married fem over time ----
+fig1b_demogtrends_teachers <- ggplot(data = samp_byyear, 
+                                     aes(x = YEAR, y = pctteach, 
+                                         fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + 
+  geom_area() +
+  xlab("Year") + ylab("Fraction of US Teachers") + labs(fill = "") + 
+  scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
+  theme_minimal() + theme(legend.position = "bottom")
+
+## extra stats ---- 
+# percentage of married women in LF that were teachers, over time
+print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_dem_teaching)))
+# percentage of married women with at least some college that were teachers
+print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_coll_teachers)))
+
+#_________________________________________________
 # MAP OF TREATMENT & CONTROL COUNTIES ----
 #_________________________________________________
 ## neighbor ----
@@ -86,47 +131,9 @@ ggplot(data = meandiffsdata, aes(x = var, y = absmeandiff)) +
   geom_point(aes(color = sample, shape = sample), size = 4) + 
   coord_flip()
   
-#________________________________________________________________
-# FIG 1: DEMOG TRENDS FOR WORKERS/TEACHERS OVER TIME ----
-#________________________________________________________________
-## share workers male/single fem/married fem over time ----
-fig1a_demogtrends_workers <- ggplot(data = samp_byyear, 
-                                    aes(x = YEAR, y = pctlf, 
-                                        fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + 
-  geom_area() +
-  xlab("Year") + ylab("Fraction of US Labor Force") + labs(fill = "") + 
-  scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
-  theme_minimal() + theme(legend.position = "bottom") 
-#slides
-fig1a_demogtrends_workers + theme(text = element_text(size=18), axis.text = element_text(size = 14))
-ggsave(filename = glue("{outfigs}/slides/fig1a_demogtrends_workers.png"), width = 8, height = 5) 
-#paper
-fig1a_demogtrends_workers + theme(text = element_text(size=12))
-ggsave(filename = glue("{outfigs}/paper/fig1a_demogtrends_workers.png"), width = 6, height = 4) 
-
-## share teachers male/single fem/married fem over time ----
-fig1b_demogtrends_teachers <- ggplot(data = samp_byyear, 
-                                     aes(x = YEAR, y = pctteachers, 
-                                         fill = factor(demgroup, levels = c("Men", "Married Women", "Unmarried Women")))) + 
-  geom_area() +
-  xlab("Year") + ylab("Fraction of US Teachers") + labs(fill = "") + 
-  scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
-  theme_minimal() + theme(legend.position = "bottom")
-#slides
-fig1b_demogtrends_teachers + theme(text = element_text(size=18), axis.text = element_text(size = 14))
-ggsave(filename = glue("{outfigs}/slides/fig1b_demogtrends_teachers.png"), width = 8, height = 5)
-#paper
-fig1b_demogtrends_teachers + theme(text = element_text(size=12))
-ggsave(filename = glue("{outfigs}/paper/fig1b_demogtrends_teachers.png"), width = 6, height = 4)
-
-## extra stats ---- 
-# percentage of married women in LF that were teachers, over time
-print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_dem_teaching)))
-# percentage of married women with at least some college that were teachers
-print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_coll_teachers)))
 
 #______________________________________________________________________
-# FIG 2: DISTN OF FRAC ALL TEACHERS/SEC MARRIED WOMEN ----
+# FIG 1: DISTN OF FRAC ALL TEACHERS/SEC MARRIED WOMEN ----
 #______________________________________________________________________
 county_means_all <- countysumm %>% 
   group_by(YEAR, TREAT) %>%
@@ -212,14 +219,7 @@ summ_stats <- countysumm_stats %>%
   summarize(OBS = n(),
             across(all_of(varnames_1930), .fns = c(~mean(.x, na.rm=TRUE), #mean
                                                    ~sd(.x, na.rm=TRUE)/sqrt(OBS))))
-# summ_stats_1940 <- countysumm_stats %>%
-#   filter(YEAR == 1940) %>%
-#   group_by(summgroup) %>% 
-#   summarize(OBS = n(),
-#             across(all_of(varnames_1940), .fns = c(~mean(.x, na.rm=TRUE), #mean
-#                                                    ~sd(.x, na.rm=TRUE)/sqrt(OBS))))
-# 
-# summ_stats_all <- inner_join(summ_stats_1930,summ_stats_1940)
+
 summ_stats_out <- as.data.frame(t(summ_stats))
 
 summtex <- file(glue("./tables/summstats.tex"), open = "w")
@@ -251,3 +251,4 @@ close(summtex)
 
 # close log ----
 sink()
+

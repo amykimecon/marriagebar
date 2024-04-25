@@ -10,11 +10,18 @@
 sink("./logs/log_duckdb_init.txt", append=FALSE)
 
 # creating connection to duckdb database ----
-con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"))
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only = TRUE)
 #for Carolyn, in case connection on Dropbox isn't working:
 #con <- dbConnect(duckdb(), dbdir = "C:\\Users\\ctsao\\Documents\\test_duckdb/db.duckdb", read_only=FALSE) 
 print("*********** Existing tables in database ************")
 dbGetQuery(con, "SHOW TABLES")
+
+#________________________________________________________
+# IPUMS 1% CENSUS SAMPLE 1910-2020 ----
+#________________________________________________________
+tic(glue("Create or replace table allyears_raw_samp..."))
+dbExecute(con, glue("CREATE OR REPLACE TABLE allyears_raw_samp AS FROM read_csv_auto ('{rawdata}/census_sample_allyears.csv')"))
+toc()
 
 #________________________________________________________
 # IPUMS CENSUS RAW FILES ----

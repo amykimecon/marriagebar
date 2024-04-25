@@ -50,8 +50,8 @@ occs <- tbl(con, "censusrawall") %>%
   group_by(OCC1950, YEAR) %>%
   summarize(n_occ_wmw      = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), #num white MW in each occ
             n_emp_wmw      = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & LABFORCE == 2, 1, 0)), #num of white MW in labor force in each occ
-            n_occ_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7, 1, 0)), # num white MW w some college in each occ
-            n_emp_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7 & LABFORCE == 2, 1, 0)), #num of white MW w some college in LF in each occ
+            n_occ_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7 & EDUC <= 11, 1, 0)), # num white MW w some college in each occ
+            n_emp_wmw_coll = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64 & EDUC >= 7 & EDUC <= 11 & LABFORCE == 2, 1, 0)), #num of white MW w some college in LF in each occ
             ) %>%
   ungroup() %>%
   group_by(YEAR) %>% 
@@ -133,37 +133,6 @@ print(glue("BoTE Denominator 4: Total Actual Rise in all college-educated WMW's 
 ### BoTE Calcs ----
 print(glue("BoTE 1: MB share of rise in white collar jobs: {round(100*num_mb_occ_gen/denom_whitecollar,4)}%"))
 print(glue("BoTE 2: MB share of rise in college-educated LFP: {round(100*num_mb_occ_gen_educ/denom_coll,4)}%"))
-
-## !! STOPPED HERE 
-## defn 2.5: includes WMW growth in all white collar occupations
-x2_5 <- x %>% 
-  group_by(whitecollar_occ, YEAR) %>% 
-  summarize(s = sum(share_wmw_occ)) 
-x2_5
-num_whitecollar    <- x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==base_yr]*did_est
-denom_whitecollar  <- x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==end_yr] - 
-                      x2_5$s[x2_5$whitecollar_occ==1 & x2_5$YEAR==base_yr] 
-print(paste0("BoTE 2.5: Contr. of MB to rise in WMW's LFP in white collar work: ", num_clerical/denom_whitecollar))
-
-## defn 3: uses numerator from defn 2 (all clerical work) but denominator is growth in college-educ WMW LFP
-allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
-wmw_samp <- allyears_raw_samp %>%
-  mutate(demgroup = case_when(SEX == 1 ~ "M", #man
-                              SEX == 2 & MARST != 1 & MARST != 2 ~ "SW", #single/divorced/widowed/separated woman
-                              TRUE ~ "MW"), #married woman
-         worker = ifelse(YEAR == 1900, 
-                         ifelse(OCC1950 != 999 & AGE >= 18 & AGE <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
-                         ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), #otherwise, those in LABFORCE 
-         teacher = ifelse(YEAR == 1900,
-                          ifelse(OCC1950 == 93 & worker == 1, 1, 0), #in 1900, no CLASSWKR
-                          ifelse(OCC1950 == 93 & CLASSWKR == 2 & worker == 1, 1, 0)),
-         coll_above = ifelse(EDUC >= 7, 1, 0)) %>%
-  filter(demgroup == "MW" & RACE == 1 & coll_above == 1) %>%
-  group_by(YEAR) %>%
-  summarize(lfp = sum(ifelse(worker == 1, PERWT, 0))/sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)))
-denom_wmw_coll <- wmw_samp$lfp[wmw_samp$YEAR == end_yr] - wmw_samp$lfp[wmw_samp$YEAR == base_yr]
-print(paste0("BoTE 3: Contr. of MB to rise in WMW's LFP in white collar work: ", num/denom_wmw_coll))
-
 
 #____________________________________________________________
 # MECHANISM MAGNITUDES (SHARE SWT -> MWT vs SHARE MWNILF -> MWT) ----
