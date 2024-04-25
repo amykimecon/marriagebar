@@ -132,6 +132,6 @@ check3p5 <- test_base %>%
             pop     = mean(pop),
             lfp     = working/pop) 
          
-print(check2p5 %>% filter(women_group=="MW, College, White")) # SUMMARY STAT IN INTRO
+print(check3p5 %>% filter(women_group=="MW, College, White")) # SUMMARY STAT IN INTRO
 
 

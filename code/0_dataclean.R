@@ -17,29 +17,32 @@ print("\n\n***** writing 1% sample 1910-2000, grouping by year *****\n\n")
 ## reading in raw data
 allyears_raw_samp <- read_csv(glue("{rawdata}/census_sample_allyears.csv"))
 
-# grouping by year
+# grouping by year and demographic group
 samp_byyear <- allyears_raw_samp %>% 
+  #defining person-level variables
   mutate(demgroup   = case_when(SEX == 1 ~ "Men",
                               SEX == 2 & (MARST == 6 | MARST == 3 | MARST == 4 | MARST == 5) ~ "Unmarried Women",
-                              TRUE ~ "Married Women"),
-         teacher    = ifelse(OCC1950 == 93 & CLASSWKR == 2, 1, 0),
-         hs_above   = ifelse(EDUC >= 6, 1, 0),
-         coll_above = ifelse(EDUC >= 7, 1, 0)) %>%
-  group_by(YEAR, demgroup) %>%
-  mutate(pop = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0))) %>%
-  filter(LABFORCE == 2 & AGE >= 18 & AGE <= 64) %>% 
-  summarise(pct_dem_teaching  = sum(ifelse(teacher == 1, PERWT, 0))/sum(PERWT),
-            numlf             = sum(ifelse(LABFORCE == 2, PERWT, 0)),
-            lfp               = numlf/mean(pop),
-            numteachers       = sum(ifelse(teacher == 1,PERWT,0)),
-            pct_coll_teachers = sum(ifelse(teacher == 1 & coll_above == 1, PERWT, 0))/sum(ifelse(coll_above == 1, PERWT, 0))) %>%
-  group_by(YEAR) %>%
-  mutate(pctteachers = numteachers/sum(numteachers),
-         pctlf       = numlf/sum(numlf)) %>% 
-  ungroup()
+                              TRUE ~ "Married Women")) %>%
+  lf_summ_demgroup(wide = FALSE, outvars = c("lfp", "pctlf", "teachshare", "pctteach"), white = TRUE)
 
 write_csv(samp_byyear, glue("{cleandata}/samp_byyear.csv"))
 #!#! CHECKED 
+
+# grouping by year and demographic x college group
+samp_byyear_coll <- allyears_raw_samp %>% 
+  mutate(demgroup_old   = case_when(SEX == 1 ~ "Men",
+                                SEX == 2 & (MARST == 6 | MARST == 3 | MARST == 4 | MARST == 5) ~ "Unmarried Women",
+                                TRUE ~ "Married Women"),
+         coll_above = ifelse(EDUC >= 7, 1, 0),
+         demgroup = case_when( demgroup_old=="Unmarried Women" & coll_above==1 ~ "SW, College",
+                                    demgroup_old=="Unmarried Women" & coll_above==0 ~ "SW, Less than college",
+                                    demgroup_old=="Married Women"   & coll_above==1 ~ "MW, College",
+                                    demgroup_old=="Married Women"   & coll_above==0 ~ "MW, Less than college",
+                                    demgroup_old=="Men"             & coll_above==1 ~ "Men, College",
+                                    TRUE ~ "Men, Less than college")) %>%
+  lf_summ_demgroup(wide = FALSE, white = TRUE)
+
+write_csv(samp_byyear_coll, glue("{cleandata}/samp_byyear_coll.csv"))
 
 #________________________________________________________
 # CROSS-SECTIONAL DATA, GROUPING BY COUNTY ----

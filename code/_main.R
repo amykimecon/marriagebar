@@ -54,7 +54,8 @@ source("./code/helper.R")
 ### 1) code to clean data ----
 #source("./code/0_dataclean.R")
 ### 2) loading all cleaned datasets ----
-samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats (figure 1)
+samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats 
+samp_byyear_coll <- read_csv(glue("{cleandata}/samp_byyear_coll.csv")) # year-level summary stats by college educ (for intro)
 countysumm  <- read_csv(glue("{cleandata}/countysumm_newmatch.csv")) # county X year-level stats (most analysis uses this)
 link1       <- read_csv(glue("{cleandata}/link1_swt.csv"))
 link1point5 <- read_csv(glue("{cleandata}/link1point5_wtnc.csv"))
