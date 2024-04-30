@@ -122,15 +122,28 @@ for (i in 1:4){
   
   # SAMPLE: SWT IN BASE YEAR; OUTCOME: (MARRIED BY LINK YEAR ) X (OCC IN LINK YEAR)
   did_graph(dataset     = linkdatasets[[i]],
-            depvarlist  = c("pct_mwt", "pct_mwnilf"),
-            depvarnames = c("Married Teacher in t", "Married Not in LF in t"),
-            colors      = c(mw_col, "grey"),
+            depvarlist  = c("pct_mwt", "pct_mwnt", "pct_mwnilf"),
+            depvarnames = c("Married Teacher in t", "Married Non-Teacher in LF in t" ,"Married Not in LF in t"),
+            colors      = c(mw_col, sw_col, men_col),
             years       = c(1920, 1940),
             yvar        = glue("DiD Estimate: Share Unmarried Women Teachers in t-10"),
             ymin        = -0.066,
             ymax        = 0.05,
             verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
-            filename    = glue("linked_swt_{datanames[[i]]}")) %>% print()
+            filename    = glue("linked_swt_marr_{datanames[[i]]}")) %>% print()
+  Sys.sleep(2) #pause so i can see the graph output
+  
+  # SAMPLE: SWT IN BASE YEAR; OUTCOME: (MARRIED BY LINK YEAR ) X (OCC IN LINK YEAR)
+  did_graph(dataset     = linkdatasets[[i]],
+            depvarlist  = c("pct_swt", "pct_swnt", "pct_swnilf"),
+            depvarnames = c("Unmarried Teacher in t", "Unmarried Non-Teacher in LF in t" ,"Unmarried Not in LF in t"),
+            colors      = c(mw_col, sw_col, men_col),
+            years       = c(1920, 1940),
+            yvar        = glue("DiD Estimate: Share Unmarried Women Teachers in t-10"),
+            ymin        = -0.066,
+            ymax        = 0.05,
+            verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+            filename    = glue("linked_swt_unmarr_{datanames[[i]]}")) %>% print()
   Sys.sleep(2) #pause so i can see the graph output
 }
 
@@ -145,6 +158,38 @@ did_graph(dataset     = linkdatasets[[1]],
           ymax        = 0.05,
           verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
           filename    = glue("linked_swt_neighbor_t"))
+
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: SW x workingstatus
+did_graph(dataset     = linkdatasets[[1]],
+          depvarlist  = c("pct_swnt", "pct_swwhitecollar", "pct_swbluecollar"),
+          depvarnames = c("Non-Teacher in LF in t", "Non-Teacher White Collar Occ. in t", "Blue Collar Occ. in t"),
+          colors      = c("grey", mw_col, sw_col),
+          years       = c(1920, 1940),
+          yvar        = glue("DiD Estimate: Share Unmarried Women Teachers in t-10"),
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("linked_swt_inlf"))
+
+
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: IN LF NON TEACHER BY OCC TYPE
+did_graph(dataset     = linkdatasets[[1]],
+          depvarlist  = c("pct_swnt", "pct_swwhitecollar", "pct_swbluecollar"),
+          depvarnames = c("Non-Teacher in LF in t", "Non-Teacher White Collar Occ. in t", "Blue Collar Occ. in t"),
+          colors      = c("grey", mw_col, sw_col),
+          years       = c(1920, 1940),
+          yvar        = glue("DiD Estimate: Share Unmarried Women Teachers in t-10"),
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("linked_swt_inlf"))
+
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: OCCSCORE IN LINK YEAR BY MARR STATUS
+did_graph(dataset     = linkdatasets[[1]],
+          depvarlist  = c("avg_occscore", "avg_occscore_mw", "avg_occscore_sw"),
+          depvarnames = c("Avg. Occupation Score in t", "Avg. Occ. Score in t | Married in t", "Avg. Occ. Score in t | Unmarried in t"),
+          colors      = c("grey", mw_col, sw_col),
+          years       = c(1920, 1940),
+          yvar        = glue("DiD Estimate for Unmarried Women Teachers in t-10"),
+          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+          filename    = glue("linked_swt_occscore"))
+
 
 # SAMPLE: SW SECRETARIES IN BASE YEAR; OUTCOME: MARRIED BY LINK YEAR (only for neighbor)
 did_graph(dataset     = link1sec %>% filter(neighbor_samp == 1 & mainsamp == 1),

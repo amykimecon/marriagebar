@@ -70,12 +70,10 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
     filter(n == 5)
   
   # filter to FIPS with at least n white teachers in 1930 and 40
-  fips1950 <- filter(dataset, YEAR == 1950 & NWHITETEACH >= n)$FIPS
   fips1940 <- filter(dataset, YEAR == 1940 & NWHITETEACH >= n)$FIPS
   outdata <- dataset %>% filter(YEAR == 1930 & NWHITETEACH >= n & 
                                   !is.na(FIPS) &       #only keeping FIPS with at least n white teachers in 1930
-                                  FIPS %in% fips1940 & #AND at least n white teachers in 1940
-                                  FIPS %in% fips1950)  #AND at least n white teachers in 1950
+                                  FIPS %in% fips1940)  #AND at least n white teachers in 1940
   
   # keep only counties observed in all four years if balanced==TRUE
   if (balanced){
@@ -84,7 +82,7 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
   
   if (verbose){
     print(glue("Original Dataset: {length(unique(dataset$FIPS))} counties"))
-    print(glue("Main Sample (Counties with >= {n} teachers in 1930, 40, and 50): {length(unique(outdata$FIPS))} counties"))
+    print(glue("Main Sample (Counties with >= {n} teachers in 1930, 40): {length(unique(outdata$FIPS))} counties"))
     print(glue("Dropped {100*(1-length(unique(outdata$FIPS))/length(unique(dataset$FIPS)))}% of Observations")) 
   }
   return(unique(outdata$FIPS))
@@ -240,7 +238,19 @@ addvars_indiv_linked <- function(dataset){
            secretary_base = ifelse(YEAR_base == 1900,
                                    ifelse(OCC1950_base == 350 & worker_base == 1, 1, 0), #in 1900, no CLASSWKR
                                    ifelse(OCC1950_base == 350 & CLASSWKR_base == 2 & worker_base == 1, 1, 0)),
-           secretary_link = ifelse(OCC1950_link == 350 & CLASSWKR_link == 2 & worker_link == 1, 1, 0))
+           secretary_link = ifelse(OCC1950_link == 350 & CLASSWKR_link == 2 & worker_link == 1, 1, 0),
+           occcat_link = case_when(OCC1950_link < 100 ~ "Professional and Technical",
+                              OCC1950_link >= 200 & OCC1950_link < 300 ~ "Managers, Officials, Proprietors",
+                              OCC1950_link >= 300 & OCC1950_link < 400 ~ "Clerical Workers",
+                              OCC1950_link >= 400 & OCC1950_link < 500 ~ "Sales Workers",
+                              OCC1950_link >= 500 & OCC1950_link < 600 ~ "Craftsmen",
+                              OCC1950_link >= 600 & OCC1950_link < 700 ~ "Operative Workers",
+                              OCC1950_link >= 700 & OCC1950_link <= 720 ~ "Private Household Workers",
+                              OCC1950_link >= 730 & OCC1950_link < 800 ~ "Non-HH Service Workers",
+                              (OCC1950_link >= 800 & OCC1950_link < 900) | (OCC1950_link >= 100 & OCC1950_link <= 123) ~ "Farm Workers/Owners",
+                              OCC1950_link >= 900 & OCC1950_link <= 970 ~ "Non-Farm Laborers",
+                              TRUE ~ "Not Classified/Non-Occupational Response"
+           ))
   return(outdata)
 } #!#! CHECKED
 
@@ -251,15 +261,35 @@ summlinks <- function(dataset, n = 10){
     summarize(nlink       = n(),
               pct_t       = sum(ifelse(teacher_link == 1, 1, 0))/n(),
               pct_marr    = sum(ifelse(marst_link == 1, 1, 0))/n(),
+              pct_lf = sum(ifelse(worker_link == 1, 1, 0))/n(),
               pct_nilf    = sum(ifelse(worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later mw and not in lf
               pct_mw      = sum(ifelse(demgroup_link == "MW", 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
               pct_mwt     = sum(ifelse(demgroup_link == "MW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw teach
               pct_mwnt    = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw non teach but in lf
               pct_mwnilf  = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later mw and not in lf
+              pct_mwprof = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link == "Professional and Technical", 1, 0))/n(),
+              pct_mwclerical = sum(ifelse(demgroup_link == "MW" & occcat_link == "Clerical Workers", 1, 0))/n(),
+              pct_mwsales = sum(ifelse(demgroup_link == "MW" & occcat_link == "Sales Workers", 1, 0))/n(),
+              pct_mwoperative = sum(ifelse(demgroup_link == "MW" & occcat_link == "Operative Workers", 1, 0))/n(),
+              pct_mwwhitecollar = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
+                                                                                                            "Clerical Workers", "Sales Workers"), 1, 0))/n(),
+              pct_mwbluecollar = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
+                                                                                                           "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/n(),
               pct_sw      = sum(ifelse(demgroup_link == "SW", 1, 0))/n(), #share of sample (swt_base) that are later sw (teach + nonteach)
               pct_swt     = sum(ifelse(demgroup_link == "SW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw teach
               pct_swnt    = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw non teach but in lf
               pct_swnilf  = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later sw and not in lf
+              pct_swprof = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link == "Professional and Technical", 1, 0))/n(),
+              pct_swclerical = sum(ifelse(demgroup_link == "SW" & occcat_link == "Clerical Workers", 1, 0))/n(),
+              pct_swsales = sum(ifelse(demgroup_link == "SW" & occcat_link == "Sales Workers", 1, 0))/n(),
+              pct_swoperative = sum(ifelse(demgroup_link == "SW" & occcat_link == "Operative Workers", 1, 0))/n(),
+              pct_swwhitecollar = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
+                                                                                                            "Clerical Workers", "Sales Workers"), 1, 0))/n(),
+              pct_swbluecollar = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
+                                                                                                           "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/n(),
+              avg_occscore = mean(OCCSCORE_link),
+              avg_occscore_sw = mean(ifelse(demgroup_link == "SW", OCCSCORE_link, NA),na.rm=TRUE),
+              avg_occscore_mw = mean(ifelse(demgroup_link == "MW", OCCSCORE_link, NA),na.rm=TRUE),
               pct_wc      = sum(ifelse(NCHILD_link > 0, 1, 0))/n(), #share of sample (swt_base) that later have children (teach + nonteach)
               pct_wct     = sum(ifelse(NCHILD_link > 0 & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and teach
               pct_wcnt    = sum(ifelse(NCHILD_link > 0 & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and work, but not as teachers
@@ -297,6 +327,14 @@ summlinks_sec <- function(dataset, n = 10){
               pct_sws     = sum(ifelse(demgroup_link == "SW" & secretary_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw teach
               pct_swns    = sum(ifelse(demgroup_link == "SW" & secretary_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw non teach but in lf
               pct_swnilf  = sum(ifelse(demgroup_link == "SW" & secretary_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later sw and not in lf
+              pct_swprof = sum(ifelse(demgroup_link == "SW" & occcat_link == "Professional and Technical", 1, 0))/n(),
+              pct_swclerical = sum(ifelse(demgroup_link == "SW" & secretary_link == 0 & occcat_link == "Clerical Workers", 1, 0))/n(),
+              pct_swsales = sum(ifelse(demgroup_link == "SW" & occcat_link == "Sales Workers", 1, 0))/n(),
+              pct_swoperative = sum(ifelse(demgroup_link == "SW" & occcat_link == "Operative Workers", 1, 0))/n(),
+              pct_swwhitecollar = sum(ifelse(demgroup_link == "SW" & secretary_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
+                                                                                                            "Clerical Workers", "Sales Workers"), 1, 0))/n(),
+              pct_swbluecollar = sum(ifelse(demgroup_link == "SW" & secretary_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
+                                                                                                           "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/n(),
               pct_wc      = sum(ifelse(NCHILD_link > 0, 1, 0))/n(), #share of sample (swt_base) that later have children (teach + nonteach)
               pct_wct     = sum(ifelse(NCHILD_link > 0 & secretary_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and teach
               pct_wcns    = sum(ifelse(NCHILD_link > 0 & secretary_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and work, but not as secretarys

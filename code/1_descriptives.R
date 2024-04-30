@@ -7,6 +7,21 @@ sink("./logs/log_1_descriptives.txt", append=FALSE)
 #_________________________________________________
 # MOTIVATING STATS FROM INTRO ----
 #_________________________________________________
+## for footnote: LFP & college-going of black married women
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
+black_white_stats <- tbl(con, "allyears_raw_samp") %>% 
+  filter(SEX == 2 & MARST %in% c(1,2) & AGE >= 18 & AGE <= 64 & RACE %in% c(1,2)) %>%
+  mutate(coll = ifelse(EDUC %in% c(7, 8, 9, 10, 11), 1, 0)) %>%
+  group_by(YEAR, RACE) %>%
+  mutate(share_coll = sum(ifelse(coll == 1, PERWT, 0))/sum(PERWT),
+         lfp = sum(ifelse(LABFORCE == 2, PERWT, 0))/sum(PERWT)) %>%
+  group_by(RACE, coll, YEAR) %>%
+  summarize(n_group = n(), 
+            share_coll = mean(share_coll),
+            lfp = mean(lfp),
+            lfp_coll = sum(ifelse(LABFORCE == 2, PERWT, 0))/sum(PERWT)) %>% collect()
+dbDisconnect(con, shutdown = TRUE)
+
 ## 1940 LFP of WMW w/ college (from full count) ----
 con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
 wmw_coll_lfp_1940 <- tbl(con, "censusrawall") %>% 
@@ -15,6 +30,27 @@ wmw_coll_lfp_1940 <- tbl(con, "censusrawall") %>%
   mutate(group = 1) %>% group_by(group) %>%
   summarize(lfp = sum(worker)/n()) %>% collect()
 print(glue("1940 LFP of White Married Women with at least some college: {round(wmw_coll_lfp_1940$lfp[1]*100,2)}%"))
+
+bmw_coll_lfp_1940 <- tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>%
+  filter(YEAR == 1940 & RACE == 2 & demgroup == "MW" & AGE >= 18 & AGE <= 64 & EDUC >= 7 & EDUC <= 11) %>%
+  mutate(group = 1) %>% group_by(group) %>%
+  summarize(lfp = sum(worker)/n()) %>% collect()
+print(glue("1940 LFP of Black Married Women with at least some college: {round(bmw_coll_lfp_1940$lfp[1]*100,2)}%"))
+
+wmw_lfp_1940 <- tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>%
+  filter(YEAR == 1940 & RACE == 1 & demgroup == "MW" & AGE >= 18 & AGE <= 64) %>%
+  mutate(group = 1) %>% group_by(group) %>%
+  summarize(lfp = sum(worker)/n()) %>% collect()
+print(glue("1940 LFP of White Married Women: {round(wmw_lfp_1940$lfp[1]*100,2)}%"))
+
+bmw_lfp_1940 <- tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>%
+  filter(YEAR == 1940 & RACE == 2 & demgroup == "MW" & AGE >= 18 & AGE <= 64) %>%
+  mutate(group = 1) %>% group_by(group) %>%
+  summarize(lfp = sum(worker)/n()) %>% collect()
+print(glue("1940 LFP of Black Married Women: {round(bmw_lfp_1940$lfp[1]*100,2)}%"))
 
 dbDisconnect(con, shutdown = TRUE)
 
@@ -42,12 +78,6 @@ fig1b_demogtrends_teachers <- ggplot(data = samp_byyear,
   xlab("Year") + ylab("Fraction of US Teachers") + labs(fill = "") + 
   scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
   theme_minimal() + theme(legend.position = "bottom")
-
-## extra stats ---- 
-# percentage of married women in LF that were teachers, over time
-print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_dem_teaching)))
-# percentage of married women with at least some college that were teachers
-print(samp_byyear %>% filter(demgroup == "Married Women") %>% select(c(YEAR, pct_coll_teachers)))
 
 #_________________________________________________
 # MAP OF TREATMENT & CONTROL COUNTIES ----
@@ -201,7 +231,7 @@ countysumm_stats <- countysumm %>%
                  WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
                  STUDENT_PER_TEACH    = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), 
                  summgroup            = ifelse(TREAT == 1, "Treated", "Neighb. Sth."))) %>%
-  mutate(summgroup = factor(summgroup, levels = c("All", "South", "Neighb. Sth.", "Treated")))
+  mutate(summgroup = factor(summgroup, levels = c("All", "South", "Treated", "Neighb. Sth.")))
 
 varnames_1930 = c("POP_THOUS","WHITESCHOOLPOP_THOUS", "URBAN", 
                   "LFP_MW", "LFP_WMW", "NCHILD", 

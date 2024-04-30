@@ -194,7 +194,9 @@ write_csv(countysumm, glue("{cleandata}/countysumm_newmatch.csv"))
 linkview <-  tbl(con, "linkedall") %>% 
   addvars_indiv_linked() %>%
   mutate(NCHILD_base = `NCHILD`, 
-         NCHILD_link = `NCHILD_1`) %>% #temporary while NCHILD isn't explicitly relabelled in duckdb
+         NCHILD_link = `NCHILD_1`,
+         OCCSCORE_base = `OCCSCORE`,
+         OCCSCORE_link = `OCCSCORE_1`) %>% #temporary while NCHILD isn't explicitly relabelled in duckdb
   dplyr::select(c(ends_with("_base"),ends_with("_link"))) %>% #only keeping variables that have been selected (see duckdb_init)
   filter(SEX_base == SEX_link & RACE_base == RACE_link &  #only keeping links with consistent sex and race (drops 1.2% of links)
            AGE_base <= AGE_link - 5 & AGE_base >= AGE_link - 15) #and consistent age (age in base year 5-15 years less than age in link year) -- drops an additional 2.2% of links
@@ -218,7 +220,7 @@ write_csv(link1point5, glue("{cleandata}/link1point5_wtnc.csv"))
 
 # group 2: unmarried women not in labor force in pre-period
 link2 <- linkview %>% 
-  filter(LABFORCE_base == 0 & demgroup_base == "SW" & AGE_base <= 20 & AGE_base >= 10 & RACE_base == 1) %>% 
+  filter(LABFORCE_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 10 & RACE_base == 1) %>% 
   summlinks() %>%
   matching_join(matchlist)
 write_csv(link2, glue("{cleandata}/link2_swnt.csv"))
@@ -261,6 +263,6 @@ write_csv(link3sec, glue("{cleandata}/link3_mwns.csv"))
 
 dbDisconnect(con, shutdown = TRUE)
 # close log ----
-sink()
+sink(NULL)
 
 

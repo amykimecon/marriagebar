@@ -9,3 +9,6 @@ import delimited "$world_data/UN_women_data_hub.csv", clear
 gsort maritalstatuscode sexcode obs_value
 list ref_areadescription obs_value if maritalstatuscode=="MIU" & sexcode=="FEMALE"
 list ref_areadescription obs_value if maritalstatuscode=="MIU" & sexcode=="MALE"
+
+list ref_areadescription obs_value if maritalstatuscode=="SNM" & sexcode=="FEMALE"
+list ref_areadescription obs_value if maritalstatuscode=="SNM" & sexcode=="MALE"
