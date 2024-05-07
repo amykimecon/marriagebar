@@ -266,30 +266,52 @@ summlinks <- function(dataset, n = 10){
               pct_mw      = sum(ifelse(demgroup_link == "MW", 1, 0))/n(), #share of sample (swt_base) that are later mw (teach + nonteach)
               pct_mwt     = sum(ifelse(demgroup_link == "MW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw teach
               pct_mwnt    = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later mw non teach but in lf
-              pct_mwnilf  = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later mw and not in lf
+              pct_mwnilf  = sum(ifelse(demgroup_link == "MW" & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later mw and not in lf
+              pct_mwt_cond = sum(ifelse(demgroup_link == "MW" & teacher_link == 1, 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
+              pct_mwnt_cond = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & worker_link == 1, 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
+              pct_mwnilf_cond = sum(ifelse(demgroup_link == "MW" & worker_link == 0, 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
+              pct_mw_cond_nilf = sum(ifelse(demgroup_link == "MW" & worker_link == 0, 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)), #share of MW 
+              pct_mw_cond_inlf = sum(ifelse(demgroup_link == "MW" & worker_link == 1, 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)), #sha, #share of sample (swt_base) that are later mw and not in lf
               pct_mwprof = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link == "Professional and Technical", 1, 0))/n(),
               pct_mwclerical = sum(ifelse(demgroup_link == "MW" & occcat_link == "Clerical Workers", 1, 0))/n(),
               pct_mwsales = sum(ifelse(demgroup_link == "MW" & occcat_link == "Sales Workers", 1, 0))/n(),
               pct_mwoperative = sum(ifelse(demgroup_link == "MW" & occcat_link == "Operative Workers", 1, 0))/n(),
               pct_mwwhitecollar = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
                                                                                                             "Clerical Workers", "Sales Workers"), 1, 0))/n(),
+              pct_mwwhitecollar_cond = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
+                                                                                                            "Clerical Workers", "Sales Workers"), 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
               pct_mwbluecollar = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
                                                                                                            "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/n(),
+              pct_mwbluecollar_cond = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
+                                                                                                           "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
               pct_sw      = sum(ifelse(demgroup_link == "SW", 1, 0))/n(), #share of sample (swt_base) that are later sw (teach + nonteach)
               pct_swt     = sum(ifelse(demgroup_link == "SW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw teach
               pct_swnt    = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw non teach but in lf
               pct_swnilf  = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that are later sw and not in lf
+              pct_swt_cond = sum(ifelse(demgroup_link == "SW" & teacher_link == 1, 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
+              pct_swnt_cond = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 1, 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
+              pct_swnilf_cond = sum(ifelse(demgroup_link == "SW" & worker_link == 0, 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
+              pct_sw_cond_nilf = sum(ifelse(demgroup_link == "SW" & worker_link == 0, 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)), #share of MW 
+              pct_sw_cond_inlf = sum(ifelse(demgroup_link == "SW" & worker_link == 1, 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)), #sha, #share of sample (swt_base) that are later mw and not in lf
               pct_swprof = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link == "Professional and Technical", 1, 0))/n(),
               pct_swclerical = sum(ifelse(demgroup_link == "SW" & occcat_link == "Clerical Workers", 1, 0))/n(),
               pct_swsales = sum(ifelse(demgroup_link == "SW" & occcat_link == "Sales Workers", 1, 0))/n(),
               pct_swoperative = sum(ifelse(demgroup_link == "SW" & occcat_link == "Operative Workers", 1, 0))/n(),
               pct_swwhitecollar = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
                                                                                                             "Clerical Workers", "Sales Workers"), 1, 0))/n(),
+              pct_swwhitecollar_cond = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
+                                                                                                            "Clerical Workers", "Sales Workers"), 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
               pct_swbluecollar = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
                                                                                                            "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/n(),
-              avg_occscore = mean(OCCSCORE_link),
-              avg_occscore_sw = mean(ifelse(demgroup_link == "SW", OCCSCORE_link, NA),na.rm=TRUE),
-              avg_occscore_mw = mean(ifelse(demgroup_link == "MW", OCCSCORE_link, NA),na.rm=TRUE),
+              pct_swbluecollar_cond = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
+                                                                                                           "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
+              avg_occscore = mean(ifelse(worker_link == 1, OCCSCORE_link, 0)), #non-workers should have occscore of 0
+              avg_occscore_sw = mean(case_when(demgroup_link != "SW" ~ NA_integer_, 
+                                               worker_link == 1 ~ OCCSCORE_link, 
+                                               TRUE ~ 0),na.rm=TRUE),
+              avg_occscore_mw = mean(case_when(demgroup_link != "MW" ~ NA_integer_, 
+                                               worker_link == 1 ~ OCCSCORE_link, 
+                                               TRUE ~ 0),na.rm=TRUE),
               pct_wc      = sum(ifelse(NCHILD_link > 0, 1, 0))/n(), #share of sample (swt_base) that later have children (teach + nonteach)
               pct_wct     = sum(ifelse(NCHILD_link > 0 & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and teach
               pct_wcnt    = sum(ifelse(NCHILD_link > 0 & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that later have children and work, but not as teachers
@@ -517,7 +539,7 @@ did_graph_data <- function(dataset, depvar, controls = "",
   regdata <- dataset %>% 
     add_did_dummies() %>% 
     filter(YEAR %in% c(years, yearomit)) %>% 
-    mutate(cluster = as.character(FIPS))
+    mutate(cluster = as.character(TREAT))
   
   # if weight not already a variable, just weight by vector of 1s
   if(!("weight" %in% names(dataset))){
@@ -591,7 +613,7 @@ did_graph_data <- function(dataset, depvar, controls = "",
 #   and toggles for slides (default is for paper) 
 #   and steps (i.e. saving versions of the graph with points gradually revealed -- default is no)
 #   and pointspan, i.e. total width of all dots for a given year, default is 2
-did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", 
+did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", pointtypes = NA,
                       years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
                       verbose = FALSE, yvar = "Coef on Treat X Year",
                       ymax = NA, ymin = NA, 
@@ -658,6 +680,12 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
       annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
       geom_point(size = 4) + labs(x = "Year", y = yvar, color = "", shape = "") + theme_minimal() + 
       theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
+    
+    
+    if(!is.na(pointtypes)){
+      graph_out <- graph_out + scale_shape_manual(values = pointtypes)
+    }
+    
     # adjust ymin/ymax 
     if (!is.na(ymax) | !is.na(ymin)){ # if ymin/ymax bounds are specified, and ...
       if (ymax > max(did_data$y_ub) & ymin < min(did_data$y_lb)){ # the observed ymin/ymax are within said bounds
@@ -678,6 +706,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "",
                                              y = min(y_lb) + (max(y_ub) - min(y_lb))/10, 
                                              label = "Marriage Bars \n Removed"), color = "#656565") 
     }
+    
     # save graphs
     if (!is.na(filename) & !slides){ #saving graph in folder for paper figs
       ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)

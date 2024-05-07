@@ -34,7 +34,15 @@ for (i in 1:4){
             verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
             filename    = glue("shareteach_{datanames[[i]]}"))  %>% print()
   Sys.sleep(2) #pause so i can see the graph output
+  
 }
+
+# OUTCOME: P(teacher|MW) (only for neighbor sample)
+did_graph(dataset     = neighbor, 
+          depvarlist  = c("pct_Teacher_mw_1000"),
+          depvarnames = c("MW Teachers Per 1000 MW"),
+          colors      = c(mw_col),
+          yvar        = "DiD Estimate: MW Teachers per 1000 MW")
 
 # OUTCOME: OVERALL SUPPLY OF TEACHERS (only for neighbor sample)
 did_graph(dataset     = neighbor, 
@@ -169,21 +177,10 @@ did_graph(dataset     = linkdatasets[[1]],
           verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
           filename    = glue("linked_swt_inlf"))
 
-
-# SAMPLE: SWT IN BASE YEAR; OUTCOME: IN LF NON TEACHER BY OCC TYPE
+# SAMPLE: SWT IN BASE YEAR; OUTCOME: LFP IN LINK YEAR BY MARR STATUS
 did_graph(dataset     = linkdatasets[[1]],
-          depvarlist  = c("pct_swnt", "pct_swwhitecollar", "pct_swbluecollar"),
-          depvarnames = c("Non-Teacher in LF in t", "Non-Teacher White Collar Occ. in t", "Blue Collar Occ. in t"),
-          colors      = c("grey", mw_col, sw_col),
-          years       = c(1920, 1940),
-          yvar        = glue("DiD Estimate: Share Unmarried Women Teachers in t-10"),
-          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
-          filename    = glue("linked_swt_inlf"))
-
-# SAMPLE: SWT IN BASE YEAR; OUTCOME: OCCSCORE IN LINK YEAR BY MARR STATUS
-did_graph(dataset     = linkdatasets[[1]],
-          depvarlist  = c("avg_occscore", "avg_occscore_mw", "avg_occscore_sw"),
-          depvarnames = c("Avg. Occupation Score in t", "Avg. Occ. Score in t | Married in t", "Avg. Occ. Score in t | Unmarried in t"),
+          depvarlist  = c("pct_lf", "pct_mwinlf", "pct_swinlf"),
+          depvarnames = c("Share in Labor Force in t", "Share in LF in t | Married in t", "Share in LF in t | Unmarried in t"),
           colors      = c("grey", mw_col, sw_col),
           years       = c(1920, 1940),
           yvar        = glue("DiD Estimate for Unmarried Women Teachers in t-10"),

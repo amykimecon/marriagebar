@@ -36,19 +36,36 @@ did_graph(neighbor_link, "pct_swnilf", depvarnames = c("MW"), colors = c(mw_col)
 
 ## Testing: remaking swt linked graphs 
 neighbor_link1 <- link1 %>% filter(neighbor_samp == 1 & mainsamp == 1)
-did_graph(neighbor_link1, c("pct_nilf", "pct_swnilf", "pct_mwnilf"), depvarnames = c("nilf", "sw", "mw"), colors = gg_color_hue(3),
+did_graph(neighbor_link1 %>% mutate(weight = nlink), c("pct_nilf", "pct_sw_cond_nilf", "pct_mw_cond_nilf"), depvarnames = c("nilf", "sw", "mw"), colors = gg_color_hue(3),
           years = c(1920,1940))
 
-did_graph(neighbor_link1, c("avg_occscore", "avg_occscore_mw", "avg_occscore_sw"), depvarnames = c("occscore", "sw", "mw"), colors = c("grey", mw_col, sw_col),
+did_graph(neighbor_link1 %>% mutate(weight = nlink), c("pct_lf", "pct_sw_cond_inlf", "pct_mw_cond_inlf"), depvarnames = c("nilf", "sw", "mw"), colors = gg_color_hue(3),
+          years = c(1920,1940))
+
+did_graph(neighbor_link1, c("avg_occscore", "avg_occscore_sw", "avg_occscore_mw"), depvarnames = c("occscore", "sw", "swnt"), colors = c("grey", mw_col, sw_col),
+          years = c(1920,1940))
+
+did_graph(neighbor_link1, c("avg_occscore", "avg_occscore_sw", "avg_occscore_swnt"), depvarnames = c("occscore", "sw", "swnt"), colors = c("grey", mw_col, sw_col),
           years = c(1920,1940))
 
 did_graph(neighbor_link1, c("pct_swt","pct_swnt", "pct_swnilf","pct_mwt","pct_mwnt","pct_mwnilf"), 
+          depvarnames = c("swt", "swnt", "swnilf","mwt", "mwnt", "mwnilf"), colors = gg_color_hue(6), years = c(1920, 1940))
+
+did_graph(neighbor_link1 %>% mutate(weight = nlink), c("pct_swt_cond","pct_swnt_cond", "pct_swnilf_cond","pct_mwt_cond","pct_mwnt_cond","pct_mwnilf_cond"), 
+          depvarnames = c("swt", "swnt", "swnilf","mwt", "mwnt", "mwnilf"), colors = gg_color_hue(6), years = c(1920, 1940))
+
+neighbor_link4 <- link4 %>% filter(neighbor_samp == 1 & mainsamp == 1)
+
+did_graph(neighbor_link5, c("pct_swt","pct_swnt", "pct_swnilf","pct_mwt","pct_mwnt","pct_mwnilf"), 
           depvarnames = c("swt", "swnt", "swnilf","mwt", "mwnt", "mwnilf"), colors = gg_color_hue(6), years = c(1920, 1940))
 
 # did_graph(neighbor_link1, c("pct_swnt", "pct_swclerical", "pct_swsales", "pct_swoperative", "pct_swprof"), 
 #           depvarnames = c("non-teacher", "clerical", "sales","operative", "professional"), colors = gg_color_hue(5), years = c(1920, 1940))
 
 did_graph(neighbor_link1, c("pct_swnt", "pct_swwhitecollar", "pct_swbluecollar"), 
+          depvarnames = c("non-teacher", "white collar", "blue collar"), colors = gg_color_hue(3), years = c(1920, 1940))
+
+did_graph(neighbor_link1, c("pct_swnt_cond", "pct_swwhitecollar_cond", "pct_swbluecollar_cond"), 
           depvarnames = c("non-teacher", "white collar", "blue collar"), colors = gg_color_hue(3), years = c(1920, 1940))
 
 

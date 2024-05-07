@@ -170,13 +170,13 @@ countysumm <- countysumm_raw %>%
          pct_workers_Teacher   = num_Teacher/NWHITEWORK, #percentage of workers that are teachers 
          pct_workers_Secretary = num_Secretary/NWHITEWORK, #percentage of workers that are secretaries
          pct_Teacher_mw        = num_mw_Teacher/NWHITEMW, #percentage of white married women that are teachers
-         pct_Teacher_mw_1000   = pct_Teacher_mw*1000,
+         pct_Teacher_mw_100   = pct_Teacher_mw*100,
          pct_Teacher_sw        = num_sw_Teacher/NWHITESW, #percentage of white unmarried women that are teachers
-         pct_Teacher_sw_1000   = pct_Teacher_sw*1000,
+         pct_Teacher_sw_100   = pct_Teacher_sw*100,
          pct_Teacher_sw_young  = num_sw_young_Teacher/NWHITESW_YOUNG,
-         pct_Teacher_sw_young_1000   = pct_Teacher_sw_young*1000,
+         pct_Teacher_sw_young_100   = pct_Teacher_sw_young*100,
          pct_Teacher_sw_mid  = num_sw_mid_Teacher/NWHITESW_MID,
-         pct_Teacher_sw_mid_1000   = pct_Teacher_sw_mid*1000,
+         pct_Teacher_sw_mid_100   = pct_Teacher_sw_mid*100,
          teacher_ratio         = WHITESCHOOLPOP/num_Teacher #ratio of number of teachers to white school-aged pop
          ) # %>% 
   # #helper function to match individual counties to specific states in order to 
@@ -204,15 +204,18 @@ linkview <-  tbl(con, "linkedall") %>%
 
 # group 1: unmarried women teachers in t-10
 link1 <- linkview %>% 
-  filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>% 
+  filter(teacher_base == 1 & worker_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>% 
   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
   matching_join(matchlist)
 write_csv(link1, glue("{cleandata}/link1_swt.csv"))
 #!#! CHECKED
 
+link1full <- linkview %>% filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>%
+  collect()
+
 # group 1.5: women teachers without children in t-10
 link1point5 <- linkview %>%
-  filter(teacher_base == 1 & NCHILD_base == 0 & RACE_base == 1 & AGE_base <= 40) %>%
+  filter(teacher_base == 1 & worker_base == 1 & NCHILD_base == 0 & RACE_base == 1 & AGE_base <= 40) %>%
   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
   matching_join(matchlist)
 write_csv(link1point5, glue("{cleandata}/link1point5_wtnc.csv"))
@@ -220,11 +223,18 @@ write_csv(link1point5, glue("{cleandata}/link1point5_wtnc.csv"))
 
 # group 2: unmarried women not in labor force in pre-period
 link2 <- linkview %>% 
-  filter(LABFORCE_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 10 & RACE_base == 1) %>% 
+  filter(worker_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 8 & RACE_base == 1) %>% 
   summlinks() %>%
   matching_join(matchlist)
-write_csv(link2, glue("{cleandata}/link2_swnt.csv"))
+write_csv(link2, glue("{cleandata}/link2_swnilf.csv"))
 #!#! CHECKED 
+
+# group 2.5: unmarried women in lf but not teaching in pre-period
+link2point5 <- linkview %>% 
+  filter(worker_base == 1 & teacher_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 8 & RACE_base == 1) %>% 
+  summlinks() %>%
+  matching_join(matchlist)
+write_csv(link2point5, glue("{cleandata}/link2point5_swnt.csv"))
 
 # group 3: married women not in labor force in pre-period
 link3 <- linkview %>% 
@@ -232,8 +242,14 @@ link3 <- linkview %>%
   summlinks() %>%
   matching_join(matchlist)
 write_csv(link3, glue("{cleandata}/link3_mwnilf.csv"))
-#write_csv(link3, glue("{cleandata}/link3_mwnt.csv"))
 #!#! CHECKED 
+
+# group 3.5: married women in lf but not teachers in pre-period 
+link3point5 <- linkview %>% 
+  filter(worker_base == 1 & teacher_base == 0 & demgroup_base == "MW" & AGE_base <= 50 & AGE_base >= 18 & RACE_base == 1) %>% 
+  summlinks() %>%
+  matching_join(matchlist)
+write_csv(link3point5, glue("{cleandata}/link3point5_mwnt.csv"))
 
 #________________________________________________________
 # LINKED DATA FOR SECRETARIES----

@@ -73,7 +73,23 @@ occs <- tbl(con, "censusrawall") %>%
          whitecollar_occ    = ifelse(OCC1950 < 500 & !(OCC1950 %in% c(100,123)), 1, 0))
 
 ## what share of the LF was employed in white-collar jobs?
-occs %>% group_by(YEAR, whitecollar_occ) %>% summarize(lf = sum(n_occ)) %>% group_by(YEAR) %>% mutate(share_lf = lf/sum(lf))
+tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>%
+  filter(YEAR >= 1940 & worker == 1) %>%
+  mutate(whitecollar_occ    = ifelse(OCC1950 < 500 & !(OCC1950 %in% c(100,123)), 1, 0)) %>%
+  group_by(whitecollar_occ, YEAR) %>% 
+  summarize(lf = n()) %>% 
+  group_by(YEAR) %>% 
+  mutate(share_lf = lf/sum(lf))
+
+## what share of the female LF was employed in teaching?
+tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>%
+  filter(YEAR >= 1940 & worker == 1 & demgroup != "M") %>%
+  group_by(teacher, YEAR) %>% 
+  summarize(lf = n()) %>% 
+  group_by(YEAR) %>% 
+  mutate(share_lf = lf/sum(lf))
 
 ## what share of teachers had college?
 occs %>% filter(OCC1950 == 93 & YEAR == 1940) %>% dplyr::select(share_occ_wmw_coll)
