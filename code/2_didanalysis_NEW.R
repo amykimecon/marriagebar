@@ -374,14 +374,23 @@ stargazer(models3, se=ses3, omit = c("Constant","cluster*", "factor*", "Year*", 
 #______________________________________________________
 # RESULT 5: NET EFFECTS ----
 #______________________________________________________
-did_graph(dataset     = link1 %>% filter(neighbor_samp == 1 & mainsamp == 1),
-          depvarlist  = c("pct_lf", "pct_mw_inlf", "pct_sw_inlf"),
-          depvarnames = c("LFP in t", "In LF and Married in t", "In LF and Unmarried in t"),
-          colors      = c("darkgrey", mw_col, sw_col),
-          years       = c(1920, 1940),
-          yvar        = glue("DiD Estimate: Share Unmarried Women Teachers in t-10"),
-          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
-          filename    = glue("overall_effects_lfp"))
+link1datasets   <- list(link1 %>% filter(neighbor_samp == 1 & mainsamp == 1), 
+                        link1 %>% filter(match_weight1 != 0 & mainsamp == 1), 
+                        link1 %>% filter(match_weight2 != 0 & mainsamp == 1), 
+                        link1 %>% filter(match_weight3 != 0 & mainsamp == 1))
+datanames  <- list("neighbor", "matched1", "matched2", "matched3")
+
+for (i in 1:4){
+  did_graph(dataset     = link1datasets[[i]],
+            depvarlist  = c("pct_lf", "pct_mw_cond_inlf", "pct_sw_cond_inlf"),
+            depvarnames = c("LFP in t", "LFP in t | Married in t", "LFP in t | Unmarried in t"),
+            colors      = c("darkgrey", mw_col, sw_col),
+            years       = c(1920, 1940),
+            yvar        = glue("DiD Estimate: Share Unmarried Women Teachers in t-10"),
+            verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
+            filename    = glue("overall_effects_lfp_{datanames[[i]]}"))
+  
+}
 
 did_graph(dataset     = link1 %>% filter(neighbor_samp == 1 & mainsamp == 1),
           depvarlist  = c("avg_occscore", "avg_occscore_mw", "avg_occscore_sw"),

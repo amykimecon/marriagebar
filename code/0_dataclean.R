@@ -263,7 +263,7 @@ write_csv(link1sec, glue("{cleandata}/link1_sws.csv"))
 
 # group 2: unmarried women non-secretaries in pre-period
 link2sec <- linkview %>% 
-  filter(secretary_base == 0 & demgroup_base == "SW" & AGE_base <= 20 & AGE_base >= 10 & RACE_base == 1) %>% 
+  filter(secretary_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 8 & RACE_base == 1) %>% 
   summlinks_sec() %>%
   matching_join(matchlist)
 write_csv(link2sec, glue("{cleandata}/link2_swns.csv"))
