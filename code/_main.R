@@ -14,6 +14,7 @@ library(lmtest)
 library(readxl)
 library(duckdb)
 library(tictoc)
+library(synthdid)
 library(tidyverse)
 
 # set filepaths to access the data directory ----
@@ -56,11 +57,17 @@ source("./code/helper.R")
 ### 2) loading all cleaned datasets ----
 samp_byyear <- read_csv(glue("{cleandata}/samp_byyear.csv")) # year-level summary stats 
 samp_byyear_coll <- read_csv(glue("{cleandata}/samp_byyear_coll.csv")) # year-level summary stats by college educ (for intro)
-countysumm  <- read_csv(glue("{cleandata}/countysumm_newmatch.csv")) # county X year-level stats (most analysis uses this)
+countysumm  <- read_csv(glue("{cleandata}/countysumm.csv")) # county X year-level stats (most analysis uses this)
+countysumm_blk  <- read_csv(glue("{cleandata}/countysumm_blk.csv")) # county X year-level stats (most analysis uses this)
+countysumm_all  <- read_csv(glue("{cleandata}/countysumm_all.csv")) # county X year-level stats (most analysis uses this)
+
+statesumm   <- read_csv(glue("{cleandata}/statesumm.csv"))
 link1       <- read_csv(glue("{cleandata}/link1_swt.csv"))
 link1point5 <- read_csv(glue("{cleandata}/link1point5_wtnc.csv"))
-link2       <- read_csv(glue("{cleandata}/link2_swnt.csv"))
+link2       <- read_csv(glue("{cleandata}/link2_swnilf.csv"))
+link2point5 <- read_csv(glue("{cleandata}/link2point5_swnt.csv"))
 link3       <- read_csv(glue("{cleandata}/link3_mwnilf.csv"))
+link3point5 <- read_csv(glue("{cleandata}/link3point5_mwnt.csv"))
 
 link1sec       <- read_csv(glue("{cleandata}/link1_sws.csv"))
 link2sec       <- read_csv(glue("{cleandata}/link2_swns.csv"))
@@ -70,6 +77,7 @@ link3sec       <- read_csv(glue("{cleandata}/link3_mwns.csv"))
 source("./code/1_descriptives.R")
 source("./code/2_didanalysis.R")
 #source("./code/2_cohortanalysis.R") # NOTE: requires duckdb connection
+
 
 
 

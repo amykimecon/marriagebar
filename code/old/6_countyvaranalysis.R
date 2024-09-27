@@ -9,7 +9,7 @@ print("***************** RUNNING: 6_countyvaranalysis *****************\n\n")
 #____________________________________________________________
 # DESCRIPTIVES ----
 #_____________________________________________________________
-countyvar_desc <- countysumm %>% filter(YEAR == 1910) %>% 
+countyvar_desc <- countysumm %>% filter(YEAR == 1930) %>% 
   mutate(treat_grp = ntile(pct_mw_Teacher, 10)) %>%
   select(c(FIPS, treat_grp)) %>%
   right_join(countysumm) %>%
@@ -25,13 +25,13 @@ ggplot(countyvar_desc, aes(x = YEAR, y = pct_mw_Teacher, color = factor(treat_gr
 countysumm_treated <- countysumm %>% filter(TREAT == 1 & mainsamp == 1) 
 
 #cutoff percentiles for treatment (1930 share teachers MW)
-treat_pctl_low = 0.3
-treat_cutoff_low = quantile(filter(countysumm_treated, YEAR == 1910)$pct_mw_Teacher, probs = treat_pctl_low)
+treat_pctl_low = 0.5
+treat_cutoff_low = quantile(filter(countysumm_treated, YEAR == 1930)$pct_mw_Teacher, probs = treat_pctl_low)
 
 print(glue("Treatment cutoff: Counties in NC/KY with fewer than {round(treat_cutoff_low,4)*100}% married women teachers in 1930 are considered 'treated'"))
 
 treat_pctl_high = 1 - treat_pctl_low
-treat_cutoff_high = quantile(filter(countysumm_treated, YEAR == 1910)$pct_mw_Teacher, probs = treat_pctl_high)
+treat_cutoff_high = quantile(filter(countysumm_treated, YEAR == 1930)$pct_mw_Teacher, probs = treat_pctl_high)
 
 print(glue("Control cutoff: Counties in NC/KY with more than {round(treat_cutoff_high,4)*100}% married women teachers in 1930 are considered 'control'"))
 
@@ -46,17 +46,17 @@ treat_cutoff_mean_high = quantile(summarize(group_by(filter(countysumm_treated, 
 print(glue("Treatment cutoff: Counties in NC/KY with more than {round(treat_cutoff_mean_high,4)*100}% married women teachers from 1910-1930 on average are considered 'treated'"))
 
 #labelling relevant counties
-treated_counties <- filter(countysumm_treated, YEAR == 1910 & pct_mw_Teacher < treat_cutoff_low)$FIPS
-control_counties <- filter(countysumm_treated, YEAR == 1910 & pct_mw_Teacher >= treat_cutoff_high)$FIPS
-countyvar <- countysumm_treated %>% mutate(TREAT = case_when(FIPS %in% treated_counties ~ 1,
-                                                             FIPS %in% control_counties ~ 0,
-                                                             TRUE ~ NA_integer_))
+treated_counties <- filter(countysumm_treated, YEAR == 1930 & pct_mw_Teacher < treat_cutoff_low)$FIPS
+#control_counties <- filter(countysumm_treated, YEAR == 1930 & pct_mw_Teacher >= treat_cutoff_high)$FIPS
+countyvar <- countysumm %>% mutate(TREAT = case_when(FIPS %in% treated_counties ~ 1, TRUE ~ 0))
+                                                             # TREAT == 0 ~ 0,
+                                                             # TRUE ~ NA_integer_))
 
 # version using mean from 1910-1930
 treated_counties_mean <- filter(summarize(group_by(filter(countysumm_treated, YEAR <= 1930), FIPS), mean_pct_mw_Teacher = mean(pct_mw_Teacher)), mean_pct_mw_Teacher < treat_cutoff_mean_low)$FIPS
-control_counties_mean <- filter(summarize(group_by(filter(countysumm_treated, YEAR <= 1930), FIPS), mean_pct_mw_Teacher = mean(pct_mw_Teacher)), mean_pct_mw_Teacher >= treat_cutoff_mean_high)$FIPS
-countyvar_mean <- countysumm_treated %>% mutate(TREAT = case_when(FIPS %in% treated_counties_mean ~ 1,
-                                                             FIPS %in% control_counties_mean ~ 0,
+#control_counties_mean <- filter(summarize(group_by(filter(countysumm_treated, YEAR <= 1930), FIPS), mean_pct_mw_Teacher = mean(pct_mw_Teacher)), mean_pct_mw_Teacher >= treat_cutoff_mean_high)$FIPS
+countyvar_mean <- countysumm %>% mutate(TREAT = case_when(FIPS %in% treated_counties_mean ~ 1,
+                                                             TREAT == 0 ~ 0,
                                                              TRUE ~ NA_integer_))
 
 # version where separate by urban/rural (urban have more marriage bars, so treated)

@@ -5,7 +5,7 @@
   
 # open log ----
 sink("./logs/log_4_back_of_the_envelope.log", append=FALSE)
-print("***************** RUNNING: 4_back_of_the_envelope *****************\n\n")
+print("***************** RUNNING: 3_back_of_the_envelope *****************\n\n")
 
 
 # opening connection to duckdb database

@@ -53,10 +53,97 @@ addvars_county <- function(dataset){
   return(outdata)
 } #!#! CHECKED
 
+# takes GROUPED duckdb individual-level panel data, summarizes full sample with variables of interest
+summ_gen <- function(dataset){
+  outdata <- dataset %>%
+    summarize(POP             = n(), #overall population of county
+              WHITEPOP        = sum(ifelse(RACE == 1, 1, 0)), #white population
+              BLACKPOP        = sum(ifelse(RACE == 2, 1, 0)), #black pop
+              NTEACH          = sum(ifelse(teacher == 1, 1, 0)),
+              NWHITETEACH     = sum(ifelse(teacher==1 & RACE==1, 1, 0)), #number of white teachers
+              NWHITEWORK      = sum(ifelse(worker == 1 & RACE == 1, 1, 0)), #number of white workers
+              NWHITEMW        = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white married women
+              NWHITESW        = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white unmarried women
+              NBLACKTEACH     = sum(ifelse(teacher==1 & RACE== 2, 1, 0)), #number of white teachers
+              NBLACKWORK      = sum(ifelse(worker == 1 & RACE == 2, 1, 0)), #number of white workers
+              NBLACKMW        = sum(ifelse(demgroup == "MW" & RACE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white married women
+              NBLACKSW        = sum(ifelse(demgroup == "SW" & RACE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white unmarried women
+              NWHITESW_YOUNG  = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 25, 1, 0)), # number of white unmarried women 18-25
+              NWHITESW_MID    = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE > 25 & AGE <= 35, 1, 0)), # number of white unmarried women 26-35
+              URBAN           = sum(ifelse(URBAN == 2, 1, 0))/n(), #percent of county living in urban area
+              PCT_WHITE       = sum(ifelse(RACE == 1, 1, 0))/n(), # percent of county that is white
+              WHITESCHOOLPOP  = sum(ifelse(RACE == 1 & AGE <= 18 & AGE >= 6, 1, 0)), #white schoolage population
+              LFP             = sum(worker)/sum(ifelse(AGE >= 18 & AGE <= 64, 1, 0)), #share of prime age population that is in LF
+              LFP_M           = sum(ifelse(worker != 0 & demgroup == "M",  1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "M",  1, 0)), #lfp for men
+              LFP_SW          = sum(ifelse(worker != 0 & demgroup == "SW", 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW", 1, 0)), #lfp for single women
+              LFP_WSW         = sum(ifelse(worker != 0 & demgroup == "SW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW" & RACE == 1, 1, 0)), #lfp for white single women
+              LFP_BSW         = sum(ifelse(worker != 0 & demgroup == "SW" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW" & RACE == 2, 1, 0)), #lfp for black single women
+              LFP_MW          = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW", 1, 0)), #lfp for married women
+              LFP_WMW         = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW" & RACE == 1, 1, 0)), #lfp for white married women
+              LFP_BMW         = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW" & RACE == 2, 1, 0)), #lfp for black married women
+              PCT_LF_MW       = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are MW
+              PCT_LF_WMW      = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are white MW
+              PCT_LF_BMW      = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 2, 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are black MW
+              PCT_UNDER20     = sum(ifelse(AGE < 20, 1, 0))/n(), #share of pop in each age group
+              PCT_20TO39      = sum(ifelse(AGE >= 20 & AGE < 40, 1, 0))/n(), #share of pop in each age group
+              PCT_40TO59      = sum(ifelse(AGE >= 40 & AGE < 60, 1, 0))/n(), #share of pop in each age group
+              PCT_OVER59      = sum(ifelse(AGE >= 60, 1, 0))/n(), #share of pop in each age group
+              AGE             = mean(AGE),
+              NCHILD          = mean(ifelse(demgroup == "MW", NCHILD, NA), na.rm=TRUE), #avg number of children for married women
+              PCT_MARR        = sum(ifelse(AGE >= 18 & SEX == 2 & MARST %in% c(1,2), 1, 0))/sum(ifelse(AGE >= 18 & SEX == 2, 1, 0)), #share adult women married
+              PCT_MARR_COHORT = sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2 & MARST %in% c(1,2), 1, 0)) / 
+                sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2, 1, 0)), #share adult women aged 18-40 married
+              PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)), #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
+              N_SWT           = sum(ifelse(RACE == 1 & teacher == 1 & demgroup == "SW" & AGE <= 40, 1, 0)),
+              N_MWNT          = sum(ifelse(RACE == 1 & teacher == 0 & demgroup == "MW" & AGE <= 50, 1, 0)),
+              N_MWNILF        = sum(ifelse(RACE == 1 & worker == 0 & demgroup == "MW" & AGE <= 50, 1, 0))
+    )
+  return(outdata)
+}
+
+# takes GROUPED AND FILTERED duckdb individual-level panel data, summarizes with occupational variables of interest
+summ_occ <- function(dataset){
+  outdata <- dataset %>%
+    summarize(num              = n(), # number of teachers (or secretaries)
+              num_mw           = sum(ifelse(demgroup == "MW", 1, 0)), #num of teachers MW
+              num_sw           = sum(ifelse(demgroup == "SW", 1, 0)), #num of teachers SW
+              num_sw_young     = sum(ifelse(demgroup == "SW" & AGE <= 25, 1, 0)), #num of teachers SW
+              num_sw_mid       = sum(ifelse(demgroup == "SW" & AGE > 25 & AGE <= 35, 1, 0)), #num of teachers SW
+              num_m            = sum(ifelse(demgroup == "M", 1, 0)), #num of teachers M
+              pct_mw           = sum(ifelse(demgroup == "MW", 1, 0))/n(), #share of teachers MW
+              pct_sw           = sum(ifelse(demgroup == "SW", 1, 0))/n(), #share of teachers SW
+              pct_m            = sum(ifelse(demgroup == "M", 1, 0))/n(), #share of teachers M
+              pctw_marr        = sum(ifelse(demgroup == "MW", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)), #share of women teachers married
+              avg_age_child    = mean(ifelse(demgroup != "M", age_child, NA), na.rm=TRUE),
+              avg_nchild       = mean(ifelse(demgroup != "M", NCHILD, NA), na.rm=TRUE),
+              num_agemarr      = sum(ifelse(AGEMARR > 0, 1, 0)), #number of teachers sampled for age at marriage (if not sampled, AGEMARR = 0)
+              pct_marr_before3 = (sum(ifelse(AGEMARR > 0 & AGE - AGEMARR > 7 , 1, 0))/sum(ifelse(AGEMARR > 0, 1, 0)))*sum(ifelse(demgroup == "MW", 1, 0))/n(), # MB/(MA+MB) x (MW)/(MW + SW + M) approx share teachers MW AND married more than 7 years ago (1933 NC)
+              pct_marr_after3  = (1 - sum(ifelse(AGEMARR > 0 & AGE - AGEMARR > 7, 1, 0))/sum(ifelse(AGEMARR > 0, 1, 0)))*sum(ifelse(demgroup == "MW", 1, 0))/n(), # MA/(MA+MB) x (MW)/(MW + SW + M) approx share of teachers MW AND married less than 7 years ago
+              pct_marr_before8 = (sum(ifelse(AGEMARR > 0 & AGE - AGEMARR > 2, 1, 0))/sum(ifelse(AGEMARR > 0, 1, 0)))*sum(ifelse(demgroup == "MW", 1, 0))/n(), # MB/(MA+MB) x (MW)/(MW + SW + M) approx share teachers MW AND married more than 2 years ago (1938 KY)
+              pct_marr_after8  = (1 - sum(ifelse(AGEMARR > 0 & AGE - AGEMARR > 2, 1 ,0))/sum(ifelse(AGEMARR > 0, 1, 0)))*sum(ifelse(demgroup == "MW", 1, 0))/n(), # MA/(MA+MB) x (MW)/(MW + SW + M) approx share teachers MW AND married less than 2 years ago 
+              pct_wc           = sum(ifelse(demgroup2 == "WC", 1, 0))/n(), #share of teachers who are women AND have children
+              pct_wnc          = sum(ifelse(demgroup2 == "WNC", 1, 0))/n(), #share of teachers who are women AND DONT have children
+              pctw_wc          = sum(ifelse(demgroup2 == "WC"  & demgroup != "M", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)), #share of W teachers who have children
+              pctw_wnc         = sum(ifelse(demgroup2 == "WNC" & demgroup != "M", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)), #share of W teachers who don't have children
+              pct_sp_teach     = mean(teacher_SP), #share with teacher spouses
+              pct_sp_teach_w   = sum(ifelse(teacher_SP == 1 & demgroup!="M",1,0))/sum(ifelse(demgroup!="M",1,0)), #share women with teacher spouses
+              pct_sp_teach_m   = sum(ifelse(teacher_SP == 1 & demgroup=="M",1,0))/sum(ifelse(demgroup=="M",1,0)), #share men with teacher spouses
+              avg_occscore     = mean(OCCSCORE_SP, na.rm=TRUE), #avg occscore of spouse 
+              avg_occscore_w   = mean(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE), #avg occscore of spouse for women
+              avg_occscore_m   = mean(ifelse(demgroup == "M", OCCSCORE_SP, NA), na.rm=TRUE), #avg occscore of spouse for men
+              med_occscore     = median(OCCSCORE_SP, na.rm=TRUE), #median occscore of spouse
+              med_occscore_w   = median(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE), #median occscore of spouse for women
+              med_occscore_m   = median(ifelse(demgroup == "M",  OCCSCORE_SP, NA), na.rm=TRUE) #median occscore of spouse for men
+    )
+  
+  return(outdata)
+}
+
+
 # Takes year x county-level dataset and returns vector of FIPS of counties in main sample 
 #   (only keeping balanced panel of counties with at least n white teachers in 
 #   1930 and 1940 and non-missing FIPS)
-mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
+mainsamp <- function(dataset, balanced = TRUE, n = 10, grp = "white", verbose = FALSE){
   # do nothing if FIPS already exists in dataset
   if (!("FIPS" %in% names(dataset))){
     dataset <- dataset %>% mergefips()
@@ -70,9 +157,18 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
     filter(n == 5)
   
   # filter to FIPS with at least n white teachers in 1930 and 40
-  fips1940 <- filter(dataset, YEAR == 1940 & NWHITETEACH >= n)$FIPS
-  outdata <- dataset %>% filter(YEAR == 1930 & NWHITETEACH >= n & 
-                                  !is.na(FIPS) &       #only keeping FIPS with at least n white teachers in 1930
+  if(grp == "white"){
+    fips1940 <- filter(dataset, YEAR == 1940 & NWHITETEACH >= n)$FIPS
+    fips1930 <- filter(dataset, YEAR == 1930 & NWHITETEACH >= n)$FIPS
+  }else if(grp == "black"){
+    fips1940 <- filter(dataset, YEAR == 1940 & NBLACKTEACH >= n)$FIPS
+    fips1930 <- filter(dataset, YEAR == 1930 & NBLACKTEACH >= n)$FIPS
+  }else{
+    fips1940 <- filter(dataset, YEAR == 1940 & NTEACH >= n)$FIPS
+    fips1930 <- filter(dataset, YEAR == 1930 & NTEACH >= n)$FIPS
+  }
+  
+  outdata <- dataset %>% filter(!is.na(FIPS) &  FIPS %in% fips1930 &     #only keeping FIPS with at least n white teachers in 1930
                                   FIPS %in% fips1940)  #AND at least n white teachers in 1940
   
   # keep only counties observed in all four years if balanced==TRUE
@@ -532,14 +628,14 @@ add_did_dummies <- function(dataset){
 #   if table = TRUE, returns list of regression model output and vcov for stargazer table formatting
 #   if septreat = TRUE, runs regression for treatment and control groups separately
 did_graph_data <- function(dataset, depvar, controls = "", 
-                           years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
+                           years = c(1910, 1920, 1940, 1950), yearomit = 1930, clus = "FIPS",
                            verbose = FALSE, table = FALSE, septreat = FALSE){
   # modifying dataset (adding interaction terms, FIPS vars for clustering, 
   #   filter to only include relevant years, setting weights to 1 if they don't exist)
+
   regdata <- dataset %>% 
     add_did_dummies() %>% 
-    filter(YEAR %in% c(years, yearomit)) %>% 
-    mutate(cluster = as.character(TREAT))
+    filter(YEAR %in% c(years, yearomit))
   
   # if weight not already a variable, just weight by vector of 1s
   if(!("weight" %in% names(dataset))){
@@ -549,13 +645,13 @@ did_graph_data <- function(dataset, depvar, controls = "",
   if (septreat){ # if septreat==TRUE, run regs separately by treatment group
     yearvars     <- glue("Year{years}")
     # for control group
-    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"),  
+    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + factor(FIPS) {controls}"),  
                        data = regdata %>% filter(TREAT == 0), weights = weight)
-    vcov_ctrl    = vcovCL(did_reg_ctrl, type = "HC1")
+    vcov_ctrl    = vcovCL(did_reg_ctrl, cluster = regdata[[clus]], type = "HC1")
     # for treated group
-    did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + cluster {controls}"), 
+    did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + factor(FIPS) {controls}"), 
                         data = regdata %>% filter(TREAT == 1), weights = weight)
-    vcov_treat    = vcovCL(did_reg_treat, type = "HC1")
+    vcov_treat    = vcovCL(did_reg_treat, cluster = regdata[[clus]], type = "HC1")
     # make dataframe for output to return 
     if (table){ # for stargazer 
       return(list(did_reg_ctrl, vcov_ctrl, did_reg_treat, vcov_treat))
@@ -582,14 +678,15 @@ did_graph_data <- function(dataset, depvar, controls = "",
     interact_vars <- glue("TREATx{years}")
     yearvars <- glue("Year{years}")
     # run reg: include year and county FE + interaction terms + any controls
-    did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + 
-                       cluster + {glue_collapse(interact_vars, sep = '+')} {controls}"), 
+    did_reg <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + factor(FIPS) + 
+                       {glue_collapse(interact_vars, sep = '+')} {controls}"), 
                   data = regdata, weights = weight)
     if (verbose){
       print(summary(did_reg))
     }
     # clustered standard errors (hc1 equiv to ,robust in stata)
-    vcov = vcovCL(did_reg, type = "HC1")
+    vcov = vcovCL(did_reg, cluster = regdata[[clus]], type = "HC1")
+    #vcov = vcovCL(did_reg, type = "HC1")
     # return table of estimates as output
     if (table){
       return(list(did_reg, vcov))
@@ -615,8 +712,8 @@ did_graph_data <- function(dataset, depvar, controls = "",
 #   and pointspan, i.e. total width of all dots for a given year, default is 2
 did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", pointtypes = NA,
                       years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
-                      verbose = FALSE, yvar = "Coef on Treat X Year",
-                      ymax = NA, ymin = NA, 
+                      verbose = FALSE, yvar = "Coef on Treat X Year", clus = "STATEICP",
+                      ymax = NA, ymin = NA, fig_width = 8, fig_height = 5,
                       slides = FALSE, steps = FALSE, pointspan = 2, 
                       septreat = FALSE, filename = NA){
   # check that varlist and namelist passed to function are same length
@@ -630,7 +727,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", p
   # make table of DiD regression outputs (in format for graphing) from all dependent variables
   if (nvars == 1){ # if only one depvar is specified
     did_data_temp <- did_graph_data(dataset, depvarlist[[1]], controls, 
-                                    years, yearomit, 
+                                    years, yearomit, clus,
                                     verbose, septreat, table = FALSE) 
     did_data      <- did_data_temp %>%
       mutate(group      = depvarnames[[1]], 
@@ -645,7 +742,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", p
     did_datasets <- list()
     for (i in seq(1,nvars)){
       did_data_temp <- did_graph_data(dataset, depvarlist[[i]], controls, 
-                                      years, yearomit, verbose) %>%
+                                      years, yearomit, clus, verbose) %>%
         mutate(group      = depvarnames[[i]], 
                year_graph = year - pointspan/2 + (i-1)*(pointspan/(nvars - 1))) # shifting over so dots don't overlap
       did_datasets[[i]] <- did_data_temp
@@ -709,7 +806,7 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", p
     
     # save graphs
     if (!is.na(filename) & !slides){ #saving graph in folder for paper figs
-      ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = 8, height = 5)
+      ggsave(glue("{outfigs}/paper/{filename}.png"), graph_out, width = fig_width, height = fig_height)
     }
     if (!is.na(filename) & slides){ #changing text size for slides and saving in folder for slide figs
       ggsave(glue("{outfigs}/slides/{filename}.png"), graph_out + 
@@ -720,6 +817,63 @@ did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", p
   } # end make graphs
 
 } #!#! CHECKED
+#__________________________
+# SYNTHETIC DID ----
+#__________________________
+panel.matrices.new <- function(panel, unit = 1, time = 2, outcome = 3, treatment = 4, treated.last = TRUE) {
+  keep = c(unit, time, outcome, treatment)
+  if (!all(keep %in% 1:ncol(panel) | keep %in% colnames(panel))) {
+    stop("Column identifiers should be either integer or column names in `panel`.")
+  }
+  index.to.name = function(x) { if(x %in% 1:ncol(panel)) { colnames(panel)[x] } else { x } }
+  unit = index.to.name(unit)
+  time = index.to.name(time)
+  outcome = index.to.name(outcome)
+  treatment = index.to.name(treatment)
+  keep = c(unit, time, outcome, treatment)
+  
+  panel = panel[keep]
+  if (!is.data.frame(panel)){
+    stop("Unsupported input type `panel.`")
+  }
+  if (anyNA(panel)) {
+    stop("Missing values in `panel`.")
+  }
+  # if (length(unique(panel[, treatment])) == 1) { ERROR: NOT A VECTOR, WILL ALWAYS RETURN TRUE
+  #   stop("There is no variation in treatment status.")
+  # }
+  # if (!all(panel[, treatment] %in% c(0, 1))) {
+  #   stop("The treatment status should be in 0 or 1.")
+  # }
+  # Convert potential factor/date columns to character
+  panel = data.frame(
+    lapply(panel, function(col) {if (is.factor(col) || inherits(col, "Date")) as.character(col) else col}), stringsAsFactors = FALSE
+  )
+  val <- as.vector(table(panel[, unit], panel[, time]))
+  if (!all(val == 1)) {
+    stop("Input `panel` must be a balanced panel: it must have an observation for every unit at every time.")
+  }
+  
+  panel = panel[order(panel[, unit], panel[, time]), ]
+  num.years = length(unique(panel[, time]))
+  num.units = length(unique(panel[, unit]))
+  Y = matrix(panel[,outcome], num.units, num.years, byrow = TRUE,
+             dimnames = list(unique(panel[,unit]), unique(panel[,time])))
+  W = matrix(panel[,treatment], num.units, num.years, byrow = TRUE,
+             dimnames = list(unique(panel[,unit]), unique(panel[,time])))
+  w = apply(W, 1, any)                         # indicator for units that are treated at any time
+  T0 = unname(which(apply(W, 2, any))[1]-1)    # last period nobody is treated
+  N0 = sum(!w)
+  
+  if(! (all(W[!w,] == 0) && all(W[,1:T0] == 0) && all(W[w, (T0+1):ncol(Y)]==1))) {
+    stop("The package cannot use this data. Treatment adoption is not simultaneous.")
+  }
+  
+  unit.order = if(treated.last) { order(W[,T0+1], rownames(Y)) } else { 1:nrow(Y) }
+  list(Y = Y[unit.order, ], N0 = N0, T0 = T0, W = W[unit.order, ])
+}
+
+
 
 #__________________________
 # MISC ----
@@ -741,7 +895,7 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALS
                               mutate(fips = FIPS, weights = cut(weights, quantile(weights, probs = seq(0,1,0.2)))) %>% 
                               dplyr::select(c(fips, weights)), 
                             values = "weights", exclude = exclude_st, color = NA) + 
-      theme(legend.position = "right", text = element_text(size = 14)) + 
+      theme(legend.position = "right", text = element_text(size = 20)) + 
       scale_fill_manual(values = colorRampPalette(c("white",control_col))(5)) +
       #scale_fill_gradient(low = control_col_min, high = control_col_max) + 
       geom_sf(data = us_map("counties", include = c("KY", "NC")), fill = treat_col, color = NA) +
@@ -754,7 +908,7 @@ graph_treatment <- function(dataset, eastern = FALSE, filename = NA, full = FALS
                               mutate(fips = FIPS, TREAT = ifelse(TREAT == 1, "Treated", "Control")) %>% 
                               dplyr::select(c(fips, TREAT)), 
                             values = "TREAT", color = NA, exclude = exclude_st) +
-      theme(legend.position = "right", text = element_text(size = 14)) + 
+      theme(legend.position = "right", text = element_text(size = 20)) + 
       scale_fill_manual(breaks = c("Treated", "Control"), values = c(treat_col, control_col)) + 
       labs(fill = "")  
   }

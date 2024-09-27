@@ -1,7 +1,137 @@
+[1] "***************** RUNNING: 2_didanalysis *****************\n\n"
 [1] "Warning: ymin/ymax out of bounds"
 
 % Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Wed, Feb 21, 2024 - 5:28:31 PM
+% Date and time: Thu, Sep 26, 2024 - 16:54:13
+\begin{tabular}{@{\extracolsep{5pt}}lcc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{2}{c}{Dependent Variable:} \\ 
+\cline{2-3} 
+ & Share Teach Mar. Wom. & MW Teach/100 MW \\ 
+\\[-1.8ex] & (1) & (2)\\ 
+\hline \\[-1.8ex] 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & 0.040$^{***}$ & 0.098$^{***}$ \\ 
+  & (0.008) & (0.037) \\ 
+  & & \\ 
+ Treated $\times$ 1950 ($\gamma_{1950}^{DD}$) & 0.007 & $-$0.014 \\ 
+  & (0.010) & (0.039) \\ 
+  & & \\ 
+\hline \\[-1.8ex] 
+Dep. Var. 1930 Treated Mean & 0.1559 & 0.5721 \\ 
+Observations & 2,635 & 2,635 \\ 
+Adjusted R$^{2}$ & 0.839 & 0.719 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\end{tabular} 
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Sep 26, 2024 - 16:54:32
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{4}{c}{Dep. Var.: fill in by panel} \\ 
+\cline{2-5} 
+ & Married in t & Married Teacher in t & Married Non-Teacher in LF in t & Married Not in LF in t \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
+\hline \\[-1.8ex] 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & $-$0.016 & 0.020$^{**}$ & 0.001 & $-$0.037$^{**}$ \\ 
+  & (0.016) & (0.009) & (0.006) & (0.016) \\ 
+  & & & & \\ 
+\hline \\[-1.8ex] 
+Dep. Var. 1930 Mean & 0.6225 & 0.05053 & 0.0351 & 0.5369 \\ 
+Observations & 1,545 & 1,545 & 1,545 & 1,545 \\ 
+Adjusted R$^{2}$ & 0.471 & 0.199 & 0.007 & 0.501 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\end{tabular} 
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Sep 26, 2024 - 16:54:37
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{4}{c}{Dep. Var.: fill in by panel} \\ 
+\cline{2-5} 
+ & Married in t & Married Teacher in t & Married Non-Teacher in LF in t & Married Not in LF in t \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
+\hline \\[-1.8ex] 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & $-$0.007$^{*}$ & 0.001$^{***}$ & 0.003 & $-$0.011$^{***}$ \\ 
+  & (0.004) & (0.0004) & (0.002) & (0.004) \\ 
+  & & & & \\ 
+\hline \\[-1.8ex] 
+Dep. Var. 1930 Mean & 0.5284 & 0.004728 & 0.03895 & 0.4847 \\ 
+Observations & 1,584 & 1,584 & 1,584 & 1,584 \\ 
+Adjusted R$^{2}$ & 0.848 & 0.252 & 0.587 & 0.885 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\end{tabular} 
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Sep 26, 2024 - 16:54:40
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{4}{c}{Dep. Var.: fill in by panel} \\ 
+\cline{2-5} 
+ & Married in t & Married Teacher in t & Married Non-Teacher in LF in t & Married Not in LF in t \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
+\hline \\[-1.8ex] 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & $-$0.001 & 0.001$^{***}$ & 0.004 & $-$0.005 \\ 
+  & (0.001) & (0.0002) & (0.004) & (0.004) \\ 
+  & & & & \\ 
+\hline \\[-1.8ex] 
+Dep. Var. 1930 Mean & 0.9352 & 0.001903 & 0.04982 & 0.8835 \\ 
+Observations & 1,584 & 1,584 & 1,584 & 1,584 \\ 
+Adjusted R$^{2}$ & 0.648 & 0.291 & 0.402 & 0.565 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\end{tabular} 
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Sep 26, 2024 - 16:54:54
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{4}{c}{Dep. Var.: fill in by panel} \\ 
+\cline{2-5} 
+ & Married in t & Married Teacher in t & Married Non-Teacher in LF in t & Married Not in LF in t \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
+\hline \\[-1.8ex] 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & $-$0.011 & 0.0004 & $-$0.002 & $-$0.009 \\ 
+  & (0.011) & (0.001) & (0.006) & (0.012) \\ 
+  & & & & \\ 
+\hline \\[-1.8ex] 
+Dep. Var. 1930 Mean & 0.5268 & 0.00386 & 0.0627 & 0.4602 \\ 
+Observations & 1,527 & 1,527 & 1,527 & 1,527 \\ 
+Adjusted R$^{2}$ & 0.468 & 0.016 & 0.371 & 0.573 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\end{tabular} 
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Sep 26, 2024 - 16:54:58
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{4}{c}{Dep. Var.: fill in by panel} \\ 
+\cline{2-5} 
+ & Married in t & Married Teacher in t & Married Non-Teacher in LF in t & Married Not in LF in t \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
+\hline \\[-1.8ex] 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & 0.001 & $-$0.001 & 0.004 & $-$0.002 \\ 
+  & (0.009) & (0.002) & (0.013) & (0.016) \\ 
+  & & & & \\ 
+\hline \\[-1.8ex] 
+Dep. Var. 1930 Mean & 0.8807 & 0.006197 & 0.1311 & 0.7434 \\ 
+Observations & 1,494 & 1,494 & 1,494 & 1,494 \\ 
+Adjusted R$^{2}$ & 0.127 & 0.043 & 0.504 & 0.474 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\end{tabular} 
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Sep 26, 2024 - 16:55:17
 \begin{tabular}{@{\extracolsep{5pt}}lcccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
@@ -10,86 +140,79 @@
  & \% Teach Mar. Wom. & \% Teach Men & \% Teach Unmar. Wom. & \# Teachers \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
 \hline \\[-1.8ex] 
- Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & 0.040$^{***}$ & 0.003 & $-$0.043$^{***}$ & $-$0.150 \\ 
-  & (0.008) & (0.006) & (0.009) & (3.909) \\ 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & 0.040$^{***}$ & 0.002 & $-$0.042$^{***}$ & $-$0.182 \\ 
+  & (0.008) & (0.006) & (0.009) & (4.007) \\ 
   & & & & \\ 
- Treated $\times$ 1950 ($\gamma_{1950}^{DD}$) & 0.006 & $-$0.008 & 0.002 & $-$2.990 \\ 
-  & (0.008) & (0.007) & (0.010) & (4.426) \\ 
+ Treated $\times$ 1950 ($\gamma_{1950}^{DD}$) & 0.007 & $-$0.009 & 0.002 & $-$3.063 \\ 
+  & (0.010) & (0.008) & (0.011) & (5.167) \\ 
   & & & & \\ 
 \hline \\[-1.8ex] 
-Dep. Var. 1930 Treated Mean & 0.1563 & 0.2159 & 0.6279 & 156.2 \\ 
-Observations & 1,569 & 1,569 & 1,569 & 1,569 \\ 
-Adjusted R$^{2}$ & 0.787 & 0.731 & 0.824 & 0.966 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\end{tabular} 
-[1] "Warning: ymin/ymax out of bounds"
-[1] "Warning: ymin/ymax out of bounds"
-[1] "Warning: ymin/ymax out of bounds"
-[1] "Warning: ymin/ymax out of bounds"
-[1] "Warning: ymin/ymax out of bounds"
-[1] "Warning: ymin/ymax out of bounds"
-[1] "Warning: ymin/ymax out of bounds"
-
-% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Wed, Feb 21, 2024 - 5:34:14 PM
-\begin{tabular}{@{\extracolsep{5pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
- & \multicolumn{5}{c}{Dep. Var.: fill in by panel} \\ 
-\cline{2-6} 
- & Married in t & Teacher in t & Married Teacher in t & Married Non-Teacher in LF in t & Married Not in LF in t \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- Treated $\times$ Post-Ban ($\gamma_{1940}^{DD}$) & $-$0.016 & 0.006 & 0.020$^{***}$ & 0.001 & $-$0.037$^{***}$ \\ 
-  & (0.013) & (0.013) & (0.007) & (0.005) & (0.013) \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Dep. Var. 1930 Mean & 0.6225 & 0.2581 & 0.05053 & 0.0351 & 0.5369 \\ 
-Observations & 1,030 & 1,030 & 1,030 & 1,030 & 1,030 \\ 
-Adjusted R$^{2}$ & 0.561 & 0.593 & 0.115 & 0.058 & 0.586 \\ 
+Dep. Var. 1930 Treated Mean & 0.1559 & 0.2167 & 0.6274 & 155.1 \\ 
+Observations & 2,635 & 2,635 & 2,635 & 2,635 \\ 
+Adjusted R$^{2}$ & 0.839 & 0.680 & 0.826 & 0.840 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \end{tabular} 
 
 % Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Wed, Feb 21, 2024 - 5:34:17 PM
-\begin{tabular}{@{\extracolsep{5pt}}lccccc} 
+% Date and time: Thu, Sep 26, 2024 - 16:55:46
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
- & \multicolumn{5}{c}{Dep. Var.: fill in by panel} \\ 
-\cline{2-6} 
- & Married in t & Teacher in t & Married Teacher in t & Married Non-Teacher in LF in t & Married Not in LF in t \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+ & \multicolumn{4}{c}{Dep. Var.: fill in by panel} \\ 
+\cline{2-5} 
+ & Unmarried in t & Unmarried Teacher in t & Unmarried Non-Teacher in LF in t & Unmarried Not in LF in t \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
 \hline \\[-1.8ex] 
- Treated $\times$ Post-Ban ($\gamma_{1940}^{DD}$) & $-$0.002 & 0.004$^{**}$ & 0.002$^{***}$ & 0.004$^{*}$ & $-$0.008$^{**}$ \\ 
-  & (0.003) & (0.002) & (0.001) & (0.003) & (0.004) \\ 
-  & & & & & \\ 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & 0.016 & $-$0.014 & 0.014 & 0.017$^{*}$ \\ 
+  & (0.016) & (0.015) & (0.010) & (0.010) \\ 
+  & & & & \\ 
 \hline \\[-1.8ex] 
-Dep. Var. 1930 Mean & 0.622 & 0.04707 & 0.006156 & 0.04724 & 0.5687 \\ 
-Observations & 1,056 & 1,056 & 1,056 & 1,056 & 1,056 \\ 
-Adjusted R$^{2}$ & 0.849 & 0.627 & 0.115 & 0.692 & 0.889 \\ 
+Dep. Var. 1930 Mean & 0.3775 & 0.2075 & 0.0844 & 0.08557 \\ 
+Observations & 1,545 & 1,545 & 1,545 & 1,545 \\ 
+Adjusted R$^{2}$ & 0.471 & 0.527 & 0.072 & 0.085 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \end{tabular} 
 
 % Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
-% Date and time: Wed, Feb 21, 2024 - 5:34:21 PM
-\begin{tabular}{@{\extracolsep{5pt}}lccccc} 
+% Date and time: Thu, Sep 26, 2024 - 16:55:49
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
- & \multicolumn{5}{c}{Dep. Var.: fill in by panel} \\ 
-\cline{2-6} 
- & Married in t & Teacher in t & Married Teacher in t & Married Non-Teacher in LF in t & Married Not in LF in t \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+ & \multicolumn{4}{c}{Dep. Var.: fill in by panel} \\ 
+\cline{2-5} 
+ & Unmarried in t & Unmarried Teacher in t & Unmarried Non-Teacher in LF in t & Unmarried Not in LF in t \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
 \hline \\[-1.8ex] 
- Treated $\times$ Post-Ban ($\gamma_{1940}^{DD}$) & $-$0.0004 & 0.001$^{***}$ & 0.001$^{***}$ & 0.003 & $-$0.004 \\ 
-  & (0.001) & (0.0002) & (0.0002) & (0.004) & (0.004) \\ 
-  & & & & & \\ 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & 0.011 & 0.002 & $-$0.007 & 0.016 \\ 
+  & (0.011) & (0.003) & (0.011) & (0.011) \\ 
+  & & & & \\ 
 \hline \\[-1.8ex] 
-Dep. Var. 1930 Mean & 0.9341 & 0.002444 & 0.001963 & 0.05359 & 0.8786 \\ 
-Observations & 1,056 & 1,056 & 1,056 & 1,056 & 1,056 \\ 
-Adjusted R$^{2}$ & 0.681 & 0.383 & 0.330 & 0.559 & 0.676 \\ 
+Dep. Var. 1930 Mean & 0.4732 & 0.01315 & 0.2887 & 0.1714 \\ 
+Observations & 1,527 & 1,527 & 1,527 & 1,527 \\ 
+Adjusted R$^{2}$ & 0.468 & 0.076 & 0.592 & 0.388 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\end{tabular} 
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Sep 26, 2024 - 16:55:53
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{4}{c}{Dep. Var.: fill in by panel} \\ 
+\cline{2-5} 
+ & Unmarried in t & Unmarried Teacher in t & Unmarried Non-Teacher in LF in t & Unmarried Not in LF in t \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
+\hline \\[-1.8ex] 
+ Treated $\times$ 1940 ($\gamma_{1940}^{DD}$) & 0.007$^{*}$ & 0.001 & $-$0.003 & 0.009$^{*}$ \\ 
+  & (0.004) & (0.001) & (0.004) & (0.005) \\ 
+  & & & & \\ 
+\hline \\[-1.8ex] 
+Dep. Var. 1930 Mean & 0.4716 & 0.03327 & 0.1402 & 0.2981 \\ 
+Observations & 1,584 & 1,584 & 1,584 & 1,584 \\ 
+Adjusted R$^{2}$ & 0.848 & 0.620 & 0.895 & 0.576 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \end{tabular} 
