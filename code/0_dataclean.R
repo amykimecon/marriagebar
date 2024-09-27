@@ -38,86 +38,33 @@ write_csv(samp_byyear_coll, glue("{cleandata}/samp_byyear_coll.csv"))
 #________________________________________________________
 # CROSS-SECTIONAL DATA, GROUPING BY COUNTY ----
 #________________________________________________________
-print("\n\n***** grouping full count census by county *****\n\n")
-## GROUPING FOR GENERAL COUNTY CHARACTERISTICS: FULL SAMPLE DATA 
+print("\n\n***** grouping full count census by county/state *****\n\n")
+
+## GROUPING FULL SAMPLE DATA  ----
+# by county
 countysumm_gen <- tbl(con, "censusrawall") %>% #taking table from DuckDB
   addvars_indiv() %>% #helper function to add individual-level variables (demgroup, teacher indicator, etc.)
   group_by(YEAR, STATEICP, COUNTYICP) %>% #grouping at the county level
-  summarize(POP             = n(), #overall population of county
-            WHITEPOP        = sum(ifelse(RACE == 1, 1, 0)), #white population
-            NWHITETEACH     = sum(ifelse(teacher==1 & RACE==1, 1, 0)), #number of white teachers
-            NWHITEWORK      = sum(ifelse(worker == 1 & RACE == 1, 1, 0)), #number of white workers
-            NWHITEMW        = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white married women
-            NWHITESW        = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white unmarried women
-            NWHITESW_YOUNG  = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 25, 1, 0)), # number of white unmarried women 18-25
-            NWHITESW_MID    = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE > 25 & AGE <= 35, 1, 0)), # number of white unmarried women 26-35
-            URBAN           = sum(ifelse(URBAN == 2, 1, 0))/n(), #percent of county living in urban area
-            PCT_WHITE       = sum(ifelse(RACE == 1, 1, 0))/n(), # percent of county that is white
-            WHITESCHOOLPOP  = sum(ifelse(RACE == 1 & AGE <= 18 & AGE >= 6, 1, 0)), #white schoolage population
-            LFP             = sum(worker)/sum(ifelse(AGE >= 18 & AGE <= 64, 1, 0)), #share of prime age population that is in LF
-            LFP_M           = sum(ifelse(worker != 0 & demgroup == "M",  1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "M",  1, 0)), #lfp for men
-            LFP_SW          = sum(ifelse(worker != 0 & demgroup == "SW", 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW", 1, 0)), #lfp for single women
-            LFP_WSW         = sum(ifelse(worker != 0 & demgroup == "SW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW" & RACE == 1, 1, 0)), #lfp for white single women
-            LFP_MW          = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW", 1, 0)), #lfp for married women
-            LFP_WMW         = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW" & RACE == 1, 1, 0)), #lfp for white married women
-            PCT_LF_MW       = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are MW
-            PCT_LF_WMW      = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are white MW
-            PCT_UNDER20     = sum(ifelse(AGE < 20, 1, 0))/n(), #share of pop in each age group
-            PCT_20TO39      = sum(ifelse(AGE >= 20 & AGE < 40, 1, 0))/n(), #share of pop in each age group
-            PCT_40TO59      = sum(ifelse(AGE >= 40 & AGE < 60, 1, 0))/n(), #share of pop in each age group
-            PCT_OVER59      = sum(ifelse(AGE >= 60, 1, 0))/n(), #share of pop in each age group
-            AGE             = mean(AGE),
-            NCHILD          = mean(ifelse(demgroup == "MW", NCHILD, NA), na.rm=TRUE), #avg number of children for married women
-            PCT_MARR        = sum(ifelse(AGE >= 18 & SEX == 2 & MARST %in% c(1,2), 1, 0))/sum(ifelse(AGE >= 18 & SEX == 2, 1, 0)), #share adult women married
-            PCT_MARR_COHORT = sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2 & MARST %in% c(1,2), 1, 0)) / 
-              sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2, 1, 0)), #share adult women aged 18-40 married
-            PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)), #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
-            N_SWT           = sum(ifelse(RACE == 1 & teacher == 1 & demgroup == "SW" & AGE <= 40, 1, 0)),
-            N_MWNT          = sum(ifelse(RACE == 1 & teacher == 0 & demgroup == "MW" & AGE <= 50, 1, 0)),
-            N_MWNILF        = sum(ifelse(RACE == 1 & worker == 0 & demgroup == "MW" & AGE <= 50, 1, 0))
-            ) %>%
+  summ_gen() %>%
   collect() %>%
   addvars_county() #adding county-level variables (treatment status, FIPS codes, etc.)
 #!#! CHECKED 
 
+# by state
+statesumm_gen <- tbl(con, "censusrawall") %>%
+  addvars_indiv() %>%
+  group_by(YEAR, STATEICP) %>%
+  summ_gen() %>%
+  collect() 
+
 ## GROUPING FOR TEACHER/SECRETARY-SPECIFIC COUNTY CHARACTERISTICS: FULL SAMPLE DATA (TEACHERS + SECRETARIES)
-print("\n\n***** grouping full count census by county, wide for teachers/secretaries *****\n\n")
+print("\n\n***** grouping full count census by county/state, wide for teachers/secretaries *****\n\n")
 countysumm_occ <- tbl(con, "censusrawall") %>% 
   addvars_indiv() %>% 
   filter((teacher == 1| secretary == 1) & RACE == 1) %>% #only keeping white teachers and secretaries
   mutate(OCC = ifelse(teacher == 1, "Teacher", "Secretary")) %>%
   group_by(YEAR, STATEICP, COUNTYICP, OCC) %>% # grouping by countyXyear AND teacher/secretary
-  summarize(num              = n(), # number of teachers (or secretaries)
-            num_mw           = sum(ifelse(demgroup == "MW", 1, 0)), #num of teachers MW
-            num_sw           = sum(ifelse(demgroup == "SW", 1, 0)), #num of teachers SW
-            num_sw_young     = sum(ifelse(demgroup == "SW" & AGE <= 25, 1, 0)), #num of teachers SW
-            num_sw_mid       = sum(ifelse(demgroup == "SW" & AGE > 25 & AGE <= 35, 1, 0)), #num of teachers SW
-            num_m            = sum(ifelse(demgroup == "M", 1, 0)), #num of teachers M
-            pct_mw           = sum(ifelse(demgroup == "MW", 1, 0))/n(), #share of teachers MW
-            pct_sw           = sum(ifelse(demgroup == "SW", 1, 0))/n(), #share of teachers SW
-            pct_m            = sum(ifelse(demgroup == "M", 1, 0))/n(), #share of teachers M
-            pctw_marr        = sum(ifelse(demgroup == "MW", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)), #share of women teachers married
-            avg_age_child    = mean(ifelse(demgroup != "M", age_child, NA), na.rm=TRUE),
-            avg_nchild       = mean(ifelse(demgroup != "M", NCHILD, NA), na.rm=TRUE),
-            num_agemarr      = sum(ifelse(AGEMARR > 0, 1, 0)), #number of teachers sampled for age at marriage (if not sampled, AGEMARR = 0)
-            pct_marr_before3 = (sum(ifelse(AGEMARR > 0 & AGE - AGEMARR > 7 , 1, 0))/sum(ifelse(AGEMARR > 0, 1, 0)))*sum(ifelse(demgroup == "MW", 1, 0))/n(), # MB/(MA+MB) x (MW)/(MW + SW + M) approx share teachers MW AND married more than 7 years ago (1933 NC)
-            pct_marr_after3  = (1 - sum(ifelse(AGEMARR > 0 & AGE - AGEMARR > 7, 1, 0))/sum(ifelse(AGEMARR > 0, 1, 0)))*sum(ifelse(demgroup == "MW", 1, 0))/n(), # MA/(MA+MB) x (MW)/(MW + SW + M) approx share of teachers MW AND married less than 7 years ago
-            pct_marr_before8 = (sum(ifelse(AGEMARR > 0 & AGE - AGEMARR > 2, 1, 0))/sum(ifelse(AGEMARR > 0, 1, 0)))*sum(ifelse(demgroup == "MW", 1, 0))/n(), # MB/(MA+MB) x (MW)/(MW + SW + M) approx share teachers MW AND married more than 2 years ago (1938 KY)
-            pct_marr_after8  = (1 - sum(ifelse(AGEMARR > 0 & AGE - AGEMARR > 2, 1 ,0))/sum(ifelse(AGEMARR > 0, 1, 0)))*sum(ifelse(demgroup == "MW", 1, 0))/n(), # MA/(MA+MB) x (MW)/(MW + SW + M) approx share teachers MW AND married less than 2 years ago 
-            pct_wc           = sum(ifelse(demgroup2 == "WC", 1, 0))/n(), #share of teachers who are women AND have children
-            pct_wnc          = sum(ifelse(demgroup2 == "WNC", 1, 0))/n(), #share of teachers who are women AND DONT have children
-            pctw_wc          = sum(ifelse(demgroup2 == "WC"  & demgroup != "M", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)), #share of W teachers who have children
-            pctw_wnc         = sum(ifelse(demgroup2 == "WNC" & demgroup != "M", 1, 0))/sum(ifelse(demgroup != "M", 1, 0)), #share of W teachers who don't have children
-            pct_sp_teach     = mean(teacher_SP), #share with teacher spouses
-            pct_sp_teach_w   = sum(ifelse(teacher_SP == 1 & demgroup!="M",1,0))/sum(ifelse(demgroup!="M",1,0)), #share women with teacher spouses
-            pct_sp_teach_m   = sum(ifelse(teacher_SP == 1 & demgroup=="M",1,0))/sum(ifelse(demgroup=="M",1,0)), #share men with teacher spouses
-            avg_occscore     = mean(OCCSCORE_SP, na.rm=TRUE), #avg occscore of spouse 
-            avg_occscore_w   = mean(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE), #avg occscore of spouse for women
-            avg_occscore_m   = mean(ifelse(demgroup == "M", OCCSCORE_SP, NA), na.rm=TRUE), #avg occscore of spouse for men
-            med_occscore     = median(OCCSCORE_SP, na.rm=TRUE), #median occscore of spouse
-            med_occscore_w   = median(ifelse(demgroup == "MW", OCCSCORE_SP, NA), na.rm=TRUE), #median occscore of spouse for women
-            med_occscore_m   = median(ifelse(demgroup == "M",  OCCSCORE_SP, NA), na.rm=TRUE) #median occscore of spouse for men
-  ) %>% 
+  summ_occ() %>%
   collect() %>% 
   pivot_wider(id_cols     = c(YEAR, STATEICP, COUNTYICP), 
               names_from  = OCC, 
@@ -125,6 +72,39 @@ countysumm_occ <- tbl(con, "censusrawall") %>%
   # pivoting wide on occupation (so each variable is now of 
   # form {varname}_Teacher or {varname}_Secretary)
 #!#! CHECKED 
+
+countysummblk_occ <- tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>% 
+  filter((teacher == 1| secretary == 1) & RACE == 2) %>% #only keeping BLACK teachers and secretaries
+  mutate(OCC = ifelse(teacher == 1, "Teacher", "Secretary")) %>%
+  group_by(YEAR, STATEICP, COUNTYICP, OCC) %>% # grouping by countyXyear AND teacher/secretary
+  summ_occ() %>%
+  collect() %>% 
+  pivot_wider(id_cols     = c(YEAR, STATEICP, COUNTYICP), 
+              names_from  = OCC, 
+              values_from = -c(YEAR, STATEICP, COUNTYICP, OCC)) 
+
+countysummall_occ <- tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>% 
+  filter((teacher == 1| secretary == 1)) %>% #keeping all white teachers and secretaries
+  mutate(OCC = ifelse(teacher == 1, "Teacher", "Secretary")) %>%
+  group_by(YEAR, STATEICP, COUNTYICP, OCC) %>% # grouping by countyXyear AND teacher/secretary
+  summ_occ() %>%
+  collect() %>% 
+  pivot_wider(id_cols     = c(YEAR, STATEICP, COUNTYICP), 
+              names_from  = OCC, 
+              values_from = -c(YEAR, STATEICP, COUNTYICP, OCC)) 
+
+statesumm_occ <- tbl(con, "censusrawall") %>% 
+  addvars_indiv() %>% 
+  filter((teacher == 1| secretary == 1) & RACE == 1) %>% #only keeping white teachers and secretaries
+  mutate(OCC = ifelse(teacher == 1, "Teacher", "Secretary")) %>%
+  group_by(YEAR, STATEICP, OCC) %>% # grouping by stateXyear AND teacher/secretary
+  summ_occ() %>%
+  collect() %>% 
+  pivot_wider(id_cols     = c(YEAR, STATEICP), 
+              names_from  = OCC, 
+              values_from = -c(YEAR, STATEICP, OCC)) 
 
 
 #________________________________________________________
@@ -136,11 +116,21 @@ countysumm_raw <- countysumm_gen %>%
   full_join(countysumm_occ, by = c("YEAR", "STATEICP", "COUNTYICP")) %>% 
   ungroup()
 
+countysummblk_raw <- countysumm_gen %>% 
+  full_join(countysummblk_occ, by = c("YEAR", "STATEICP", "COUNTYICP")) %>% 
+  ungroup()
+
+countysummall_raw <- countysumm_gen %>% 
+  full_join(countysummall_occ, by = c("YEAR", "STATEICP", "COUNTYICP")) %>% 
+  ungroup()
+
 # main sample of counties (FIPS)
 # (default is filter on counties with at least 10 white teachers in 
 # 1930 and 1940 AND non-missing FIPS code AND observed in all four years 1910-1940)
 print("\n\n***** identify main sample of counties... *****\n\n")
 mainsamp_list <- mainsamp(countysumm_raw)
+mainsampblk_list <- mainsamp(countysummblk_raw, grp = "black")
+mainsampall_list <- mainsamp(countysummall_raw, grp = "all")
 #!#! CHECKED
 
 ## Matching & samp selection
@@ -161,6 +151,9 @@ matches3 <- matching(countysumm_raw, matchvars, method = "full")
 
 matchlist <- list(matches1, matches2, matches3)
 
+#________________________________________________________
+#  FINAL DATASET ----
+#________________________________________________________
 # cleaning county-level combined data, joining with matches
 countysumm <- countysumm_raw %>% 
   matching_join(matchlist = matchlist) %>% #helper function to join county-level combined data with list of matched data
@@ -183,8 +176,22 @@ countysumm <- countysumm_raw %>%
   # #assign counties to 'law passing' in 1933 or 1938 and use outcome Married After/Married Before
   # state_matching(matchtype = "neighbor") 
 #!#! CHECKED
+write_csv(countysumm, glue("{cleandata}/countysumm.csv"))
 
-write_csv(countysumm, glue("{cleandata}/countysumm_newmatch.csv"))
+# state level
+statesumm <- statesumm_gen %>% full_join(statesumm_occ, by = c("YEAR", "STATEICP")) %>% ungroup() 
+write_csv(statesumm, glue("{cleandata}/statesumm.csv"))
+
+# black teachers only
+countysumm_blk <- countysummblk_raw %>%
+  mutate(mainsamp = ifelse(FIPS %in% mainsampblk_list, 1, 0))
+write_csv(countysumm_blk, glue("{cleandata}/countysumm_blk.csv"))
+
+# all teachers
+countysumm_all <- countysummall_raw %>% 
+  mutate(mainsamp = ifelse(FIPS %in% mainsampall_list, 1, 0))
+write_csv(countysumm_all, glue("{cleandata}/countysumm_all.csv"))
+
 
 #________________________________________________________
 # LINKED DATA ----
