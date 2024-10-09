@@ -15,6 +15,7 @@ library(readxl)
 library(duckdb)
 library(tictoc)
 library(synthdid)
+library(fwildclusterboot)
 library(tidyverse)
 
 # set filepaths to access the data directory ----
@@ -63,10 +64,13 @@ countysumm_all  <- read_csv(glue("{cleandata}/countysumm_all.csv")) # county X y
 
 statesumm   <- read_csv(glue("{cleandata}/statesumm.csv"))
 link1       <- read_csv(glue("{cleandata}/link1_swt.csv"))
+link1state  <- read_csv(glue("{cleandata}/link1_swt_state.csv"))
 link1point5 <- read_csv(glue("{cleandata}/link1point5_wtnc.csv"))
 link2       <- read_csv(glue("{cleandata}/link2_swnilf.csv"))
+link2state  <- read_csv(glue("{cleandata}/link2_swnilf_state.csv"))
 link2point5 <- read_csv(glue("{cleandata}/link2point5_swnt.csv"))
 link3       <- read_csv(glue("{cleandata}/link3_mwnilf.csv"))
+link3state  <- read_csv(glue("{cleandata}/link3_mwnilf_state.csv"))
 link3point5 <- read_csv(glue("{cleandata}/link3point5_mwnt.csv"))
 
 link1sec       <- read_csv(glue("{cleandata}/link1_sws.csv"))

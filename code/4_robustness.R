@@ -144,80 +144,266 @@ did_graph(dataset     = link1_border %>% filter(mainsamp == 1),
 #______________________________________________________
 # CHECK FOUR: SYNTHETIC DID ----
 #______________________________________________________
-# COUNTY
-fips1920 <- filter(countysumm, YEAR == 1920 & NWHITETEACH >= n)$FIPS
-fips1910 <- filter(countysumm, YEAR == 1910 & NWHITETEACH >= n)$FIPS
-
-county_panel = panel.matrices.new(countysumm %>% filter(mainsamp == 1 & FIPS %in% fips1920 & FIPS %in% fips1910) %>% 
-                             mutate(treatment = ifelse(YEAR <= 1930, 0, TREAT)), #%>% 
-                             #filter(YEAR < 1950), 
-                           unit = "FIPS", time = "YEAR", outcome = "pct_mw_Teacher", treatment = "treatment")
-
-synthdid_est = synthdid_estimate(county_panel$Y, county_panel$N0, county_panel$T0)
-plot(synthdid_est)
-ctrls = synthdid_controls(synthdid_est)
-ctrl_fips = rownames(ctrls)
-
-graph_treatment(countysumm %>% left_join(data.frame(FIPS = ctrl_fips, ctrl_weights = ctrls)) %>%
-                  mutate(weights = estimate.1) %>% filter(!is.na(estimate.1)), full = TRUE)
-
-# STATE
+# STATE-LEVEL SYNTH DID SETUP
 balanceddata_state <- statesumm %>% 
-  filter(YEAR != 1900) %>% 
+  filter(YEAR != 1900 & YEAR < 1950) %>% 
   group_by(STATEICP) %>% 
   summarize(n = n()) %>% 
-  filter(n == 5)
+  filter(n == 4)
 
-treat_states <- c(47,51)
-treat_exclude <- c()
-state_panel = panel.matrices.new(statesumm %>% filter(STATEICP %in% balanceddata_state$STATEICP & !STATEICP %in% treat_exclude) %>% 
-                             mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))), #%>% 
-                           #filter(YEAR < 1950), 
-                           unit = "STATEICP", time = "YEAR", outcome = "pct_mw_Teacher", treatment = "treatment")
-
-synthdid_est_state = synthdid_estimate(state_panel$Y, state_panel$N0, state_panel$T0)
-#plot(synthdid_est_state)
+# x <- statesumm %>% filter(STATEICP %in% balanceddata_state$STATEICP & !STATEICP %in% treat_exclude_list[[i]]) %>% 
+#   mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>% 
+#   filter(YEAR < 1950)
+# write.csv(x, glue("{cleandata}/tempstatepanel.csv"))
 
 # crosswalk from state icpsr to fips codes
 fipscrosswalk <- read_xls(glue("{root}/StateFIPSicsprAB.xls"))
 
-ctrls_st = synthdid_controls(synthdid_est_state)
-ctrl_states = data.frame(STATEICP = as.numeric(rownames(ctrls_st)), weights = ctrls_st) %>% 
-  rename(weights = estimate.1) %>% left_join(fipscrosswalk, by = c("STATEICP" = "STICPSR"))
+## Cross-Sectional Results ----
+treat_states <- c(47,51)
+treat_exclude_list <- list(c(), c(47), c(51))
+treat_labels <- list(c("KY","NC"),"KY","NC")
 
-n = 5
-plot_usmap(data = ctrl_states %>% filter(!is.na(weights)) %>%
-             mutate(state = AB, weights = cut(weights, quantile(weights, probs = seq(0,1,1/n)))) %>%
-             select(c(state, weights)),
-           values = "weights", color = NA) +
-  scale_fill_manual(values = colorRampPalette(c("white",control_col))(n))
+# empty list for outputs (to graph)
+coefs_sdid <- numeric(9)
+ses_sdid_bs <- numeric(9)
+ses_sdid_plac <- numeric(9)
+ses_sdid_jk <- numeric(9)
+coefs_wdid <- numeric(9)
+ses_wdid <- numeric(9)
+var_labs <- character(9)
+group_labs <- character(9)
+j = 1
 
-# did with states
-statedid_data <- statesumm %>% mutate(FIPS = STATEICP, 
-                                 TREAT = ifelse(STATEICP %in% treat_states, 1, 0)) %>%
-  left_join(ctrl_states %>% select(c(STATEICP, weights))) %>%
-  mutate(weight = ifelse(TREAT == 1, 1, weights)) %>%
-  filter(STATEICP %in% balanceddata_state$STATEICP)
+for (i in 1:3){
+  for (var in c("pct_mw_Teacher", "pct_sw_Teacher", "pct_m_Teacher")){
+    var_labs[j] <- var
+    group_labs[j] <- glue_collapse(treat_labels[[i]])
+    # creating panel in correct format
+    state_panel = panel.matrices.new(statesumm %>% filter(STATEICP %in% balanceddata_state$STATEICP & !STATEICP %in% treat_exclude_list[[i]]) %>% 
+                                       mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>% 
+                                       filter(YEAR < 1950), 
+                                     unit = "STATEICP", time = "YEAR", outcome = var, treatment = "treatment")
+    
+    # synthetic did estimates
+    synthdid_est_state = synthdid_estimate(state_panel$Y, state_panel$N0, state_panel$T0)
+    
+    # SEs using bootstrap method
+    se_bs = sqrt(vcov(synthdid_est_state, method = "bootstrap"))
+    
+    # SEs using placebo method
+    se_plac = sqrt(vcov(synthdid_est_state, method = "placebo"))
+    
+    # SEs using jackknife method
+    se_jk = sqrt(vcov(synthdid_est_state, method = "jackknife"))
+  
+    
+    ## mapping unit weights
+    ctrls_st = synthdid_controls(synthdid_est_state)
+    ctrl_states = data.frame(STATEICP = as.numeric(rownames(ctrls_st)), weights = ctrls_st) %>% 
+      rename(weights = estimate.1) %>% left_join(fipscrosswalk, by = c("STATEICP" = "STICPSR"))
+    
+    n = 5
+    sdid_plot <- plot_usmap(data = ctrl_states %>% filter(!is.na(weights)) %>%
+                              mutate(state = AB, weights = cut(weights, quantile(weights, probs = seq(0,1,1/n)))) %>%
+                              select(c(state, weights)),
+                            values = "weights", color = NA) +
+      scale_fill_manual(values = colorRampPalette(c("white",control_col))(n)) +
+      geom_sf(data = us_map("counties", include = treat_labels[[i]]), fill = treat_col, color = NA)
+    
+    ggsave(glue("{outfigs}/paper/sdid_graph_{glue_collapse(treat_labels[[i]])}_{var}.png"), sdid_plot, width = 8, height = 5)
+    
+    ## printing results
+    print(synthdid_est_state)
+    coefs_sdid[j] <- synthdid_est_state
+    ses_sdid_plac[j] <- se_plac
+    ses_sdid_jk[j] <- se_jk
+    
+    statedid_data <- statesumm %>% mutate(FIPS = STATEICP, 
+                                          TREAT = ifelse(STATEICP %in% treat_states, 1, 0)) %>%
+      left_join(ctrl_states %>% select(c(STATEICP, weights))) %>%
+      mutate(weight = ifelse(TREAT == 1, 0.5, weights/sum(ctrl_states$weights))) %>%
+      filter(STATEICP %in% balanceddata_state$STATEICP & !STATEICP %in% treat_exclude_list[[i]] & YEAR %in% c(1930, 1940) & !is.na(weight))
+    
+    state_wdid <- lm(glue("{var} ~ factor(STATEICP) + factor(YEAR)*factor(TREAT)"), data = statedid_data, weights = weight)
+    #x <- lm(pct_mw_Teacher ~ factor(YEAR)*factor(TREAT), data = statedid_data, weights = weight)
+    print(state_wdid$coefficients[["factor(YEAR)1940:factor(TREAT)1"]])
+    coefs_wdid[j] <- state_wdid$coefficients[["factor(YEAR)1940:factor(TREAT)1"]]
+    # clustered SE at state level
+    ses_wdid[j] <- sqrt(diag(vcovCL(state_wdid, cluster = statedid_data[["STATEICP"]], type = "HC1"))[["factor(YEAR)1940:factor(TREAT)1"]])
+    
+    # did_graph_data(statedid_data, "pct_mw_Teacher", years = c(1940), yearomit = 1930) %>% print()
+    # did_graph(statedid_data, years = c(1940), yearomit = 1930,
+    #           depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
+    #           depvarnames = c("Men", "Married Women", "Single Women"),
+    #           colors      = c(men_col, mw_col, sw_col)) %>% print() 
+    
+    j = j + 1
+  }
+}
 
-did_graph(statedid_data,
-          depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
-          depvarnames = c("Men", "Married Women", "Single Women"),
-          colors      = c(men_col, mw_col, sw_col))
+var_labs_ct = character(3)
+group_labs_ct = character(3)
+coefs_wdid_ct = numeric(3)
+ses_wdid_ct = numeric(3)
+
+j = 1
+# adding baseline county results
+for (var in c("pct_mw_Teacher", "pct_sw_Teacher", "pct_m_Teacher")){
+  group_labs_ct[j] <- "countydid"
+  var_labs_ct[j] <- var
+  coefs_wdid_ct[j] <- did_graph_data(neighbor, var, years = c(1940))["TREATx1940","y"]
+  ses_wdid_ct[j] <- sqrt(did_graph_data(neighbor, var, years = c(1940))["TREATx1940","var"])
+  j = j + 1
+}
+
+## GRAPHING RESULTS
+sdid_graph_data <- data.frame(var = var_labs, group = group_labs, coefs_sdid = coefs_sdid,
+                              ses_sdid_bs = ses_sdid_bs,
+                              ses_sdid_plac = ses_sdid_plac,
+                              ses_sdid_jk = ses_sdid_jk,
+                              coefs_wdid = coefs_wdid,
+                              ses_wdid = ses_wdid) %>%
+  bind_rows(data.frame(var = var_labs_ct, group = group_labs_ct, coefs_sdid = coefs_wdid_ct, ses_sdid_plac = ses_wdid_ct)) %>%
+  mutate(coefs_wdid_ub = coefs_wdid + 1.96*ses_wdid,
+         coefs_wdid_lb = coefs_wdid - 1.96*ses_wdid,
+         coefs_sdid_ub = coefs_sdid + 1.96*ses_sdid_plac,
+         coefs_sdid_lb = coefs_sdid - 1.96*ses_sdid_plac,
+         i = case_when(var == "pct_mw_Teacher" ~ 2, var == "pct_sw_Teacher" ~ 3, var == "pct_m_Teacher" ~ 1),
+         group_num = case_when(group == "countydid" ~ 2 - 0.1 + (i-1)*0.1,
+                               group == "KYNC" ~ 4 - 0.1 + (i-1)*0.1,
+                               group == "NC" ~ 6 - 0.1 + (i-1)*0.1,
+                               group == "KY" ~ 8 - 0.1 + (i-1)*0.1),
+         var = case_when(var == "pct_mw_Teacher" ~ "Married Women",
+                         var == "pct_m_Teacher" ~ "Men",
+                         var == "pct_sw_Teacher" ~ "Single Women"))
+
+sdid_cs_graph <- ggplot(data = sdid_graph_data, aes(x = group_num, y = coefs_sdid, color = factor(var, levels = c("Men", "Married Women", "Single Women")), 
+                                                    shape = factor(var, levels = c("Men", "Married Women", "Single Women")))) + 
+  geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
+  geom_errorbar(aes(min = coefs_sdid_lb, max = coefs_sdid_ub), width = 0, linewidth = 4, alpha = 0.5) +
+  scale_color_manual(values = c(men_col, mw_col, sw_col)) +
+  scale_x_continuous(breaks=c(2,4,6,8),
+                   labels=c("Original County-Level DiD", "State-Level Synthetic DiD", "State-Level SDiD (NC Only)", "State-Level SDiD (KY Only)")) +
+  geom_point(size = 5) + labs(x = "", y = "Treat x 1940: Share of Teachers", color = "", shape = "") + theme_minimal() + 
+  theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
+
+ggsave(glue("{outfigs}/paper/sdid_shareteach.png"), sdid_cs_graph, width = 8, height = 5)
+
+
+## Linked Results ----
+## stargazer tables ----
+coefs1        <- numeric(4)
+ses1           <- numeric(4)
+linkreg_means1 <- c()
+coefs2        <- numeric(4)
+ses2           <- numeric(4)
+linkreg_means2 <- c()
+coefs3        <- numeric(4)
+ses3           <- numeric(4)
+linkreg_means3 <- c()
+
+i = 1
+for (coefname in c("pct_mw", "pct_mwt", "pct_mwnt", "pct_mwnilf")){
+  #link 1
+  state_panel1 = panel.matrices.new(link1state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>% 
+                                     mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>% 
+                                   filter(YEAR < 1950), 
+                                   unit = "STATEICP", time = "YEAR", outcome = coefname, treatment = "treatment")
+  synthdid_est_state1 = synthdid_estimate(state_panel1$Y, state_panel1$N0, state_panel1$T0)
+  coefs1[[i]] <- synthdid_est_state1
+  ses1[[i]] <- sqrt(vcov(synthdid_est_state1, method = "placebo"))
+  linkreg_means1 <- c(linkreg_means1, mean(filter(link1state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
+
+  #link 2
+  state_panel2 = panel.matrices.new(link2state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>%
+                                      mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>%
+                                      filter(YEAR < 1950),
+                                    unit = "STATEICP", time = "YEAR", outcome = coefname, treatment = "treatment")
+  synthdid_est_state2 = synthdid_estimate(state_panel2$Y, state_panel2$N0, state_panel2$T0)
+  se2 = sqrt(vcov(synthdid_est_state2, method = "placebo"))
+  coefs2[[i]] <- synthdid_est_state2
+  ses2[[i]] <- se2
+  linkreg_means2 <- c(linkreg_means2, mean(filter(link2state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
+
+  #link 1
+  state_panel3 = panel.matrices.new(link3state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>% 
+                                      mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>% 
+                                      filter(YEAR < 1950), 
+                                    unit = "STATEICP", time = "YEAR", outcome = coefname, treatment = "treatment")
+  synthdid_est_state3 = synthdid_estimate(state_panel3$Y, state_panel3$N0, state_panel3$T0)
+  coefs3[[i]] <- synthdid_est_state3
+  ses3[[i]] <- sqrt(vcov(synthdid_est_state3, method = "placebo"))
+  linkreg_means3 <- c(linkreg_means3, mean(filter(link3state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
+  
+  i = i + 1
+}
+
 
 #______________________________________________________
 # CHECK FIVE: STATE-LEVEL CLUSTERED SEs ----
 #______________________________________________________
-did_graph(dataset     = neighbor, 
-          depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
-          depvarnames = c("Men", "Married Women", "Single Women"),
-          colors      = c(men_col, mw_col, sw_col),
-          clus = "STATEICP",
-          yvar        = "DiD Estimate: Share of Teachers",
-          ymin        = -0.065, 
-          ymax        = 0.06,
-          verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
-          filename    = glue("shareteach_neighbor_stateclus"))  %>% print()
+regdata <- neighbor %>% 
+  add_did_dummies() %>% 
+  filter(YEAR %in% seq(1910,1950,10))
 
+years <- c(1910, 1920, 1940, 1950)
+interact_vars <- glue("TREATx{years}")
+yearvars <- glue("Year{years}")
+
+n = 15
+var_labs = character(n)
+year_labs = numeric(n)
+coefs = numeric(n)
+cf_lbs = numeric(n)
+cf_ubs = numeric(n)
+
+set.seed(100)
+i = 1
+for (var in c("pct_mw_Teacher","pct_sw_Teacher","pct_m_Teacher")){
+  did_reg_state <- lm(glue("{var} ~ {glue_collapse(yearvars, sep = '+')} + factor(STATEICP) + 
+                       {glue_collapse(interact_vars, sep = '+')}"), 
+                      data = regdata)
+  for (yr in years){
+    btse <- boottest(did_reg_state, B = 10000, param = glue("TREATx{yr}"),
+                     clustid = "STATEICP", r = 1.5)
+    var_labs[i] = var
+    year_labs[i] = yr
+    coefs[i] = btse$point_estimate
+    cf_lbs[i] = btse$conf_int[1]
+    cf_ubs[i] = btse$conf_int[2]
+    i = i + 1
+  }
+  var_labs[i] = var
+  year_labs[i] = 1930
+  coefs[i] = 0
+  cf_lbs[i] = 0
+  cf_ubs[i] = 0
+  i = i + 1
+}
+
+pointspan = 2
+btse_data <- data.frame(year = year_labs, var = var_labs, coefs = coefs, y_lb = cf_lbs, y_ub = cf_ubs) %>%
+  mutate(i = case_when(var == "pct_mw_Teacher" ~ 2,
+                       var == "pct_m_Teacher" ~ 1,
+                       var == "pct_sw_Teacher" ~ 3),
+         year_graph = year - pointspan/2 + (i-1),
+         var = case_when(var == "pct_mw_Teacher" ~ "Married Women",
+                         var == "pct_m_Teacher" ~ "Men",
+                         var == "pct_sw_Teacher" ~ "Single Women"))
+
+depvarnames = c("Men", "Married Women", "Single Women")
+btse_graph <- ggplot(btse_data, aes(x = year_graph, 
+                     y = coefs, 
+                     color = factor(var, levels = depvarnames), 
+                     shape = factor(var, levels = depvarnames))) + 
+  geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
+  geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
+  scale_color_manual(values=c(men_col, mw_col, sw_col)) +
+  annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
+  geom_point(size = 4) + labs(x = "Year", y = "fill", color = "", shape = "") + theme_minimal() + 
+  theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
+ggsave(glue("{outfigs}/paper/shareteach_neighbor_stateclus.png"), btse_graph, width = 8, height = 5)
 
 
 #______________________________________________________

@@ -354,6 +354,30 @@ addvars_indiv_linked <- function(dataset){
 summlinks <- function(dataset, n = 10){
   outdata <- dataset %>% 
     group_by(STATEICP_base, COUNTYICP_base, YEAR_base, YEAR_link) %>%
+    summlinks_help(n = n) %>%
+    rename(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, YEAR = YEAR_link) %>%
+    collect() %>%
+    addvars_county()
+  
+  # using helper function to test if FIPS in main linked sample
+  mainlinksamplist = mainlinksamp(outdata, n = n)
+  outdata <- outdata %>% 
+    mutate(mainsamp = ifelse(FIPS %in% mainlinksamplist, 1, 0))
+  
+  return(outdata)
+} #!#! CHECKED
+
+summlinks_state <- function(dataset, n = 10){
+  outdata <- dataset %>% 
+    group_by(STATEICP_base, YEAR_base, YEAR_link) %>%
+    summlinks_help(n=n) %>%
+    rename(STATEICP = STATEICP_base, YEAR = YEAR_link) %>%
+    collect()
+}
+
+# helper with all the guts of the summlinks (other than grouping)
+summlinks_help <- function(dataset, n = 10){
+  outdata <- dataset %>% 
     summarize(nlink       = n(),
               pct_t       = sum(ifelse(teacher_link == 1, 1, 0))/n(),
               pct_marr    = sum(ifelse(marst_link == 1, 1, 0))/n(),
@@ -375,11 +399,11 @@ summlinks <- function(dataset, n = 10){
               pct_mwwhitecollar = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
                                                                                                             "Clerical Workers", "Sales Workers"), 1, 0))/n(),
               pct_mwwhitecollar_cond = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
-                                                                                                            "Clerical Workers", "Sales Workers"), 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
+                                                                                                                 "Clerical Workers", "Sales Workers"), 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
               pct_mwbluecollar = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
                                                                                                            "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/n(),
               pct_mwbluecollar_cond = sum(ifelse(demgroup_link == "MW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
-                                                                                                           "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
+                                                                                                                "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/sum(ifelse(demgroup_link == "MW", 1, 0)),
               pct_sw      = sum(ifelse(demgroup_link == "SW", 1, 0))/n(), #share of sample (swt_base) that are later sw (teach + nonteach)
               pct_swt     = sum(ifelse(demgroup_link == "SW" & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw teach
               pct_swnt    = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that are later sw non teach but in lf
@@ -396,11 +420,11 @@ summlinks <- function(dataset, n = 10){
               pct_swwhitecollar = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
                                                                                                             "Clerical Workers", "Sales Workers"), 1, 0))/n(),
               pct_swwhitecollar_cond = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Professional and Technical", "Managers, Officials, Proprietors",
-                                                                                                            "Clerical Workers", "Sales Workers"), 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
+                                                                                                                 "Clerical Workers", "Sales Workers"), 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
               pct_swbluecollar = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
                                                                                                            "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/n(),
               pct_swbluecollar_cond = sum(ifelse(demgroup_link == "SW" & teacher_link == 0 & occcat_link %in% c("Craftsmen","Operative Workers", "Private Household Workers",
-                                                                                                           "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
+                                                                                                                "Non-HH Service Workers", "Farm Workers/Owners", "Non-Farm Laborers"), 1, 0))/sum(ifelse(demgroup_link == "SW", 1, 0)),
               avg_occscore = mean(ifelse(worker_link == 1, OCCSCORE_link, 0)), #non-workers should have occscore of 0
               avg_occscore_sw = mean(case_when(demgroup_link != "SW" ~ NA_integer_, 
                                                worker_link == 1 ~ OCCSCORE_link, 
@@ -416,18 +440,10 @@ summlinks <- function(dataset, n = 10){
               pct_wnct    = sum(ifelse(NCHILD_link == 0 & teacher_link == 1, 1, 0))/n(), #share of sample (swt_base) that later don't have children and teach
               pct_wncnt   = sum(ifelse(NCHILD_link == 0 & teacher_link == 0 & worker_link == 1, 1, 0))/n(), #share of sample (swt_base) that don't have children and work, but not as teachers
               pct_wncnilf = sum(ifelse(NCHILD_link == 0 & teacher_link == 0 & worker_link == 0, 1, 0))/n(), #share of sample (swt_base) that don't have children and exit lf
-    ) %>%
-    rename(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, YEAR = YEAR_link) %>%
-    collect() %>%
-    addvars_county()
-  
-  # using helper function to test if FIPS in main linked sample
-  mainlinksamplist = mainlinksamp(outdata, n = n)
-  outdata <- outdata %>% 
-    mutate(mainsamp = ifelse(FIPS %in% mainlinksamplist, 1, 0))
+    )
   
   return(outdata)
-} #!#! CHECKED
+}
 
 # summarizes linked dataset at the county level with key variables -- FOR SECRETARIES
 summlinks_sec <- function(dataset, n = 10){
