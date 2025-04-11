@@ -1,0 +1,993 @@
+
+\documentclass[12pt]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{geometry}
+%\usepackage[colon]{natbib}
+%\usepackage{caption}
+\usepackage{xr} 
+%\usepackage{hyperref}
+\externaldocument{unions_1october2020}
+%\usepackage{bibunits}
+\usepackage[backend=biber, natbib=true, style=authoryear, firstinits=true, doi=false,isbn=false,url=false, uniquelist=false, uniquename=false]{biblatex}
+\DefineBibliographyStrings{english}{%
+  references = {\large References cited in this response letter},
+}
+
+\bibliography{unionbib} 
+\renewbibmacro{in:}{}
+\usepackage[pdftex]{graphicx}
+\usepackage{float}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\leftmark{}
+\usepackage[normalem]{ulem}
+\usepackage{clipboard}
+\openclipboard{unions_stuff}
+\usepackage{caption}
+\usepackage{lscape}
+\usepackage{enumerate}
+\usepackage[T1]{fontenc}
+
+
+\newcommand{\sups}[1]{\ensuremath{^{\textrm{#1}}}}
+\newcommand{\subs}[1]{\ensuremath{_{\textrm{#1}}}}
+
+\usepackage{subcaption}
+\usepackage{clipboard}
+%\openclipboard{../unions_clipboard}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newenvironment{proof}[1][Proof]{\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+\geometry{left=1.0in,right=1.0in,top=1in,bottom=1in}
+\textwidth=15.7cm
+%\input{tcilatex}
+
+\usepackage{tabulary}
+\usepackage{tabularx}
+\usepackage{booktabs}
+
+
+\newcommand{\dd}{\$}
+% \newcommand{\mm}{$}
+
+
+%\defaultbibliography{../../latex_biblio_abe_jimmy}
+%\defaultbibliographystyle{ecca}
+
+\usepackage[parfill]{parskip}
+
+\begin{document}
+
+
+\noindent {Suresh Naidu\newline
+\noindent Department of Economics \& SIPA \newline
+Columbia University}
+
+\bigskip
+
+\bigskip
+
+\noindent RE: Revision -- \textquotedblleft Unions and Inequality over the Twentieth Century \textquotedblright
+
+\bigskip
+
+\rhead{ }
+\lhead{}
+
+\begin{refsection}
+
+\noindent Dear Larry,
+
+Thank you for keeping the ``door ajar'' on our submission for the \textit{QJE}.  We are grateful for your careful and thoughtful read of our paper and the many suggestions you provided.  We feel the paper is far stronger as a result of our efforts to address them, and (obviously) we hope you agree.
+
+Before delving into our point-by-point response to your letter, we wanted to summarize some of the major changes to the draft.
+
+First, we have improved considerably on the identification. We attempted to leverage Right-To-Work laws, as you suggested in your letter, but Appendix \ref{sec-app-RTW} shows that the change in union density after a RTW law is passed, while in the expected direction, is not strong enough to yield a credible IV. Instead, we build a new instrumental variables strategy based on the take-up of the union recognition mechanisms protected under the Wagner Act and enforced in war industries by the National War Labor Board.  One nice feature of this analysis is that our outcome variables of state-level inequality measures are at the \textit{annual} level, and thus we are not limited to looking at decadal Census years.  Indeed we find that unions explain the large share of the dramatic decline in inequality from the mid-1930s until the mid- to late-1940s.  This analysis is summarized in Section \ref{sec-iv} and described in greater detail in a new Appendix \ref{sec-app-iv}.
+
+	Second, we have added labor share of net income as an outcome variable in all our aggregate regressions (time-series, state-year panel, and instrumental variables). To implement this, we have also constructed a new measure of labor share at the state-year level from BEA sources. The details of its construction are in a new Appendix \ref{sec-app-laborshare}.  
+
+Third, we have added new results using the reweighting methodology of \citet{dinardofortinlemieux}, and these supersede our previous RIF results.  We have also implemented the recent extension to DFL proposed by \citet{fll} that allows for spillovers onto non-union workers, and find evidence of spillovers throughout our sample period.  This analysis is summarized in Section \ref{sec-dfl} and more detail is provided in a new Appendix \ref{sec-app-dfl}.  
+
+Fourth, we have provided substantially more analysis that compares our \textit{household} union concept to the more standard individual union concept.  We reference this new analysis throughout the text and show a variety of results that show in a new Appendix \ref{sec-app-wgts-HH} that whenever we can compare trends (e.g., in selection into unions or the union premium) measured at the household- versus the individual-level, they look very similar.
+
+Finally, we have substantially shortened the material in the original draft (much of the history of the Gallup poll is now relegated to Appendix \ref{sec-app-gallup}).  While the paper has grown in length somewhat since the original version, it is  mostly due to adding the IV and DFL sections.
+
+In what follows, we respond point-by-point to questions and concerns raised by you and the referees (original comments from you and the referees are in \textit{italics}).
+
+\medskip \noindent
+Sincerely,
+
+\medskip \noindent
+Suresh (and Hank, Dan and Ilyana)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagebreak
+
+
+\rhead{Response to the Editor}
+\lhead{}
+
+\section*{Editor's Comments}
+
+
+
+
+\textit{The referees and I find much to admire in your data set construction efforts in putting together microdata from the Gallop Surveys for 1937 to 1985 (as well as other sources) on union membership (at least at the household/family level), demographics, and income.  We also greatly appreciate your ambitious and comprehensive use of the new data sources and traditional data sources (the CPS and ACS) to examine changes in selection into unions, the union family income premium, and union impacts on different measures of inequality over an approximately 80-year period from 1936 to close to the present.}
+
+\textit{Nevertheless, the referees have somewhat divergent assessments of your paper's overall novel contributions and potential suitability for the QJE. Two referees (R1 and R4) are enthusiastic about your paper for the QJE, subject to revisions to strengthen the write-up and the analysis.  The two other referees (R2 and R3) don't think your paper is either sufficiently novel (R2) or sufficiently compelling (R2 and R4) for the QJE.  R2 and R4 are particularly worried about the analyses of the impacts of unions on changes in inequality in Section 7 using what R2 characterizes as ecological regressions of inequality measures on aggregate union density without any clear sources of exogenous variation in union density or union power.  R2 and R4 both recommend that your current submission be rejected. But R2 is "on the fence" about the prospects for a major revision and willing to be convinced by a paper that is less sloppy and does a much more "serious" analysis of linking micro and ecological regression estimates of union impacts on inequality in Section 7.}
+
+\textbf{Authors' reply:}  Thank you for this feedback. Based on your subsequent correspondence, it seems like it was R3, not R4, who recommends rejection.  
+
+%	So, R1 is positive, R2 on the fence, R3 said reject, and R4 is positive.
+
+
+\textit{I very much share the main concerns raised by R2, but I also agree with R1 and R4 that your paper has great potential. I have discussed your paper with a second QJE editor who, to be frank, is skeptical about it for the QJE. The second editor finds R2's critiques to be convincing and worries (as do several of the referees) about the lack of novelty for the QJE of the historical (mid-century) contribution relative to Callaway and Collins (2018 EEH) and Collins and Niemesh (2018, forthcoming Economic History Review).  I have held off on asking the second editor for a formal second opinion since it is clear that I will not get a positive response based on your current draft.}
+
+	\textbf{Authors' reply:}  We address R2's criticisms directly in the revision, conducting DFL decompositions for each year of our data, including the DFL counterfactual as a covariate in the aggregate time-series regression of inequality on union density, and developing what we think is a convincing identification strategy that leverages our data and the key policy variation driving union density in the mid-20th century: the Wagner Act and the National War Labor Board. Beside a much broader historical scope, and the development of the IV strategy (which focuses on the core period 1936-1947) and new labor share of net income data, and our broader focus on overall income inequality, rather than just wages or earnings inequality, distinguishes our work further from other mid-century estimates of the union premium, most recently \citep{collins_1951premium}. Finally, we have used the 1956-1960 panel from the ANES to provide (to our knowledge) the first fixed-effect estimates of union premium from the period of peak union density, further distinguishing the contribution of the paper.
+
+
+\textit{The bottom line is that we are going to need to pass on your current submission. Still I am pleased to consider a major revision of your paper that (1) addresses R2's comments and completely revamps Section 7 along the lines suggested by R2; (2) improves the writing and cleans up the sloppiness and lack of clarity in many of the figured, tables, the main text, and appendices; (3) does a better job connecting your analyses and findings to the most related literature especially Callaway and Collins (2018) and Collins and Niemesh (2018) and (4) takes into account the constructive suggestions of R1 and R4. I can make no promises based on your current version and will need to get a formal second editor's assessment on any revision. But I am reasonably optimistic about the prospects for a revision that better satisfies R2.}
+
+\textit{If you decide to take up this challenge and work on such a revision, I also hope you can think about R3's specific comments and take into account the following suggestions: }  
+
+\textit{1. (Section 7, The Effects of Unions on Inequality) I concur with R2 that Section 7 needs some real work.  I think starting with micro-based analyses along the lines of DiNardo, Fortin, and Lemieux (1996 Econometrica) that clearly show the union and nonunion income (or wage) distributions over time and do the DFL counterfactuals to get at micro level estimates of the impact of unions on different inequality measures would be a good beginning.  You need to be clear about the caveats that there is no real identification strategy and the union wage premium could partially reflect selection on unobservables as can the lower dispersion in incomes (wages) for the union sector (union households) than the nonunion sector. Thus, we suspect such an analysis is an overestimate of the micro causal union effects on differences in wage levels and dispersion for the union vs. nonunion sectors. You should use clear graphs of the union and nonunion income (wage) distributions to discuss at what points of the income distribution it would be plausible for unions to have impacts. Union members tend to be more in the middle of the distribution so is it plausible that they have much direct impact at the 90th or 10th percentiles and certainly not above the 90th.}
+
+%To do:  Some kind of summary graphs of where unions members are in the distribution.  Maybe for each of our decades?
+%To do: DFL re-weighted graphs (again, by decade)? DONE?
+
+\textbf{Author's reply:} We have now constructed, by year, the traditional micro effect of unions on inequality, using the reweighting procedures from \cite{dinardofortinlemieux} and \cite{ffl_handbook}. Precisely, in each year we re-weight the non-union population so that its distribution of observables matches that of the full population. This weighted non-union sample approximates the counterfactual income distribution of an entirely de-unionized general population. We compare this counterfactual distribution with the true income distribution from the unweighted sample and calculate differences in inequality statistics between the two. Appendix Figure \ref{fig:dflhist_spill_levels} presents kernel density plots comparing true and counterfactual income distributions for selected years, while the top panel of Figure \ref{fig:dflhist_spill} plots annual differences in Gini coefficient.  For ease of visualization we present the differences between the union and deunionized log wages by percentile in the bottom panel of \ref{fig:dflhist_spill}, with the densities in the Appendix, which confirms that unions have the largest impacts on the bottom of the household income distribution. Indeed, given that we are looking at income and not just earnings, it is likelier that union members sit in the lower part of the income distribution, even as they sit in the middle of the wage distribution.
+
+Further, we have incorporated recent advances in the reweighting methodology proposed by \citet{fll} that allows for spillovers to be incorporated into the counterfactual distribution. This methodology lets union density at the state-year-industry level to have effects on the non-union income distribution (using an ordered probit to estimate union density effects on individual non-union incomes). We can then consider inequality under a distribution where union members are given their predicted non-union wage \textit{and} the non-union wages are adjusted accounting for any spillovers of union density onto non-union workers in the same labor market. We relegate details of the methodology to section \ref{sec-app-dfl}, but present the implied changes to the percentiles in \ref{fig:dflhist_spill}.  Using this methodology, which arguably avoids some of the ``ecological regression" pitfalls R2 worries about, we can show that spillovers at the state x industry x year level exist and significantly increase the contribution unions make to reducing inequality.
+
+
+\textit{(a) You can then move to RIF extension, but you need to do a better job of explaining and motivating the RIF analysis and how it compares to DFL.}
+
+\textbf{Authors' reply:} We have dropped the RIF analysis in the current draft, as we believe it is superseded by the DFL analysis and as you noted the paper was already so long.
+
+\textit{(b) You can then explore your ecological regressions at the national and state level but with some better framing about the limitations and lack of exogenous variation in union density. I have played around with such regressions in the past and have always found estimates to be pretty sensitive to specification choices and worried that union density endogenously declines more when markets forces are going against middle and low wage workers (from technological changes to trade shocks to housing busts). Thus, I suspect your approach generates an overestimate of the causal union effect. In fact, detrended union density effectively be a  measure of demand shifts for middle and low skilled workers.  Thus, any attempt you can make to try to use more plausibly exogenous sources of variation in union density or union strength would be a large step forward.  R1 makes a Bartik-instrument type suggestion. I wonder if the adoption of right to work laws and public sector collective bargaining laws can provide useful sources of variation for the state level ecological regression analyses.}
+
+\textbf{Authors' reply:} We very much thank you for pushing us on the identification in our paper. You'll see this is where the biggest substantive improvement in the paper has happened. We now have an instrumental-variables-based strategy, presented in Section \ref{sec-iv} and detailed in a new Appendix \ref{sec-app-iv}, where we leverage the Wagner Act (and the 5-4 Supreme Court decision upholding it in 1937) and the National War Labor Board's protection of unions to generate cross-state variation in union density driven by federal policy. Specifically, we use the number of new members added under the Wagner Act mechanisms (members added via NLRB elections and successful recognition strikes) between 1935 and 1938 as one instrument, and we use war spending per capita between 1940 and 1945 as another instrument. These two instruments are highly correlated, so we present results both separately and pooling, and subject them to a number of robustness checks. We show that these two shocks only affect changes in inequality in the 1935-1947 windows, and only affect changes in union density in this window as well, and this pattern is robust to controlling for minimum wages, state and federal tax changes, skill shares, manufacturing share, and we separately rule out a role for egalitarian norms using our microdata in the Appendix.  We now view this as a substantial contribution of the paper.
+	
+While the effect sizes in our 2SLS estimates are quite a bit larger than the OLS estimates, we think the generally large magnitudes of the union effect are consistent with the structural change in the economy generated by mid-century mass unionization. Appendix Figure \ref{fig-superstar} shows the share of Top 4, i.e. ``superstar" firms that have major union contracts, which we constructed from a variety of historical sources. We think the fact that unions were organizing the largest firms in the economy (many of which are in Michigan) likely leads to an effect of unions on inequality potentially much larger than the recent correlation of union density with inequality would suggest. Consistent with this conjecture, effects are considerably smaller, although still large and significant, when we exclude Michigan. Further, using the microdata, we are able to show that the treated states see differentially higher unionization of non-white workers, who have a generally larger union premium (we lack the data to similarly examine education). The IV treats both high rent firms and low wage workers with unionization, and so the effects on inequality are likely to be larger than the OLS.
+
+An especially important outcome variable for the IV exercise given the intercensal variation is our new measure of annual state-year labor share. We have constructed a new measure of the labor share of net income at the state-year level that goes back to 1929, following the methods in \citet{PSZ2018DINA}, with details and validation in Appendix \ref{sec-app-laborshare}. We find that union density is positively associated with this measure in our time-series, state-year, and instrumental variables analyses. This is a measure of inequality that would be difficult to examine without allowing for ``ecological" effects of unions on non-union members (i.e. owners), and our results would be difficult to explain were we limited to solely the traditional ``micro" effects of unions on union members only. Our results suggest that some of the effects of unions on inequality come via redistribution from capital to labor.
+
+Regarding right-to-work (RTW), we indeed had the same hope that RTW laws could serve as an IV.  We investigate this possibility in Appendix \ref{sec-app-RTW}.  As you can see there, the first-stage (the effect of RTW passage on state-level union density) is generally in the correct direction but too weak for a convincing IV analysis.  We include this section as a cautionary tale for future researchers hoping to use RTW as IVs---at least in the event-study specifications we used, which we view as the natural way to investigate their effect on density, the results are too noisy. Indeed, \citet{fll} caution that RTW laws are likely to operate via threat effects rather than effects on density \textit{per se}.
+
+\textit{(c) DFL (1996), Card (1996 EMA, 2001 ILRR), and Card, Lemieux and Riddell (2004) provide micro-level estimates of union impacts on wage inequality fo the 1970s to the 1990s. And Lemieux and collaborators extend some of this work into the early 2000s.  You should view part of your contribution as extending such an analysis backwards with your Gallop (and other data) and forward up close to the present in the CPS.} 
+
+\textbf{Authors' reply:} We now examine the contribution of unions to changes in inequality across several time periods, effectively extending the decomposition performed by \cite{dinardofortinlemieux} and others into the earlier era. We begin by taking differences in the micro effect estimates described above across two years. This difference provides an estimate of the total change in inequality attributable to unions over that time period. We then further decompose this total union effect into two components: the component attributable to changes in union membership over time (the ``unionization component'') and the component attributable to changes in how union members were paid over time (the ``union wage component''). Decomposition results for several selected time periods are presented in Table \ref{tab:decomp_gini}. We also make use the distributional regression techniques recently developed by \cite{fll} to allow for union spillovers in the decomposition.
+
+\textit{(d) It would be helpful to compare the findings from micro-level analyses of union impacts on inequality from using individual level union status and wages (earnings) as in past literature to your approach of using household level measures of union status and household/family income.  Do the patterns look similar in the post-1973 period when one can do it both ways in the CPS?  And how does an analysis of the Gallop data from 1973 to the mid-1980s compare to CPS analyses?  And why are you not going back to 1973 in your CPS analyses?}
+
+%To do: Re-do RIF at individual level and compare to our current graphs that are at household (just in CPS era)?  //
+
+%QFS: We don't go back to 1973 bc it is missing state identifiers, right? //
+
+\textbf{Authors' reply:} We have now reproduced all of our main microdata findings using (whenever possible) both individual and household data from the ANES and the CPS in a new Appendix \ref{sec-app-wgts-HH}.  For example, Appendix Figure \ref{fig-ind-hh-density} compares household and individual measures of union density for the ANES and the CPS (where it is possible to calculate both).  Appendix Figure \ref{fig-wageprem-all-ind} shows this comparison between union individual and family premia each year it is possible for us to estimate both.  
+
+As you may recall, R1 brings up a related concern with the household membership concept. S/he correctly notes that the Gallup and other survey dataset gives us the \textit{respondent's} demographics, not necessarily the union member's, and thus some of our selection results could be driven by changes in assortative mating by education, not changes in who joins unions.  To address these important concerns, in this same new Appendix, we also show are key selection results for men only.  Given that men were far more likely to be in unions than women during most of our sample period, this analysis ensures that the person answering the survey and the union member are very likely one and the same.  As you can see in Appendix Figure \ref{fig-yrs-ed-select-men}, the same $U$-shape in terms of selection by education emerges when we drop female respondents.
+
+In response to your final question, we do not use the 1973-76 CPS because there are no state identifiers and we use state fixed effects as a control in all of our analyses.  To be consistent, we thus wait until 1977 (when the CPS adds state identifiers) to include the CPS.
+
+\textit{2. (Framing on unions and inequality analyses in introduction and Section 7) I found the introduction to be more tendentious than needed (especially the first 2 pages) and found it to be strangely outdated focusing on polls of economists from over 20 years ago on sources of changes in inequality (footnote 1) and one Acemoglu et al. (2001) paper that also is out of date.  I think it makes more sense to make clear that there are alternative approaches to look at changes in inequality and try to get at the role of market forces vs. institutions.  You need to place your approach into this arena. And please cut footnote 1.}
+
+\textbf{Authors' reply:} Thank you for this comment. We have now rewritten the introduction following the guidelines in your letter (including deleting footnote 1).  We in fact have dropped almost all the discussion of ``unions and SBTC'' from the macro literature, as you, R3 and R4 all felt it added little and the paper is so long as it is.
+
+It is hard to summarize in this letter all the changes we have made to the introduction without essentially quoting it all.  So while we try to make your response letter as ``self-contained'' as possible so that you don't have to constantly flip between the letter and the revised manuscript, we hope you can re-read the introduction and let us know your thoughts.
+
+\textit{I view there as being 3 distinctive but complementary approaches to examining the role of market force vs. institutions on inequality (or the wage structure):}
+
+\textit{(1) (Market forces first)  The supply-demand (or race between education and technology) framework starting with Paul Douglas in the 1920s and then Tinbergen and Freeman in the 1970s and becoming Katz-Murphy (1992) models with Goldin and Katz (2008), Autor, Katz, and Kearney (2008 RESTAT), Autor (2014 Science), and Card and Lemieux (2001 QJE) being example. This approach takes seriously competitive labor market equilibrium models of supply and demand for skills and tries to model time serious (or regional or international) changes using such a framework. The advantages are the approach is logically clear and interpretable in an economic framework that is consistent for price (relative wages) and quantities (relative employment).  The interpretation as made clear in Katz and Autor (Handbook of Labor Economics 1998) is that one is likely to overstate the role of supply and demand forces by not formally including institutional factors so this is an upper bound approach for market forces.}
+
+\textbf{Authors' reply:}  Please see pp. 1-2 of the new introduction.  We believe that we now hew very close to the framework you lay out in this point and the related points below.  Doing so has helped to streamline the introduction and clarify the contribution.
+
+\textit{The anomalies of poor fit (such as the 1940s and late 1970s-early 1980s) and the 2000s are viewed as period when institutional factors (union growth and War Labor Board in the 1940s, double indexed union contracts and strong minimum wage in late 1970s), and fissuring of the workplace in the 2000s play a particularly important role and possible dominate the market forces in those periods. Weaknesses in fit of canonical Katz-Murphy models also have led to improvements in theories of technological change and modelling skills as in Autor, Levy, and Murnane (2003 QJE) on task-based models and Deming (2017 QJE) on the rise of social skills and attempts to look at the role of post-college vs. college training by Lemieux.}
+
+%New
+\textbf{Authors' reply:} Thank you for this reminder.  We in fact now motivate our new IV analysis (summarized in Section \ref{sec-iv} and detailed in a new Appendix \ref{sec-app-iv}) with the anomalies of poor fit highlighted in \citet{GoldinKatz2009} and elsewhere.  It is a very nice way to transition to the IV results, while grounding them in past literature.  We write (p. \pageref{p-poor-fit}):
+
+\begin{quote}
+\Paste{poor-fit-1}
+\Paste{poor-fit-2}....[And then we move on to our IV strategy.]
+\end{quote}
+
+\textit{(2) (Institutions first) This approach exemplified by Bound and Johnson (AER 1992), DFL (1996), Lee (1999 QJE), and many David Card papers on unions and inequality tried to adjust observed wages for institutional factors at the micro level first (e.g. union wage premia estimates, etc.) and only then look at supply-demand factors using the adjusted wages. Thus, this approach gives priority to institutions and likely overstates the role of institutions vs. market forces. It has 3 limitations: (1) Selection bias in micro estimates of institution effects such as union wage impacts; (2) does not address the endogeneity of changes in institutional factors to market forces as in declines in unionization from labor demand shocks; and (3) a lack of a coherent approach to quantity setting (should employment depend on opportunity costs or actual wages).}
+
+\textbf{Authors' reply:} We have now tried to do a better job of couching our empirical results in this literature and emphasizing our attempts to overcoming some of its limitations.  
+
+In response to your point (1) above, on selection bias, in our historical period (and the period of the IV analysis in particular) we argue it is less likely to be a concern than in the present day.  Union members at mid-century are \textit{much} less educated and in fact are more non-white than non-union members, so if unobservables correlate with unobservables then we would expect we are understating the premium.  Of course, individual-level attributes are not the only source of unobserved heterogeneity, and we might worry that unions target ``super star,'' high-paying firms (and we show, Appendix Figure \ref{fig-superstar} that they successfully do target these firms at mid-century). But the premium is very similar across time: in our 1936 Consumption Survey (before GM, Ford, AT\&T, and US Steel were unionized), during the mid-century union heyday when most industry leaders were organized, and today (when superstar firms are once again non-union).  Of course, selection is always a concern, but we do feel that the stability of the premium over this long period of changing selection and density lends support to the claim that the premium is not purely an artifact of selection.
+
+In response to your point (2), our IV strategy helps to alleviate this concern.  We argue in Appendix \ref{sec-app-iv} that differences across states in industrial composition (as measured by manufacturing share of employment) and latent demand for unions (as measured by strike activity) were in fact very stable from 1914 to 1940 (see Appendix Figures \ref{fig-manuf-LHS} and \ref{fig-strike-rank}).  What changed with the Wagner Act not so much strike activity or even strike demands but the \textit{success rate} of strikes (see Appendix \ref{fig-nlrb}).
+
+Of course, we might still worry that in the mid- and late-1930s, unobserved changes in local labor demand or political support, not the shock of the Wagner Act, were in fact responsible for both the rise in density and the decline in inequality in certain states.  As a final check, we use \textit{1920s-era strike activity} interacted with the Wagner Act period to purge the IV of any correlation with contemporaneous local political or economic factors conducive to unions (see Appendix Table \ref{tab-iv-1920s}).  We find similar results, suggesting the centrality of the Wagner Act itself.  We also provide many examples of historians arguing that, e.g., the Flint Sit-Down Strike and U.S. Steel strike would have been unsuccessful pre-Wagner.
+
+In response to your point (3), we try to be more candid that inserting union density into the classic SBTC regression equation is \textit{ad hoc}.  The SBTC framework is elegantly built-up from the first principles of a competitive labor market, and thus inserting union density into it is not theoretically grounded. We write on p. \pageref{p-no-theory}:
+
+\begin{quote}
+\Paste{no-theory}
+\end{quote}
+
+We have flagged as a topic for future work how to theoretically reconcile our puzzling results of changing selection, changing density, but stable premia.  Despite much effort, we have been unable to write down such a model ourselves.
+
+\textit{(3) (Horse race approach) This approach take Katz-Murphy style ecological regressions and adds institutional variables such as the minimum wage or union strength measures and does a horse race between market force variables and institutional factors.  This approach is big in cross-country work by sociologists, political scientists, and OECD economists including Jaumette and Osorio Buirtron (2015 IMF) work mentioned by R2.  Blau and Kahn in many papers and their book have been the leader in economics in this approach for cross-country analysis. The weaknesses are lack of sources of exogenous variation in institutional factors and a lack of clear conceptual framework for specifications.  R2 worries that these types of regressions can generate a lot of ``spurious'' results.}
+
+\textbf{Authors' reply:} We agree with these concerns regarding our state-year ecological regressions.  We hope that the IV section helps allay some of them.
+
+One small improvement we have made to the state-year OLS regressions is to add controls (varying at the state-year level) for the top state marginal income tax rate.  We thank Jon Bakija for these data.  
+
+While we realize that readers will have justified skepticism regarding state-year OLS regressions, the results (as we show in Appendix Tables \ref{st-yr-appendix-1} and \ref{st-yr-appendix-1}) are very stable as we add controls one-by-one.  The only ``control'' that reduces the magnitude of the estimates is a ``catch-all'' state-specific quadratic polynomial in time.  Even then, the effect of density remains significant for most of our outcomes.
+
+\textit{My sense is your approaches in Section 7 start with approach 2 (institutions first at the micro level in your RIF approach) and then move to the horse race approach 3. You should be clearer about the historical and conceptual antecedents to your actual analysis and how your approaches fit into work on changes in inequality in the introduction and Section 7. I would be open minded about both market forces and institutions playing important roles and being studied by economists who don't just think everything is technological change in my reading of the literature.}
+
+\textbf{Authors' reply:} We hope that the re-written introduction as well as the additional re-writing of the paper cited above has addressed your concerns about our original introduction and framing.
+
+We have also added this paragraph to the conclusion, which we hopes highlights that we indeed see a role for both traditional supply-and-demand factors and institutions:
+
+\begin{quote}
+\Paste{both-factors}
+\end{quote}
+
+One final point we wanted to emphasize in terms of framing is a new result (one that we did not have in the original submission), which the Gallup data are uniquely suited to uncovering.  In the market-forces-versus-institutions debate, ``social norms'' are often raised as a component of institutions.  However, we find no evidence that social norms became more pro-worker or egalitarian norms during World War II.  We in fact find strong evidence in the other direction.  As we show in Appendix \ref{sec-app-iv} (in particular, Section \ref{sec-app-iv-norms} and Appendix Table \ref{tab-norms}) Gallup respondents felt unions had unfairly benefited during the war.  By contrast, they report that the war improved their opinion of \textit{managers and executives}.  If anything, this sense was greater in the states where density rose the most during the war, so they are not a likely candidate to confound our IV results.
+
+This result surprised us, and we would be happy to emphasize it more if you wished.  We think it is potentially important because it suggests that egalitarian norms among the public are \textit{not} a necessary factor in reducing inequality.  During the war and in the immediately post-war period, unions were powerful, but they were not popular and Americans did not express particularly pro-worker views.
+
+\textit{3. (Section 2) Stand-alone literature review sections are boring and pretty useless. That is my reaction to your Section 2. Please delete Section 2. Instead, a concise mention of the most relevant and important literature upon which you build should be integrated into the introduction (maybe a couple paragraphs). And, more importantly, you need to discuss the relevant literature more seamlessly throughout the paper as you do different analyses to compare your findings and approach to previous work.}
+
+\textbf{Authors' reply:} We have deleted the stand-alone literature review section, based on your feedback and those of several referees.  We are now able to get to our main results more quickly, which we hope makes the paper more readable.
+
+\textit{(a) Several of the referees in their reports or cover letters point out that the novelty of the mid-century evidence from the Gallop Polls is only modest relative to Callaway and Collins (2018 EEH) and Collins and Niemash (2018, forthcoming Economic History Review) who show negative selection into unions in 1950 in the Palmer microdata, a large union wage premium for low human capital workers at mid-century, and that union density in the 1940s is strongly negatively associated with changes in local inequality conditional on lots of controls. You need to do a much better job of giving these papers credit and be clear about how your finding reinforce or change out understanding of unions in the mid-century.}
+
+\textbf{Authors' reply:} Thank you for this comment. We have now a discussion of where our paper differs from these papers. In the Appendix we expand on the differences and similarities in the DFL exercises in our work versus Callaway and Collins, noting that we cannot do percentile ratios as measures of inequality the years proximate to 1951 because we only have binned data and so the percentile ratios are quite unstable. 
+
+We write:  \Paste{collins}
+
+%``An important exception is a recent paper, \citet{collins_1951premium}, which uses detailed microdata from a survey of six cities in 1951 to estimate a union premium comparable in magnitude to what we find. The advantage of our data is that it is nationally representative as well as available over long stretches of time, and includes income from all sources not just earnings. The disadvantage is that our data is binned rather than continous."
+
+We also add a footnote (footnote \ref{fn-collins}) to the introduction describing \citet{collins2017unions} (and build on it in the DFL exercises):
+
+``\Paste{collins-intro-footnote}''
+
+%``\citet{collins2017unions} is another recent paper emphasizing the role of unions in the Great Compression. They use the industry measures of union density constructed by Troy and form proxies of union density using 1940 IPUMS industry allocations within state economic areas. We build on this by providing direct measures of household union membership at the annual level over this period."
+
+\textit{(b) Please move discussions of past micro work on unions and wage inequality into Section 7 and compare it to your findings.}
+
+\textbf{Authors' reply:} We have moved this section as you suggest and integrated the discussion of previous work into the relevant sections of the analysis.
+
+\textit{4. Your paper is long and rambling in parts and needs some work to focus on the most important issues and analyses as indicated in comment 1 of R3.  Please work on streamlining the paper to make it more reader-friendly.}
+
+\textit{(a) Section 2 must go as noted above.}
+
+\textbf{Authors' reply:} We have done this and eliminated the literature review section.  We have put much of the history of Gallup in a new Appendix \ref{sec-app-gallup}.
+
+\textit{(b) Section 5.2 adds little and should be deleted.}
+
+\textbf{Authors' reply:} We have eliminated this section entirely.
+
+\textit{(c) Section 6 can shortened a bit.}
+
+\textbf{Authors' reply:} We have shortened this section considerably, now providing much shorter summaries of our main results.
+
+\textit{5. The current paper is sloppier than it should be with many tables and figures not being sufficiently self-contained and some of the documentation of empirical choices being hard to follow or incomplete in the text and appendices. A thorough re-writing for clarity is necessary. And all tables and figures need to be made as self-contained as possible. Some examples of issues that need to be cleaned up include:}
+
+\textbf{Authors' reply:} We apologize for any sloppiness in the previous draft. We have endeavored to do better in this revision and have extensive table notes and empirical documentation in our Appendices.
+
+\textit{(a) Tables 2 and 3 need to indicate the precise time periods covered by the different regressions.}
+
+\textbf{Authors' reply:} We have added rows in the table footer giving first and last year of the sample in each column.
+
+%Update: Done. %Gallup_digitization/Outputs_st: TimeSeriesReg and StateYearReg tex files.
+
+\textit{(b) Goldin and Katz (2009) is actually Goldin and Katz (2008).}
+
+\textbf{Authors' reply:} Fixed. We thought that 2009 looked off and that it was 2008, but, oddly, Google Scholar listed it as 2009 (and still does), so we assumed our instinct was wrong.  
+
+\centerline{\includegraphics[scale=0.6, trim={0, 0, 0, 0cm}, clip]{GS_GK.png}}
+
+\textit{(c) Figure 1 says it covers 1917 to 2011, but it looks like it start in the late 1930s.}
+
+\textbf{Authors' reply:} Apologies for this error, fixed.
+
+\textit{(d) Appendix B (p. 83)  Does the college-high school share ratio only include the employed, include everyone working or not, count everyone equal or weight individuals by hours worked, efficiency units, or what?  Presumably the justification for using College + 1/2 Some College over High School plus 1/2 Some College comes from Autor, Katz and Krueger (1998 QJE) who showed that approximates the more general (and kosher) efficiency units approach of Katz-Murphy (1992 QJE) or Card-Lemeiux (2001 QJE). The justification needs to be discussed and proper attribution given.}
+
+%To do: Let's double check with a fine-toothed comb and ask Fabiola.  Obviously LK knows this literature like the back of his hand so we need to be super, super clear.
+
+\textbf{Authors' reply:} Apologies for any lack of clarity in this (obviously your backyard!). The college high school share ratio is calculated in terms of efficiency units following the methodology outlined in Autor, Katz and Kearney (2008). We include full-time, full-year wage and salary workers with 0-48 years of experience in samples from the March CPS (1964-2009 for the time series analysis and 1979-2009 for the state-year analysis) and the 1940-2010 Census. Workers are divided into cells based on 2 sexes, 5 education categories (High School drop outs, High School graduates, Some College, College, Greater than College), and single years of experience. 
+	
+For each cell in each year we calculate the weighted sum of weeks worked by all individuals in the cell using the individual weights from the data. This comprises the ``quantity'' of labor supplied. To translate this into efficiency units of labor supply we also calculate the ``price'' of each week of labor in a particular cell. We calculate the weighted average real weekly income in each cell, and normalize this by dividing by a reference wage (the wage of male high school graduates with 10 years of experience). We compute the average of this relative wage over the entire period. The efficiency units of labor supplied by each cell is the product of weeks worked and the average relative wage. 
+	
+The total efficiency units of labor supplied in a given year is calculated by summing across cells. Following Autor, Katz, and Krueger (1998) and Card and Lemieux (2001), we calculate aggregate college-equivalent labor supply as the share of total efficiency units of labor supplied by college or college-plus workers plus half of the share of labor supplied by workers with some college. Similarly, aggregate high school–equivalent labor supply is the share of efficiency units supplied by high school or lower workers, plus half of the share supplied by workers with some college. The college high school share ratio is the natural logarithm of the ratio of college-equivalent to non college-equivalent labor supply shares in each year.
+
+We calculate the changes in the college high school share ratio between 1940-50, 1950-60 and 1960-70 in the Census data and append these changes to the estimates of college high school share ratio from 1964-2009 calculated from the March CPS.
+
+We have added the above description to Appendix \ref{sec-app-cons}.
+
+% .do files: code/eff_units_st.do, code/ipums_akk_st.do, AKK Replication/Data and Programs from AKK/March_cps_2010_18_IPUMS_CPS/eff_units_cps1018_st.do (extending the series beyond 2009)
+
+\textit{(e) Appendix B (p. 84) I could not follow how you estimate the college wage premium. You first say you only use full-time and full-year wage and salary workers and then you say you set the unemployed and NILF to 0. Does that mean you also include the unemployed and NILF and give them a log wage of zero? Or what?  And is the college wage premium for BA only vs. HS grad only, for BA+ to HS grad, or do you follow Katz-Murphy (1992 QJE) and  Goldin-Katz (2008) and estimate separate wage premia for BA only and post-College workers and use a fixed-weighted average college plus premium, or what?}
+
+\textbf{Authors' reply:} Again apologies for any lack of clarity in this (obviously your backyard!). We have added the below description to Appendix \ref{sec-app-cons}:
+
+To calculate the college wage premium, we use a sample comprising full-time and full-year wage and salary workers. Therefore the unemployed and NILF are excluded from the analysis. The premium is the fixed weighted average of the premium earned by College educated workers vs High School graduates and More than College educated workers vs High School graduates. The weights are the relative employment shares of College and More than College educated workers in 1980 (following Autor, Katz and Krueger 1998). 
+
+The wage differentials for college-educated (more than college-educated) workers relative to high school graduates are estimated in each year from cross-sectional log weekly earnings regressions with a dummy for BA (BA+) education, a quartic in experience, three region dummies, a female dummy, a nonwhite dummy, and interaction terms between the female dummy and the quartic in experience and the nonwhite dummy. 
+
+Weights are calculated as follows: 
+	\footnotesize
+	\begin{equation*} CollegeShare = \frac{\text {Number of workers with exactly college education}}{\text {Number of workers with exactly college or more than college education}} \end{equation*} 
+	\begin{equation*} MoreThanCollegeShare = \frac{\text{Number of workers with more than college education}}{\text{Number of workers with exactly college or more than college education}} \end{equation*} 
+	\normalsize
+
+% .do file: chsp_construction_st.do
+
+\textit{I very much hope you are willing to revise your paper along the lines indicated in the editorial decision letter. As I indicated above, I can make no firm promises based on your current submission. But we will be receptive to a responsive revision.  If you decide to try to revise and resubmit for the QJE, I am pleased to provide feedback on your revision plans or to try to clarify anything that is not clear in this letter.}
+
+------------------
+
+Thank you again for the chance to revise our paper and the guidance on how to do so most effectively, even though we understand no firm promises have been made.  We hope that the revision has  addressed your concerns.  The rest of this document addresses point-by-point the referee reports.
+
+\printbibliography
+
+\end{refsection}
+
+\pagebreak
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%  RESPONSE TO REFEREE #1
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{refsection}
+
+\rhead{Response to R1}
+\lhead{}
+
+
+\section*{Referee \#1}
+
+Dear referee,
+
+Thank you for reading our paper and providing your feedback.  
+
+Before delving into our point-by-point response to your letter, we wanted to summarize some of the major changes to the draft, some made in response to your suggestions and others made in response to the editor and other referees.
+
+First, we have improved considerably on the identification. We attempted to leverage Right-To-Work laws, as suggested by the editor, but Appendix \ref{sec-app-RTW} shows that the change in union density after a RTW law is passed, while in the expected direction, is not strong enough to yield a credible IV. Instead, we build a new instrumental variables strategy based on the take-up of the union recognition mechanisms protected under the Wagner Act and enforced in war industries by the National War Labor Board.  One nice feature of this analysis is that our outcome variables of state-level inequality measures are at the \textit{annual} level, and thus we are not limited to looking at decadal Census years.  Indeed we find that unions explain the large share of the dramatic decline in inequality from the mid-1930s until the mid- to late-1940s.  This analysis is summarized in Section \ref{sec-iv} and described in greater detail in a new Appendix \ref{sec-app-iv}.
+
+	Second, we have added labor share of net income as an outcome variable in all our aggregate regressions (time-series, state-year panel, and instrumental variables). To implement this, we have also constructed a new measure of labor share at the state-year level from BEA sources. The details of its construction are in a new Appendix \ref{sec-app-laborshare}.  
+
+Third, we have added new results using the reweighting methodology of \citet{dinardofortinlemieux}, and these supersede our previous RIF results.  We have also implemented the recent extension to DFL proposed by \citet{fll} that allows for spillovers onto non-union workers, and find evidence of spillovers throughout our sample period.  This analysis is summarized in Section \ref{sec-dfl} and more detail is provided in a new Appendix \ref{sec-app-dfl}.  
+
+Fourth, we have provided substantially more analysis that compares our \textit{household} union concept to the more standard individual union concept.  We reference this new analysis throughout the text and show a variety of results that show that whenever we can compare trends (e.g., in selection into unions or the union premium) measured at the household- versus the individual-level, they look very similar.
+
+Finally, we have substantially shortened the material in the original draft (much of the history of the Gallup poll is now relegated to Appendix \ref{sec-app-gallup}).  While the paper has grown in length somewhat since the original version, it is  mostly due to adding the IV and DFL sections.
+
+In what follows, we italicize your original comments and respond in regular font.
+
+Thank you again for your many suggestions on how to improve our paper.
+
+Sincerely, Hank, Dan, Ilyana and Suresh
+
+\newpage \clearpage
+
+
+
+\textit{In "Unions and Inequality Over the Twentieth Century: New Evidence from Survey Data," Farber, Herbst, Kuziemko, and Naidu uncover a wealth of new data and new findings about unions over the last 100 years. They draw microdata from a variety of new sources, most notably---and carefully constructed---are the Gallup surveys from 1937 to 1985. There are three main findings. First, when unions are strongest (or at least most dense), their membership is least skilled (and most non-white). Second, the union household premium has been remarkably steady at around 15 to 20 log points for the last 80 years. Third, more union density correlates with lower inequality in this new series, measured either with the time series, the state-year panel, or via Firpo et al (2009) distributional regressions.}
+
+
+\textit{The authors describe four contributions (the data itself and then three findings). I have a bigger comment about each and then a few smaller points below.}
+
+
+\textit{Bigger Comments}
+
+\textit{- First, the new source of union data is awesome. The clever-ness of converting old political polling data into a series of unionization rates is great, but would have been wasted without the obvious care that went into constructing the final data, including the work with weighting, question standardization, etc. Pushing unionization data back in time with a state panel would have been impressive enough, but getting microdata as well is beyond.}
+
+\textbf{Authors' reply:} Thank you so much for the kind words.
+
+\textit{- Second, selection into unions. The authors estimate the selection into unions over time via equation 1. Due to data limitations, the outcomes are household union status but the Xs are for the respondent. Given the low rates of interracial marriage, the regressions behind Figure 4 are probably fine. But I would like to see a bit more behind the assortative mating argument for education (and age); to the extent that assortative mating is changing over the last 100 years, the error with which years of education is measured is changing (potentially compounded by Gallup reaching more women over time or changes in the question about heads or self and union status). If there is a way to construct a respondent level outcome, at least for some of the sample, that would be reassuring as well.} 
+
+\textbf{Authors' reply:} Thank you for pushing us to do more to confirm that our trends over time are in fact about changes in union membership \textit{per se} and not about changes in marriage patterns.   We have now added an entire Appendix section (Appendix \ref{sec-app-wgts-HH}) largely dedicated to this endeavor (as well as showing robustness to weights).
+
+We take two approaches in responding to your concern.  First, whenever possible, we reproduce our key results at the individual level, and compare them to those at the household level.  For example, Appendix Figure \ref{fig-ind-hh-density} compares household and individual measures of union density for the ANES and the CPS (where it is possible to calculate both).  Appendix Figure \ref{fig-yrs-ed-select-hh-ind} uses CPS data to show that the relative rise in education among union members since the 1970s is very similar at the household (which potentially has the issues of assortative mating you note) and the individual level.  Appendix Figure \ref{fig-wageprem-all-ind} shows this comparison between union individual and family premia each year it is possible for us to estimate both.  
+
+Our second approach to your concerns about changes in assortative mating affecting our household-level selection estimates is to show all key selection results \textit{for men only}.  Given that men were far more likely to be in unions than women during most of our sample period, this analysis ensures that the person answering the survey and the union member himself are very likely one and the same.  As you can see in Appendix Figure \ref{fig-yrs-ed-select-men}, the same $U$-shape in terms of selection by education emerges when we drop female respondents.
+
+We hope we have allayed your concerns about the results, especially the selection results, being biased by the household measure, but we are of course happy to do more.
+
+
+\textit{- More, while the pattern in Figure 3 is striking, I'm held up on interpretation. Do unions get stronger (denser) in the mid-century and pull in more lower-education workers (and then that reduces inequality in the Great Compression)? That seems to be the authors preferred interpretation (they discuss the marginal union member being relative low-skilled on page 19). But I'm not sure Table 1 (using changes in national union density) rather than something more like the last section (unions on inequality with some attempts at causality) nails that story.}
+
+\textbf{Authors' reply:} Thank you for this comment.  We should note that we have in fact eliminated the original Table 1 you describe, as the editor wanted us to drop the entire section that contained Table 1.
+
+	We agree that the last section, encompassing the selection and compression effects of mid-century unionization using Dinardo-Fortin-Lemieux style reweighting, captures the story much better, and our Figure \ref{fig:dflhist_spill}
+	shows the effect of strong unions (with and without spillovers) on the lower end of the distribution.
+
+% .do files: Gallup_digitization/code/cps_indiv_hh_st.do and anes_indiv_hh_st.do
+
+%To do: Given that he doesn't like Table 1 (and LK asks us to cut it) perhaps cutting it and emphasizing this claim less is enough? 
+
+%To do: In fact, we *do* have the RTW stuff we could show him/her -- that as RTW comes into a state, union members become more skilled.  That would sound like exactly what he wants, no?  Even if not in the paper, just include in the letter for him.
+
+%Update: We tried the RTW stuff, but even after changes to the state-year data the output didn't change much.
+
+% .do file: code/RTW_event_study_vf.do
+
+\textit{- Third, the stable premia. Why is the union premium so stable over the last 90 years? The authors are puzzled by this and so am I, and it is a great flag for future research, as they note. But one question that I think the authors are best suited to address here. What is going on with the ANES union premium? One could imagine the authors starting just with the ANES data (easier to get than Gallup) drawing just the red squares on Figure 5 and concluding that there were big swings in the union premium from the 1950s to the 1980s. I know the ANES samples are smaller and so it could just be noise, but more unpacking of the seeming contradiction between ANES and Gallup and CPS would be great. ANES extends beyond the 1990s and that would be a cheap way to get more overlap between the political survey based measures of the union premium and the CPS based measure. Does ANES continue to swing wildly even the last 20 years when we think the union premium has been pretty stable as measured in CPS?}
+
+\textbf{Authors' reply:}  We of course had wanted to extend ANES further, but beginning in 1996 the ANES no longer includes some of the employment variables that we use in our preferred specification (in particular, whether the household head is employed).  So it would be very hard to further analyze why the ANES differs from other data sources in 1996 and beyond given that the specifications would be slightly different.   Moreover, data on the occupation and industry of the respondent is missing in 2002, 2008, 2012 so in these years we cannot compute the union premium with occupation controls, or exclude people in the manufacturing/public sector (as we do in some robustness checks).  We are thus left with the rather unsatisfying explanation that the ANES likely differs from some of the other estimates due to its smaller sample size.
+
+In response to your highlighting the stable premium, we did push further, however, in investigating heterogeneity over time and place (instead of just over individual attributes as we had in the original submission) in a new Appendix Table \ref{tab-cycle}.  This table shows little correlation of the premium by the national unemployment rate, the national inflation rate or the national union density (cols 2-5), so in that sense it corroborates our ``stable premiums over time'' claim, though obviously our standard errors do not allow us to reject some small effects.   We return to this table when we respond to your question about regional variation later in this letter.
+
+
+\textit{- Fourth, the effects of unions on inequality. There is a paper from Collins and Niemesh (forthcoming at Economic History Review) looking at the effects of unions on inequality during the Great Compression. For reasons I don't understand, the paper is on neither of their websites but careful Google-ing yields the paper in the cache of the EHA website. I understand the authors not citing it given that it barely exists online, but I actually think their results speak nicely with what is going on here. I also think their identification strategy could be credibly deployed in some way here. That paper makes use of a "union Bartik" (changes in industries at the region level x national unionization rates by industry) though without a first stage. This paper has the data for the first stage and the instrument could be constructed over the entire sample period. They find large effects, suggesting that growing strength of unions in this period drove a good deal of the Great Compression. I read the state panel results for 1940-1960 in Table 4 as the most similar to this approach (Collins and Niemesh are at the SEA level, so sub-state). But I think they also find different effects of unions on different measures of inequality that seem plausible (eg, unions don't do much to top percent income). I could have missed it in the appendix, but I think the 50/10 and the 90/50 are important inequality measures to think about in the context of Table 4. I'm sympathetic to the multiple identification strategies the authors use in section 7, but I think a union Bartik shock would add nicely to that.}
+
+\textbf{Authors' reply:}  We view an industry-level Bartik a bit differently and worry it is not suitable variation.  The ideal instrument would ``shock'' union density \textit{without} changing industry composition, as industry composition could plausibly have its own, independent effect on the wage or income distribution.
+
+We argue that we have found such an instrument using \textit{policy}-driven shocks---the legalization of union organizing via the 1935 Wagner Act (which disproportionately helped some states that had past, though largely unsuccessful, histories of organizing) and defense contracts during World War II (which required union-friendly policies by any firms getting these contracts).  A summary of this analysis appears in a new Section \ref{sec-iv} and more detail in a new Appendix \ref{sec-app-iv}.  We take pains to show that these policy shocks had only \textit{temporary} effects on manufacturing employment (as you can see in Appendix Figure \ref{fig-manuf-LHS} any effect disappears by 1946) yet permanent effects on union density.  
+
+Finally, thank you for the suggestion to add the 90/50 and 10/50 to our main regressions tables, which we have done (for men only since female LF participation changes considerably over our sample period).
+
+\vspace{.5cm}
+
+\textit{Smaller Points}
+
+
+
+\textit{- On page 2, I found the "suppose we find"... but we actually find... construct a bit more confusing than part of an introduction should be.}
+
+\textbf{Authors' reply:} That entire paragraph has been rewritten and the sentence cut.  It was indeed confusing.
+
+\textit{- Page 8: "By 1940, about eight million people had encountered Gallup?s tri-weekly polling report." What does encountered mean here? Been surveyed? Seen the reports?}
+
+\textbf{Authors' reply:}  Note that on the advice of another referee, we have moved much of the background on Gallup into an appendix (a new Appendix \ref{sec-app-gallup}).  
+
+There, we have clarified the original unclear ``encountered'' point to read: ``\Paste{america-speaks}''
+
+\textit{- The description of the Gallup polls in Appendix C makes clear that Gallup surveys conducted in person. But is that true throughout the sample? By 1985, I have to imagine that telephones were widespread enough (and in person enumeration expensive enough) that surveys were done by phone (they certainly are today right?).} 
+
+\textbf{Authors' reply:} 
+
+Again, in our new Appendix \ref{sec-app-gallup}, we clarify that Gallup in fact did face-to-face interviews until the mid-1980s, when they indeed switched to telephone.  Given that we only use the Gallup date through the early 1980s (and at that point we switch to CPS) the vast, vast majority of our Gallup data come from face-to-face interviews.  
+
+\textit{-More, Figure 2 suggests very small Gallup surveys post-1980 when the costs of surveying might be falling? I was confused by that.}
+
+\textbf{Authors' reply:} Gallup surveys do not always include the union question.  In the 1980s it was asked less frequently, thus the fall in sample size.  We clarify this point now in the notes to Figure \ref{fig-timeseries_all} and apologize for the confusion.
+
+\textit{- Page 19: an extra "over" and a word missing from "We now use the survey microdata to estimate union premia, both on average and by skill level over over nine-decade period."}
+
+\textbf{Authors' reply:} Thank you for catching this typo.  In the course of shortening the paper, we have in fact cut that entire paragraph, which was a bit repetitive.
+
+\textit{- Heterogeneity of the union premium by region (south or not south) would be interesting as well given the very different legal frameworks unions (especially public sector) operate in.}
+
+\textbf{Authors' reply:} Thank you for this suggestion, which produced some very interesting results that we report in cols. 6-8 of Appendix Table \ref{tab-cycle}.
+
+The union premium is approximately five log points larger in the South (col. 6). We then show that this effect is entirely driven by the premium being larger in states that were ever right-to-work during our sample period (cols. 6).  Moreover, even while simultaneously controlling for $South \times Union$ and \textit{Ever right to work}$\times Union$, there is an increase in the union premium \textit{among ever right to work states after they pass RTW laws}.  
+
+In sum, this analysis shows that the premium is actually higher in places where unions are weaker, which on face is surprising, but is completely consistent with the literature that argues that strong unions (either via political economy effects of labor-market spillovers) raise working-class wages in the non-organized sector as well.  
+
+
+% .do file: code/cyclicality_union_unemp_st.do
+
+\textit{- The authors note in footnote 3 the imprecise dating of the Great Compression period. I found that a bit confusing throughout, as Great Compression usually conjures Goldin and Margo for me. Referring to the period from 1940 to 1970 as just mid-century might be cleanest?}
+
+\textbf{Authors' reply:} Thanks a lot for this suggestion.  We were really struggling over the wording and very much like the ``mid-century'' terminology.  We have dropped all references to ``Great Compression'' except for one where it is made by another author we are quoting.
+
+\textit{- I have a hard time gauging how plausible the no-spillovers claim used to identify the Firpo et al style regressions in Section 7.1 is. It seems quite unlikely (given all we know about unions and lobbying and politics). Is there any way to predict the magnitude or direction of the bias if the no-spillovers assumption is violated?}
+
+\textbf{Authors' reply:} Thanks a lot for this comment. Instead of the Firpo et al. RIF regressions, we now use DFL-style distributional decompositions. This allows us to explicitly model spilloevers following the methodology in Fortin, Lloyd, and Lemieux (2019), and we find a significant role for union spillovers in explaining hh income inequality. Further, our more "ecological" regressions imply consistently larger effects of density than the individual regressions (even incorporating spillovers), likely due to the effects of unions on the capital share and top incomes (which would be missed in our household income measure).
+
+\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
+
+Thank you again for your careful and thoughtful read of our paper.  We are of course happy to revisit the above points or any new suggestions or concerns you raise.
+
+
+\printbibliography
+
+\end{refsection}
+
+
+\pagebreak
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%  RESPONSE TO REFEREE #2
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{refsection}
+
+
+
+\rhead{Response to R2}
+\lhead{}
+
+
+\section*{Referee \#2}
+
+Dear referee,
+
+Thank you for reading our paper and providing your feedback.  
+
+Before delving into our point-by-point response to your letter, we wanted to summarize some of the major changes to the draft, some made in response to your suggestions and others made in response to the editor and other referees.
+
+First, we have improved considerably on the identification. We attempted to leverage Right-To-Work laws, as suggested by the editor, but Appendix \ref{sec-app-RTW} shows that the change in union density after a RTW law is passed, while in the expected direction, is not strong enough to yield a credible IV. Instead, we build a new instrumental variables strategy based on the take-up of the union recognition mechanisms protected under the Wagner Act and enforced in war industries by the National War Labor Board.  One nice feature of this analysis is that our outcome variables of state-level inequality measures are at the \textit{annual} level, and thus we are not limited to looking at decadal Census years.  Indeed we find that unions explain the large share of the dramatic decline in inequality from the mid-1930s until the mid- to late-1940s.  This analysis is summarized in Section \ref{sec-iv} and described in greater detail in a new Appendix \ref{sec-app-iv}.
+
+
+Second, we have also constructed a new measure of labor share at the state-year level from BEA sources, which we now examine in all our aggregate regressions (time-series, state-year panel, and instrumental variables). The details of its construction are in a new Appendix \ref{sec-app-laborshare}.  
+
+
+Third, we have added new results using the reweighting methodology of \citet{dinardofortinlemieux}, and these supersede our previous RIF results.  We have also implemented the recent extension to DFL proposed by \citet{fll} that allows for spillovers onto non-union workers, and find evidence of spillovers throughout our sample period.  This analysis is summarized in Section \ref{sec-dfl} and more detail is provided in a new Appendix \ref{sec-app-dfl}.  
+
+Fourth, we have provided substantially more analysis that compares our \textit{household} union concept to the more standard individual union concept.  We reference this new analysis throughout the text and show in a new Appendix \ref{sec-app-wgts-HH} a variety of results that show that whenever we can compare trends (e.g., in selection into unions or the union premium) measured at the household- versus the individual-level, they look very similar.
+
+Finally, we have substantially shortened the material in the original draft (much of the history of the Gallup poll is now relegated to Appendix \ref{sec-app-gallup}).  While the paper has grown in length somewhat since the original version, it is  mostly due to adding the IV and DFL sections.
+
+In what follows, we italicize your original comments and respond in regular font.  Thank you again for your many suggestions on how to improve our paper.
+
+Sincerely, Hank, Dan, Ilyana and Suresh
+
+\newpage \clearpage
+
+
+\textit{Comments on ``Unions and Inequality Over the 20th Century", Farber et al}
+
+\textit{This paper presents a variety of analyses linking the unionization rate (at the national or subnational level) to various measures of wage or income in- equality. The main approach is what could be called ``ecological", rather than the ``micro-based" approach taken in studies such as Freeman (1993), Dinardo Fortin Lemieux (1996), or Card (2001). Essentially, the authors relate measures of inequality in some labor market directly to the unionization rate in that market, controlling for some other factors. The alternative, micro-level approach is to develop a statistical model of how union wage setting affects wage outcomes relative to the nonunion sector (in a given market at a point in time) and then conduct a counterfactual analysis assuming that all the currently unionized workers were paid ``as if" they were non-union. The micro approach has a solid intellectual pedigree dating back to Lewis (1963), and as shown in DFL can be implemented nonparametrically by simple reweighting techniques. The problem with this approach is that it gives pretty small estimates of the effect of changes in unionization. Indeed, for female workers it often suggests that unions have no effect, or even (slightly) raise inequality.}
+
+\textit{As was noted in the 1960s by pretty serious labor economists who were forced to think about union effects using aggregated (sector level) data, the problem with the ecological approach is that often shows effects that are too large to be believable (and can be quite unstable). These authors have essentially turned this bug into a feature. (They also reproduce some of the instability, as can be seen by the enormous gap between the estimates in Table 2 and Table 3). In fact an earlier paper by Jaumette and Osorio showed that in cross-country regressions, declines in unionisation had a lot of explanatory power, potentially explaining around 40\% of cross-country differences in inequality trends over recent decades. People who liked the J-O paper will like this one, and I could imagine a minor industry of ecological regressions for other countries.}
+
+\textbf{Author's reply:}: We agree there are important limitations of ecological regressions. Nonetheless, it seems clear from the literature (e.g. most recently Fortin, Lemieux and Lloyd 2019) that unions, particularly at high levels of density, have effects on non-union workers and firms in the same labor market, both via market mechanisms and via non-market mechanisms like norms and politics. Further, for effects of unions on inequality, accounting for effects on capital share and top incomes, which would be missed by the traditional ``micro" approach, is likely to be important. Our aggregate units are also not national product markets (i.e. manufacturing industries) as in some of the early work, but, because we have geographic identifiers, are closer to labor markets (and political jurisdictions). We also think the new IV approach disciplines our state-year analysis: we have isolated cross-sectional variation in union density that arguably avoids many of the problems with the ecological approach. Finally, the stability our estimates does not seem to be an issue, and we show robustness to a large number of specification choices (indeed the union density variable appears at least as stable as the coefficient on the Katz-Murphy skill-share variable).
+
+\textit{A novel part of this paper is the discovery of the Gallop Poll data, which has household income and union status information. This seems interesting but I was disappointed by the way the data is presented. Section 3 has many pages of stuff about the (perhaps interesting) history of how Gallop did polling before we get to a short paragraph at the start of Section 4 explaining what the questions actually were in the Gallop survey. It seems like this is purposeful obfuscation because in reality the questions vary from year to year and typically asks if anyone in the household is member of a labor union---a concept that needs to be explained and validated. It would be really so nice to see a careful analysis that tries to compare in a series of years that overlap what happens when you use modern concepts and the Gallop concept. That should be ``Appendix 1" in this reviewer's opinion.}
+
+	\textbf{Author's reply:} We have reorganized the paper considerably and now devote Appendix \ref{sec-app-gallup} to detailed discussion of the Gallup data, while keeping the focus on the union question in the main text.  We have expanded the discussion of the differences between the household and individual concepts we use, paying close attention to issues of household labor supply (e.g. number of workers in household). In Footnote 23 we acknowledge that household union status may have within-household spillovers that are missed by focusing on individual members: union households may have higher earning spouses for assortative mating reasons, but increased income and improved benefits (e.g. health care) from one hh union member could reduce incentives for others to work. We write: "Union households are more likely to have at least one person employed (likely the union member himself), which explains why controlling for household employment has a (slight) negative effect on the estimated union household premia. However, living with a union member is a \textit{negative} predictor of own employment (results available upon request), which likely accounts for the fact that controlling for total number of workers in the household has only a small effect on the estimated premium."
+	
+	In the Appendix, we also devote considerable space to showing that our measures tracks the CPS individual series quite closely, and further use both the ANES and the CPS to reproduce our main microdata analyses (selection and premium) at both the individual and household level, and we show that the basic patterns remain the same across both measures.
+
+%To do: Expand discussion of concepts in text.
+
+%Note: Ugh -- ``purposeful obfuscation'' give me a break.    We talk extensively about how Gallup has a household measure!
+
+%To do: Cut part of Section 3?  Maybe mention earlier (in the intro?) how we have a household concept?  I think we used to do that in earlier drafts.
+
+%To do: Elevate analysis that we had cut (described in fn. 34 but not shown).  We used to have a lot more on potential biases of our ``household'' measure.  Let's try to do a lot here, given that we might not be able to make him/her happy on their second point below (trashing Section 7).
+
+
+\textit{To me the most disappointing part of the paper is Section 7. This is really the best such an accomplished set of economists can do? It seems to me that at a minimum the authors should construct, for each year, the more traditional micro effect of unions. Just use the data for a given year and reweight to get the counterfactual inequality measure assuming all the union people were paid like nonunion, then take the difference between actual and counterfactual and plot that series. They can then regress the micro effect measure on the overall unionization rate - the coffecient here tells us how a change in unionization will affect the inequality measure through the traditional wage setting channel. With that benchmark in hand they can then ask how much bigger is the ecological regression estimate, and start to get serious about the extra causal channels they have in mind.}
+
+% ADDED BY DAN:
+
+	\textbf{Author's reply:} We have now constructed, by year, the traditional micro effect of unions on inequality, using the reweighting procedures from \cite{dinardofortinlemieux} and \cite{ffl_handbook}. Precisely, in each year we re-weight the non-union population so that its distribution of observables matches that of the full population. This weighted non-union sample approximates the counterfactual income distribution of an entirely de-unionized general population. We compare this counterfactual distribution with the true income distribution from the unweighted sample and calculate differences in inequality statistics between the two. Panel B of Figure \ref{fig:dflhist_spill_levels} presents kernel density plots comparing true and counterfactual income distributions for selected years, while Panel A  plots annual differences in Gini coefficient. In the main text we show differences in log income between the densities for three representative years in which we have continuous data in Figure \ref{fig:dflhist_spill} for ease of visualization.
+
+Next, we examine the contribution of unions to changes in inequality, effectively extending the decomposition performed by \cite{dinardofortinlemieux} and others into the earlier era. We begin by taking differences in the micro effect estimates described above across two years. This difference provides an estimate of the total change in inequality attributable to unions over that time period. We then further decompose this total union effect into two components: the component attributable to changes in union membership over time (the ``unionization component'') and the component attributable to changes in how union members were paid over time (the ``union wage component''). Decomposition results for several selected time periods are presented in Table \ref{tab:decomp_gini} and further results in Appendix Table \ref{tab:dfl_compare}.
+
+In the time-series analysis, we follow the referee's suggestion and regress these ``yearly union effects'' against annual aggregate union density. Tables \ref{tab:beta_gini} report estimates from these regressions with and without time controls and skill shares. The tables also include specifications that, instead of using the difference in inequality as the dependent variable, put inequality in the reweighted data on the right-hand side (effectively allowing the coefficient to be different from 1).  These coefficients show that the ``micro" effect of a one percentage point increase in union density on the Gini is roughly -0.05 ( on  a 0-1 scale), but there is a large potential role for spillovers, with the macro effect being -0.3 union density.
+
+While the aggregate vs micro results are suggestive of spillovers, we also extend the reweighting analysis to allow for union spillovers, following methods recently developed by \cite{fll}. First, we estimate spillover effects in a distributional regression framework using aggregate union density at the labor market level (state-year in the PSID, and industry-state-year in the CPS). Specifically, we model the likelihood of falling into some income bin $k$, for each $k$. This exercise is ideally done with continuous data, and so we present results for two representative years for which we have both continuous income data and national geographical representation (1968 and 2014). We find a significant role for spillovers, particularly in the 1968 PSID.
+
+%in the set of a given survey's income response categories.\footnote{In our setting, we must rely on the existing bin structure given by survey data. Our reliance on existing survey income bins also prevents any pooling across surveys with different bin structures, so we estimate spillover effects separately by bin structure.} We then generate predicted probabilities for each individual in the end year using the state-level unionization rate in the base year.
+
+On the identification front, we believe we have improved enormously, and we thank the referee for pushing us on this point. We now have a novel identification strategy that uses the cross-state variation in union density induced by the Wagner Act and the National War Labor Board, proxying each with new members added via NLRB elections and recognition strikes, for the former, and state-specific war spending in the latter, and show that these instruments generate increases in union density \textit{only} in the relevant windows between 1935 and 1947. We further show that these differential union density increases are in turn associated with large and statistically significant effects on the top ten share of income and the labor share (As a byproduct we believe is useful for future work we have constructed a new measure of labor share of net income at the state-year level back to 1929.) By using both annual frequency data in union density and inequality outcomes, as well as a large set of possible confounding variables, we can rule out a number of alternate stories such as manufacturing employment or other policies like minimum wages or taxes.
+
+We think the additional causal channels are complex and we leave detailed examination of them to future work. It is clear, however, that the effects of union density in the critical juncture of 1935-1947 are quite large, and beyond what could be accounted for by the effects of unions on the earnings of union members alone. The fact that top incomes and labor share responds suggests that redistribution from capital to labor is one thing that is happening (either via formal collective bargaining or via political pressure) and this would be missed by the focus on labor earnings inequality alone.
+
+
+
+\printbibliography
+
+
+
+\end{refsection}
+
+\pagebreak
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%  RESPONSE TO REFEREE #3
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{refsection}
+
+
+\rhead{Response to R3}
+\lhead{}
+
+
+\section*{Referee \#3}
+
+Dear referee,
+
+Thank you for reading our paper and providing your feedback.  
+
+
+
+Before delving into our point-by-point response to your letter, we wanted to summarize some of the major changes to the draft, some made in response to your suggestions and others made in response to the editor and other referees.
+
+First, we have improved considerably on the identification. We attempted to leverage Right-To-Work laws, as suggested by the editor, but Appendix \ref{sec-app-RTW} shows that the change in union density after a RTW law is passed, while in the expected direction, is not strong enough to yield a credible IV. Instead, we build a new instrumental variables strategy based on the take-up of the union recognition mechanisms protected under the Wagner Act and enforced in war industries by the National War Labor Board.  One nice feature of this analysis is that our outcome variables of state-level inequality measures are at the \textit{annual} level, and thus we are not limited to looking at decadal Census years.  Indeed we find that unions explain the large share of the dramatic decline in inequality from the mid-1930s until the mid- to late-1940s.  This analysis is summarized in Section \ref{sec-iv} and described in greater detail in a new Appendix \ref{sec-app-iv}.
+
+
+Second, we have also constructed a new measure of labor share at the state-year level from BEA sources, which we now examine in all our aggregate regressions (time-series, state-year panel, and instrumental variables). The details of its construction are in a new Appendix \ref{sec-app-laborshare}.  
+
+
+Third, we have added new results using the reweighting methodology of \citet{dinardofortinlemieux}, and these supersede our previous RIF results.  We have also implemented the recent extension to DFL proposed by \citet{fll} that allow for spillovers onto non-union workers, and find evidence of spillovers throughout our sample period.  This analysis is summarized in Section \ref{sec-dfl} and more detail is provided in a new Appendix \ref{sec-app-dfl}.  
+
+Fourth, we have provided substantially more analysis that compares our \textit{household} union concept to the more standard individual union concept.  We reference this new analysis throughout the text and show in a new Appendix \ref{sec-app-wgts-HH} a variety of results that show that whenever we can compare trends (e.g., in selection into unions or the union premium) measured at the household- versus the individual-level, they look very similar.
+
+Finally, we have substantially shortened the material in the original draft (much of the history of the Gallup poll is now relegated to Appendix \ref{sec-app-gallup}).  While the paper has grown in length somewhat since the original version, it is  mostly due to adding the IV and DFL sections.
+
+In what follows, we italicize your original comments and respond in regular font.  Thank you again for your many suggestions on how to improve our paper.
+
+Sincerely,  Hank, Dan, Ilyana and Suresh
+
+\newpage \clearpage
+
+\textit{Report on Unions and Inequality over the Twentieth Century: New Evidence from Survey Data}
+
+\textit{The paper develops evidence on union membership, selection, and the wage premium from the 1930s to the present by combining microdata from old surveys (e.g., Gallup and ANES) with the modern CPS. The CPS microdata include information on union membership from 1973 onward, and so much of the paper's novelty lies in developing the historical evidence, combining it with modern evidence, and using that combination over a long period to assess the plausibility that unions played an important role in driving wage inequality trends. After describing the new data and some key facts that are consistent with unions reducing inequality, the paper develops time-series and state-by-year based evidence that changes in unionization are correlated with changes in inequality, conditional on other factors.}  
+
+\textit{The paper's main contributions spring from its synthesis of historical and modern data to improve our long-run perspective on the rise and fall of unions and the implications for wage inequality. This is a significant accomplishment and required great care and resourcefulness.  My suggestions and concerns are spelled out below.}
+
+\textit{Suggestions}
+
+\textit{1. I thought the paper took too long to get to its main points and most interesting evidence. The points about SBTC-based explanations for the rise and fall of unions are interesting, but they tend to distract from the paper's main thrust---the connection running from unions to inequality over the long run. Perhaps the discussion of the determinants of the rise and fall of unions could wait for discussion until the conclusion, which I think merits expansion.  Likewise I think section 4, which presents a new time series on union membership, is interesting and maybe valuable, but it slows down the paper. Perhaps it could be presented briefly in section 7.2 as an input to the time-series analysis. Section 5.2 didn't seem to add much value relative to the space it takes up.}
+
+\textbf{Authors' reply:} Thank you for this feedback, which echos the views of the editor. We have dropped the material in Section 5.2.  We have in fact combined the old Sections 2 and 3 into a much shorter section.  We did keep the new time series as the first result in the paper (instead of putting it in the inequality section of the paper, as you suggested) because we felt we had to validate our new union measure at least a bit before moving on to results.  But if you and the editor feel strongly, we are open to further rearranging.
+
+We have dropped almost all of the discussion of SBTC-based explanations for changes in union density---both you and the editor felt it didn't add much to the paper.  Doing so allows us to get to the main results much more quickly.
+
+Again, thank you for this feedback, which has made the paper much more readable.  
+
+\textit{2. The introduction breaks the results into two main sets. The first set of results pertains to selection into unions and the union wage premium. For the post-1973 period, when data are readily available, it is clear that the union wage premium bounced around between 10 and 20 log points and that selection into unions changed from negative to neutral or slightly positive. Most of the paper's value added is in revealing the trends for pre-1973 period. Having microdata for this period is useful, but the authors could do more to engage the literature on this period's union wage premium and the implications for inequality. Surely Lewis and others had opinions regarding the size of the union wage premium, selection into unions, etc., even without microdata. How does the new analysis change our perception of the pre-1973 period? Why does it matter?}
+
+\textbf{Authors' reply:}  The original version did cite and discuss \citet{lewis1986union}, but in response to your comment we have enriched our engagement with the older literature (we wait until the conclusion to do so, as we think it is a useful place to sum up what we have found and what it means for these older debates).   
+
+The pre-neoclassical analysis of unions was focused on issues much broader than the union wage premium and selection, and we think our analysis sheds light on these debates, perhaps beginning with Arthur Ross \citep{ross1948trade} and John Dunlop \citep{dunlop1944wage} in the 1940s about what unions maximize. Ross argued that unions respond to political forces and are political actors, while Dunlop argued more narrowly that unions were interested in maximizing the wagebill of their members. Which of these models best fits the patterns of constant premia co-existing with co-movements of selection and density? We further think our overall package of results suggests that union density, particularly at the mid-century peak, affect inequality in ways beyond their effects on individual union members. 
+
+%To do: I like this comment, though don't we already say that Lewis thought selection was positive so we *are* engaging that older literature?  We could probably do more. In his 1986 work summarizing the union premium evidence to date, Lewis wrote that ``I have a strong prior that selection is positive", and this seems to be a common feature of the early literature. But this was referring to selection on unobservable ability, not observables, and the changing pattern of selection into unions over such a long period we believe is a new fact established by out paper. 
+
+\textit{3. The second set of results---regressions of inequality measures on union density and other variables---is the more interesting contribution, I think.  It dovetails nicely with the well-known Katz-Murphy and Goldin-Katz style analysis of inequality trends. There is no experimental design here, and therefore no strong causal inference, as the authors acknowledge. I am persuaded, but it isn't exactly a slam dunk, and I have no good candidates for instruments.}  
+
+
+\textbf{Authors' reply:} Thank you for this reaction.  The editor pushed us to develop some ideas for more plausibly exogenous variation, and we have dedicated much of the revision to this task.  The most obvious candidate is right-to-work (RTW) laws, which we tried.  As we detail in a new Appendix \ref{sec-app-RTW}, while the coefficients on RTW dummies on union density in an event-study regression are the expected, negative sign, they are too weak to serve as instruments.
+
+We then turned to the 1930s and 1940s, the period that saw the largest gains for unions and the largest declines in inequality.  Goldin-Katz and others have suggested that the declines in inequality in this period cannot be explained by traditional supply-and-demand factors, and suggest a role for unions.  We thus develop two policy shocks at the state-year level to try to isolate the effect of rising union density from other factors.  This exercise is summarized in a new Section \ref{sec-iv} and detailed in a new Appendix \ref{sec-app-iv}.
+
+Very briefly, the first policy shock IV is the legalization of union organizing itself in 1935 via the Wagner Act (and the 5-4 Supreme Court decision upholding the law in 1937).  We argue that this legalization had differential effects on states that already had some history of (largely unsuccessful) organizing, and thus provides differential effects across states.  The second policy shock is defense spending from 1940-1945.  As we discuss in the paper, Roosevelt carried out this massive industrial mobilization effort under terms favorable to unions.  We show in a first-stage analysis that states that received more defense contracts from the federal government saw larger increases in union density during this period.
+
+Do these positive shocks to union density correlate with declines in inequality?  We show that they do, and, important, \textit{only} during the treatment period.  Neither before the 1935 NLRB nor after the war ends do states with large values for our IVs see either $(a)$ large increases in density or $(b)$ declines in inequality.
+
+Far more detail is provided in Section \ref{sec-iv} and especially Appendix \ref{sec-app-iv}.  We hope you find this new material complimentary to the original OLS results.
+
+\textit{4. I'm not so sure the finding that union workers are relatively skilled today ``mimics'' the pre-WWII era when unions were small and their members relatively skilled? (p. 34 in conclusion). In figure 3, the relationship with education is negative in 1936, and no evidence is presented for earlier eras or other metrics of skill. It's plausible that prior to the CIO union members tended to have more trade skills (unmeasurable), but it's not clear to me that they had educational advantages on average.}
+
+\textbf{Authors' reply:} Thanks for pushing us to be more careful with our language.  You are indeed right that while Figure \ref{fig-educ-select} is roughly $U$-shaped, it is not a \textit{symmetric} $U$.  The very first sentence describing these results now notes that, as you highlight, the 1936 data point suggests negative selection, though less of it than in the 1950s and 1960s.  
+
+We have deleted the entire paragraph where the ``mimic'' sentence appeared.  
+
+\textit{Also, I wonder if a linear regression coefficient is really summarizing the relationship between education and union membership in the most useful way. It would be easy to imagine scenarios where the relationship between union membership and skill/education is inverse-U shaped, and of course there's the complication of private versus public sector unions. I'd just be more careful in characterizing that result and saying that the pre-war era resembles the modern era.}
+
+\textbf{Authors' reply:}  In addition to the main figure in the text proxying education with (linear) years of schooling, we also have Appendix Figures \ref{fig-hs-selection},  \ref{fig-coll-selection} and \ref{fig-logeduc-selection}
+showing that our basic $U$-shape in selection remains across variety of measures of education: respectively, HS degree, BA and log years schooling.  We further show that the trend in increasingly positive selection post-1960 remains even when excluding the public sector, manufacturing, or both (see Appendix Figure \ref{fig-edu-select-nopub-manuf}).
+
+Of course, the referee is completely right that this analysis may still miss other measures of ``skill'' which may have been important in the early period.  Unfortunately, we do not have other consistent measures across our sample period, so it is hard to push further (e.g., occupation categories vary both across and within data sets over time, so it's not feasible to create an occscore as another skill proxy).  We now highlight this point on p. \pageref{pg-skill}, as well as relate it to a conjecture made by Lewis: 
+
+\begin{quote}
+\Paste{skill}
+\end{quote}
+
+After describing our selection-on-education results, we return to the point about unobserved skill at the end of Section \ref{sec-select-educ}, again relating it to Lewis:
+\begin{quote}
+\Paste{skill-2}
+\end{quote}
+
+Your comment also made us realize that at times in the paper we had been (sloppily) referring to education as ``skill.''  This conflation is wrong for all sorts of reasons and we now take care to use ``education'' when we are referring to selection by years of schooling, given that formal education is but one dimension of ``skill.''
+
+
+\textit{5. I think the conclusion should be expanded and should probably be more nuanced about what the results show and what the limitations are. Given that the paper's main contribution is to shed light on the era of compression, why not return to the Goldin and Margo cornerstone here and work toward developing a new interpretation of the era?  As is, the conclusion falls flat because it doesn't make an effort to tie the paper back to the literature.}    
+
+\textbf{Authors' reply:} Thanks for this comment. We have broadened the scope of the conclusion to emphasize that our results shows that union density can account for a truly large share of the fall in inequality from the mid 1930s to the mid 1940s, independent of taxes, minimum wages, egalitarian norms, or manufacturing share, suggesting that economists reconsider unions as a tool for reducing inequality.  Further, given the unique crisis situation of the 1930s giving rise to the labor movement, we draw a speculative parallel to the current crisis and the rash of labor activism that has occured during the COVID era.
+
+%To do: IV discussion, norms not a big deal.
+
+\textit{Minor points}
+
+
+\textit{p. 9, Before 1950 Gallup polls attempted to sample voters in an ad hoc way. The paper notes that after 1950 Gallup used ``modern day'' sampling procedures.  Were these post-1950 surveys designed to sample the population or were they still geared to sample voters?} 
+
+\textbf{Authors' reply:} Thank you. We have searched secondary sources on the history of Gallup and find no evidence that they publicly announced that they no longer targeted voters.  As we document in Appendix \ref{sec-app-gallup}, George Gallup did state in the 1930s his intent to target voters, so we know that Gallup began with this stated intent.  But by 1960, the demographics of Gallup respondents no longer look like voters.  As we show in Appendix Table \ref{tab-compare-50-80}, by 1960 the black share of the South are nearly identical in Gallup and the Census, but in pre-Votings-Rights-Act 1960 only about twenty percent of Southern blacks were registered to vote and even fewer actually did.  So, it's clear by 1960 that, at least in the South, Gallup samples blacks far more than he would if he were still targeting voters.
+
+\textit{Are there not occupation or industry categories that can be used for weighting (race by region sounds like not much to work with)?} 
+
+
+\textbf{Authors' reply:}  Note that we use $race \times region$ weights only for years before 1942.  After 1942, Gallup adds an education question, so we have 16-cell weights from that point on (white v. non-white, South v non-South, and four education categories).  In terms of including occupation in our weights, Gallup almost always asks occupation, but the categories change so much from year to year that it's impossible to use them to construct weights across time.  
+
+But in response to your concerns, we now add other exhibits to the paper that show that even with our minimal reweighting, our Gallup and other historical survey data appear to capture the representative U.S. household.  In Appendix Figure \ref{fig-gdp-inc-hh} we compare average and household income from our historical survey sources to those from the Census and FRED, from 1940 to the early 1970s (at which point we use the familiar CPS).  In almost all years, the Gallup, Psych Corp and ANES data points fall very close to those from the Census and FRED.  Similarly, while we document that the Gallup data over-represent the well-to-do, especially before 1950, Appendix Figure \ref{fig-unemp} shows that it nonetheless interviewed many household where the head was unemployed and tracks the official unemployment numbers from the Historical Statistics of the US very closely during the Roosevelt Recession and beyond.
+
+Our historical survey data can reproduce patterns not only in the average and median of household income across time, but also the dispersion of household income across time. In Appendix Figure \ref{fig:surveygini} we show the Gini coefficient for income in our data produces the typical $U$-shape.  
+
+Finally, we note that different weighting methodology (including not weighting at all) simply does not have a huge effect on our key results (as we document in Appendix \ref{sec-app-wgts-HH} and in particular Appendix Figure \ref{fig-gallup-wgt} and Table \ref{tab-selection-wgts}).  As we discuss in footnote \ref{fn-sampling-bias} of the paper, we suspect the robustness to different weights in this early period is due to the sampling biases offsetting each other with respect to union membership (oversampling the well-to-do understates membership, but limited coverage of the union-hostile South overstates it).
+
+\textit{How wide are the income bins? In general, I think a lot of readers will be skeptical about the reliability of the Gallup data because it is clearly being used for purposes other than its original design. I am impressed by the authors' efforts to do their best with it and am pretty comfortable with using them, but a little more clarity in the main text's description might help.}
+
+The ANES in most years has 20-25 income bins, so each bin is very small and in general we get a very detailed look at the family income distribution.  Gallup's income bins vary quite a bit and as we note in the text, they do not update the bins in nominal terms during the high-inflation years of the 1970s, resulting in severe top-coding.  As noted in the text, we do not use a Gallup survey in the income analysis if it has more than thirty percent of respondents in its top-code.  
+
+
+%To do: Can we make arguments that even if you don't believe the time-series because of weighting issues, you'd have to have a lot of heterogeneity in the $\beta$s to get hugely biased estimates of the coefficients we care about?
+
+%to do: DFL graphs showing that despite wide bins we still see a U in our data.
+
+
+\textit{p. 13, The footnote about changing the BLS and Troy denominator to households is important to anyone whose trying to interpret Figure 2. I'd recommend putting that in the figure's notes. Most readers would assume the BLS denominator is employment or labor force.}       
+
+\textbf{Authors' reply:}  Great point. We have done exactly that.
+
+\textit{p. 19, It's jarring to read that the ``almost all evidence on the size of the union wage premium is from the CPS era.'' Obviously, there is an extended discussion of the union wage premium in Lewis (1963) and elsewhere in the ``old'' labor literature.}  
+
+\textbf{Authors' reply:} Thank you for pushing us to engage with this older literature, which we should have done in the first place.  Given how long the paper is, we only summarize it briefly in a footnote, but are happy to expand further if you think we should.
+In footnote \ref{fn-older-lit} we now write: 
+
+\begin{quote}
+\Paste{older-lit}
+\end{quote}
+
+\textit{p. 20, The nature of the 1936 Expenditure Survey will be a mystery to most readers, but it is your first data point in most figures and usually the only data point for the 1930s (also I think it's mislabeled in figure 7).  You should discuss sample selection/composition issues in the 1936 data. Maybe I just missed it.}   
+
+\textbf{Authors' reply:} Thank you for this comment.  We have now presented summary statistics (along with our other surveys) in Table \ref{tab-extra-sum-stats}, with a description in section \ref{sec-add-data}. We have also fixed the label.
+
+\textit{p. 21, I don't think it's quite right to say that the wage premium is ``constant.''  Looking at figure 5, there appear to be periods where it rises or falls, but the standard errors are always pretty large, so who knows.  Saying between 10 and 20 log points seems fair and still interesting.}
+
+\textbf{Authors' reply:}  We have softened the ``constant premium'' language throughout the paper and use instead the more accurate ``between ten and twenty log points.''
+
+\textit{One of the paper's main ``facts'' is the relative stability of the union wage premium over time.  But the point estimates do seem to move around a fair amount (figure 5), and the standard errors are pretty large.  It may be worthwhile to discuss the view that the union wage gap tends to be countercyclical (e.g., Lewis, 1963, 1986; Hirsch, 2004). In general, there is a large union wage gap literature that the authors push past very quickly in section 6.  Perhaps that's not the question they wish to engage (understandably), but if the ``steady wage premium'' is going to be featured as a key fact, then I think they have to at least acknowledge that others have suggested it is countercyclical.}
+
+\textbf{Authors' reply:}   Thank you for this suggestion, which we address in a new Appendix Table \ref{tab-cycle}.  We find little support for counter-cyclality over our long sample period.  In our premium income regression, interactions of our union variable with a variety of business-cycle variables are insignificant, including unemployment, inflation, and aggregate union density. There seems to be little significant heterogeneity by the usual macroeconomic suspects. We now write on p. \pageref{pg-cycle}: 
+
+\begin{quote}
+\Paste{cycle}
+\end{quote}
+
+
+\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
+
+Thank you again for your careful and thoughtful read of our paper, especially for the many places you pushed us to clarify when our writing was vague.  We believe the paper is much stronger as a result.
+
+\printbibliography
+
+
+\end{refsection}
+
+\pagebreak
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%  RESPONSE TO REFEREE #4
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{refsection}
+
+
+\rhead{Response to R4}
+\lhead{}
+
+
+\section*{Referee \#4}
+
+Dear referee,
+
+Thank you for reading our paper and providing your feedback.  
+
+
+
+Before delving into our point-by-point response to your letter, we wanted to summarize some of the major changes to the draft, some made in response to your suggestions and others made in response to the editor and other referees.
+
+First, we have improved considerably on the identification. We attempted to leverage Right-To-Work laws, as suggested by the editor, but Appendix \ref{sec-app-RTW} shows that the change in union density after a RTW law is passed, while in the expected direction, is not strong enough to yield a credible IV. Instead, we build a new instrumental variables strategy based on the take-up of the union recognition mechanisms protected under the Wagner Act and enforced in war industries by the National War Labor Board.  One nice feature of this analysis is that our outcome variables of state-level inequality measures are at the \textit{annual} level, and thus we are not limited to looking at decadal Census years.  Indeed we find that unions explain the large share of the dramatic decline in inequality from the mid-1930s until the mid- to late-1940s.  This analysis is summarized in Section \ref{sec-iv} and described in greater detail in a new Appendix \ref{sec-app-iv}.
+
+Second, we have also constructed a new measure of labor share at the state-year level from BEA sources, which we now examine in all our aggregate regressions (time-series, state-year panel, and instrumental variables). The details of its construction are in a new Appendix \ref{sec-app-laborshare}.  
+
+Third, we have added new results using the reweighting methodology of \citet{dinardofortinlemieux}, and these supersede our previous RIF results.  We have also implemented the recent extension to DFL proposed by \citet{fll} that allows for spillovers onto non-union workers, and find evidence of spillovers throughout our sample period.  This analysis is summarized in Section \ref{sec-dfl} and more detail is provided in a new Appendix \ref{sec-app-dfl}.  
+
+Fourth, we have provided substantially more analysis that compares our \textit{household} union concept to the more standard individual union concept.  We reference this new analysis throughout the text and show in a new Appendix \ref{sec-app-wgts-HH} a variety of results that show that whenever we can compare trends (e.g., in selection into unions or the union premium) measured at the household- versus the individual-level, they look very similar.
+
+Finally, we have substantially shortened the material in the original draft (much of the history of the Gallup poll is now relegated to Appendix \ref{sec-app-gallup}).  While the paper has grown in length somewhat since the original version, it is  mostly due to adding the IV and DFL sections.
+
+In what follows, we italicize your original comments and respond in regular font. Thank you again for your many suggestions on how to improve our paper.
+
+Sincerely, Hank, Dan, Ilyana and Suresh
+
+\newpage \clearpage
+
+
+\textit{Referee Report: Unions and Inequality Over the Twentieth Century: New Evidence from Survey Data}
+
+
+\textit{This paper provides an ambitious and novel analysis of union effects on household incomes and income dispersion spanning roughly an 80 year period. In the earliest years, the authors rely on Gallup household surveys that report whether a family member belongs to a union, coupled with information on education, race, gender, and household income. The Gallup surveys are complemented with analysis using the decennial censuses (from IPUMS), the CPS, and additional data sources detailed in the paper (Appendices B, C, and D).
+The principal findings of the paper are that (1) union household income premiums are relatively steady between 10-20 log points over nearly the entire period; (2) union selection on skill is inversely related to union density ? in the 1950s and 60s period of peak unionization mean skill of union members was lowest, with less negative selection into unions during earlier and later periods; and (3) multiple analyses showing that unionization reduces income inequality. In short, despite enormous changes over time in our economy?s structure, worker skill levels, and technology, higher levels of unionization have consistently led to higher wage levels and lower dispersion (and vice-versa).
+This is an ambitious and important paper that warrants publication in a top-level journal. Below I provide several suggestions that I believe can improve the paper.}
+
+\textit{1. For the first two-thirds of the last century, nearly all unionization was in the private sector. Currently, half of union membership is in the public sector. This matters a lot given that public sector workers, on average, are more highly paid, more educated, more tenured, and have lower wage compression than do private sector workers. The governance structure in the public sector is highly formalized, both in states with and without collective bargaining. By contrast, in the private sector governance structure differences between union firms (formalized governance) and nonunion firms (less formalized) are substantive. Several of the key correlations in the paper reflect a mix of changes in union composition and public composition. The authors are well aware of this and provide some analyses in which results from later (CPS) years are shown without as well as with the inclusion of public workers. Public/private workers cannot be explicitly separated in the Gallup surveys. Although the authors are aware of this issue, I am less sure that readers will appreciate its importance. If I were an author, I would give greater emphasis to public/private differences. I believe the authors could construct and emphasize an approximate ``private-only'' analysis, which would use the Gallup surveys in the pre-CPS period, followed by the CPS in which public workers can be removed (as the authors have shown in some tables). I understand that there is no explicit public/private identifier in the Gallup surveys, but there is an occupation question. I suspect that removal of teachers, police, firefighters, and postal workers (and perhaps a few others) would provide a reasonable ``private sector'' sample. Indeed, one could use early CPS files and look at \% public by occupation, which in turn can guide your use of Gallup. The CPS sample could explicitly remove either all public workers, or just remove those in occupations removed from Gallup. The authors can determine whether a ``public-only'' analysis is informative.}
+
+\textbf{Authors' reply:} You are indeed correct that the public-private distinction is central to understanding the dynamics of union density in the US.  Unfortunately, the Gallup occupation codes are simply too coarse and do not identify teachers, police and other occupations that are very likely to be public sector. For this same reason, your idea to use data that \textit{does} have public/private sector (the early CPSs, as you suggest, or the 1940 and 1950 Census) and then predict which Gallup occupation codes are disproportionately public sector runs into the same problem.  The coarseness of the Gallup occupation codes means that using them to predict public-versus-private sector yields a tiny $R$-squared.
+
+% code/gallup_public_st.do
+
+But we take to heart your point that readers may not be aware of the importance of the public-private distinction.  In part for this reason, we 
+have added a new Appendix Figure \ref{fig-pub-manuf}, which shows the share of union workers that are in the public sector each year since 1949.  Just as the rise in the public-sector share on union members is important context for understanding the evolution of unions since the 1960s, so is the \textit{decline} in the manufacturing share of union members, which we also depict in Appendix Figure \ref{fig-pub-manuf}.
+
+We also add an extended discussion of both trends, beginning on p. \pageref{pg-public-sector} and pasted here for your convenience:
+
+\begin{quote}
+\Paste{public-sector-1}
+\end{quote}
+
+\begin{quote}
+\Paste{public-sector-2}
+\end{quote}
+
+
+
+\textit{2. At multiple points in the paper (including the introduction and conclusion), the authors make reference to SBTC models in which technical change that is skill biased leads to a decline in skilled union workers over time (simple SBTC, not Autor et al. task-based SBTC in which computing substitutes for routine/programmable tasks). Farber et al. emphasize that evidence suggests the opposite ? at the height of unionization, average worker skill was lowest; as unionization declined over time average skill of union workers relative to nonunion workers has increased (in part due to public sector union members). Based on articles cited by the authors, the only SBTC paper that explicitly models unionization is Acemoglu, Aghion, and Violante (2001), but I do not believe this is a paper widely read or cited. If there are other SBTC articles explicitly addressing union membership, then the authors should cite those papers. If not, I would downplay the theme that changes in unionization over time run counter to predictions from SBTC models. Checking Google Scholar, there were 298 citations to the Acemoglu et al. (2001) union paper. That's not a trivial number, but other Acemoglu papers on technological change typically have around 2,000 citations (his coauthored paper on colonial origins has 11,000+ cites).}
+
+\textbf{Authors' reply:} You, the editor and another referee all had the same reaction, so we have cut all of the discussion of the SBTC models from the macro literature. Thank you for the feedback that it was making the paper less readable.  Cutting it allowed us to get to our main results more quickly.
+
+\textit{3. The Callaway-Collins working paper cited in fn. 5 was published in Explorations in Economic History in early 2018. The CC paper provides evidence complementary to the submitted paper. Although far narrower in scope than the Farber et al. paper, the CC analysis is based on relatively high-quality individual worker surveys in 1950 from BLS (the so-called Palmer Surveys). Their estimation sample includes data for 5569 men, ages 25+ in five large cities (a sixth city, Chicago, was also surveyed, but the micro data records were not complete). The authors provide analyses of these data focusing on union wage gaps, selection into unions, and inequality, comparing these results to early 1970s evidence from the CPS. They find strong similarity in results from 1950 (Palmer data) and 1973 (CPS), which in turn are highly similar to contemporary analyses of unions. More to the point, their findings appear to me to be highly consistent with the Farber et al. results from the 1950s, which in turn enhances and complements their Gallup analyses and results. I recommend that the authors identify major similarities between CC and their analyses, as well as any discrepancies (if any).}
+
+\textbf{Authors' reply:} Thank you for this suggestion. We now discuss the Callaway-Collins paper in our union premium section, as well as in the distributional decomposition section. We think the results are broadly consistent, although we lack the precision of geographic identifiers and hourly wages that Callaway-Collins have to make precise comparisons. In Appendix \ref{sec-app-dfl} we compare our DFL counterfactuals to theirs, noting the differences in data and concepts of inequality used (we cannot do percentile ratios in the years closest to 1951 due to absence of continuous income data).
+
+\textit{4. In fn. 7, the authors cite Lemieux (1998) as a paper that examines wage changes among ``involuntary'' (i.e., exogenous) union switchers in Canada. Note that Raphael conducted this type of analysis using the 1994 and 1996 Displaced Worker Surveys (ILRR, April 2000). Kulkarni and Hirsch had a paper at the recent SOLE meetings providing a similar wage analysis using the 1994 through 2016 DWS. Both Raphael and KH obtain union wage effects among involuntary switchers highly similar to standard wage level results (i.e., about 15\%).}
+
+\textbf{Authors' reply:} Thank you for these additional citations, which we now include in the re-written footnote (it is now footnote \ref{fn-panel}).  It reads:
+
+\begin{quote}
+\Paste{panel}
+\end{quote}
+
+These citations are especially useful, as we now include our \textit{own} panel estimate (from the 1956, 1958 and 1960 waves of the ANES, which included a panel component), shown in Appendix Table \ref{tab-panel}.  Just as in the papers you noted above, we also find that the cross-sectional and the panel estimates are very similar (in our case about 11 log points).
+
+\textit{5. Pp. 13-14 regarding the divergence between Gallup and BLS/Troy during 1937-1938. The authors are skeptical of BLS and Troy estimates that show robust growth in union membership despite soaring unemployment. The authors should note that working in the opposite direction was the (unexpected) Jones \& Laughlin Supreme Court decision in 1937 that ruled the 1935 NLRA constitutional by a 5-4 decision. My (imperfect) understanding is that many or most employers had assumed the NLRA was not constitutional and it was largely ignored. The Jones \& Laughlin decision ruled that the NLRA was constitutional, leading to rapid unionization. Hence, a sharp increase in union membership, despite a recession, may well be plausible. You should not trust my characterization of this history absent verification.}
+
+\textbf{Authors' reply:} Thank you for this. As you will now see we have an extensive discussion in the context of the IV section on the NLRA and the Supreme Court decision. We agree that it is not clear whether our early time-series is superior to the existing BLS or Troy measures, which is why we combine them in the independent variable in our time-series regression analysis.
+
+\textit{6. I don't believe there was discussion of how the authors treated CPS estimates of union wage (or income) differences with respect to nonresponse and imputations. Estimates can be severely biased (attenuated) by inclusion of those with imputed earnings (or other income sources). The attenuation occurs because earnings or income nonrespondents are assigned the earnings or income of a donor with similar characteristics, but union status is not used as a donor match characteristic. Nonrespondent union members are typically assigned earnings of a nonunion worker; nonrespondent nonunion workers are sometimes assigned earnings of a union member. See Hirsch-Schumacher (JOLE, July 2004) and/or Bollinger-Hirsch (JOLE, July 2006) for details.}
+
+\textbf{Authors' reply:} For our college premium and skill-share (in efficiency units) calculations, we follow the data-processing procedures in \citet{AKK08}, which exclude any imputed observations. 
+
+We have included imputed values in our union-premium analysis, however.  Below we show that results are very similar if we drop all CPS observations with imputed income, which look very similar.  In the interest of space, we do not include this figure in the paper, but are happy to do so if you and the editor think we should.
+
+
+\begin{figure}[h!]
+\caption*{Union family income premium in the CPS, robustness to imputation}
+\centerline{\includegraphics[scale=0.6, trim={0, 0, 0, .3cm}, clip]{../Outputs_Emb/figures/premium_cps_nimpute.pdf}}
+\end{figure}
+
+
+\textit{7. There exist other sources of information that the authors may (or may not) find helpful.}
+
+\textit{a. Pencavel and Hartsog (JOLE, April 1984) provide an in depth examination of historical union density, earnings, and hours over time. Pencavel (ILRR, January 2009) in ?How Successful Have Trade Unions Been? provides measures of union density and wage gaps for 1922-2005.}
+
+\textit{b. In the Historical Statistics of the United States, Millennial Edition On Line (editors, Susan Carter et al.), Cambridge University Press, 2006, there is an article by Joshua Rosenbloom titled ?Labor Unions? that summarizes various historical estimates of union density, strikes, and wages (it includes a companion set of tables, that Rosenbloom is happy to provide).}
+
+\textbf{Authors' reply:} Thank you for this. We have used the HSUS statistics in constructing the share of union members in manufacturing  in Appendix Figure \ref{fig-pub-manuf}.
+
+\textit{c. Hirsch and Macpherson publish an annual Union Membership and Earnings Data Book (from Bloomberg BNA) that includes historical tables of union and nonunion CPS wages for 1973-2017 for union and nonunion workers. This includes annual estimates of the union/nonunion wage ratios (absent controls) and time-consistent wage regression estimates of union log wage differentials beginning with 1973. Separate tables are provided for W\&S workers, private sector, public sector, men, women, men and women by race, and industry group (construction, manufacturing, TCU, trade, and services). All their wage and earnings estimates account for imputations. The Data Book is expensive, but the authors will provide an electronic copy to researchers.}
+
+\textbf{Authors' reply:} Thank you for this. We use Hirsch and Macpherson in our series on manufacturing share in Appendix Figure \ref{fig-pub-manuf}. Because we want to include state fixed effects in our premia regressions, we have relied on our own CPS estimates, and thus only go back to 1977.
+
+\textit{8. Berinsky (2006a) and Berinsky (2006b) appear to be identical in the references.}
+
+\textbf{Authors' reply:} Fixed, thank you.
+
+\textit{9. Alaska, Hawaii, and DC are excluded. I understand exclusion of Alaska and Hawaii given that they were not states prior to 1959, but do not understand exclusion of DC.}
+
+\textbf{Authors' reply:} Gallup did not include DC in its early years, so we drop it to make the sample consistent over our long sample period.  We describe this and other sampling rules in Appendix \ref{sec-app-cons}.
+
+\textit{10. Fn. 17, CPS state identifiers. I would replace the current text in parentheses: ?as opposed to merely state groups or regions? to text such as ?as opposed to a combination of individual states and state groups.? [Prior to 1977, 12 states and DC were individually identified; the remaining 38 states were included in 10 state groups.].}
+
+\textbf{Authors' reply:} Thank you for this suggestion.  We have changed the footnote as you suggest.
+
+\textit{11. p. 21 The authors state it is difficult to provide a standard union objective function model (with goals of higher membership and wages) that accounts for a nine-decade period of stable union premiums despite substantive increases and decreases in union density. I understand and appreciate this statement. That said, cannot one provide some informal conjectures outside a simple stylized model? Rios-Avila and Hirsch (Industrial Relations, Jan. 2014) provided a recent analysis of union wage effects throughout the distribution (using RIF analyses) for Bolivia and Chile. Despite these two countries being very different from the U.S. and from each other, the authors find union wage premium and inequality effects highly similar to those seen in the U.S. The authors do not provide a model, but make the simple point that union wage premiums are constrained from below and above. If union wage premiums are too small, workers are unlikely to vote for and fund union representation. If union premiums are too high, businesses are unlikely to flourish. Is it not conceivable that a lower bound average of 10\% and upper bound average of 20\%, as found by the authors, reflect such constraints? Average union wage premium estimates do show some changes over time. Moreover, economy-wide average premiums of 10\% (20\%) will reflect many union firms with very high (low) firm-level premiums.}
+
+\textbf{Authors' reply:} Thank you very much for this suggestion and citation, which we discuss on p. \pageref{pg-steady-premium}:
+
+\begin{quote}
+\Paste{steady-premium}
+\end{quote}
+
+
+
+\textit{12. Section 7.2 on Times Series Regressions. In summarizing regression results, the authors state where coefficients are substantive and statistically significant, but choose not to report explicit magnitudes until section 7.4 based on the RIF regressions. I think readers will find it helpful in section 7.2 to provide an example or two, just to make sure they know they are correctly interpreting the coefficients. I found the magnitudes to be highly plausible.}
+
+\textbf{Authors' reply:} We have done this and write :
+
+\begin{quote}
+\Paste{tseriesestimates}
+\end{quote}
+
+
+%"Our time-series estimates imply that a 10\% increase in union density results in a 12-15 percent fall in the college premium, 2-1.7 percent falls in 90-10 wage ratios for men, small and insignificant effects on 90-50 male wage ratio, and 1.5 to 1.8 percent increase in the 50-10 wage ratio. We further find that the same size increase leads to a 0.016 to 0.014 decrease in the Gini, roughly 3\% of the mean, and 2.3 to 3.5 percentage points in the top ten share and 4.5-4.8 percentage points in the labor share."
+
+\textit{13. P. 32, end of the lengthy paragraph beginning ``In Table 4 ...'' The authors provide a nice (but brief) discussion of the difficulty in stating a reasonable counterfactual, and then state how RIF analysis helps guide such a counterfactual. In the widely read (and influential) Western-Rosenfeld paper on unions and inequality (ASR, 2011), a serious concern of reviewers was the counterfactual issue; that is, how could the authors plausibly draw inferences about future inequality if, say, union density were to double, based on historical relationships. You may want to look at this discussion toward the end of their paper. Does the RIF approach address, at least in part, concerns in that paper? I am not sure.}
+
+\textbf{Authors' reply:} The editor and R2 encouraged us to emphasize a more standard DFL decomposition instead of the RIF.  We have thus dropped the RIF entirely and added a somewhat lengthy DFL analysis (a new Section \ref{sec-dfl} and additional detail in a new Appendix \ref{sec-app-dfl}).  One of many advantages of the DFL is making more explicit the assumptions used to construct the counterfactual.  We take two approaches.  The first assumed no spillovers to non-union households.  The second allows union density in a given state-year to have an effect on the income of non-union households in the same state-year, either via labor market spillovers or threat effects or the norm mechnanisms in Western and Rosenfeld. We find that spillovers modestly increase the effect of unions on inequality, but our data makes it difficult to go further into mechanisms. One auxillary piece of evidence against the norms story is provide in \ref{sec-app-iv}, where we see if changing norms are associated in the WW2 increase in union density, and we find that they are not. 
+
+\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
+%###############
+
+Thank you again for your careful read of our paper and your thoughtful suggestions.  We hope we have answered your concerns and are of course happy to revisit any remaining issues you have with the paper.
+
+
+
+\printbibliography
+
+\end{refsection}
+
+\end{document}
+
+
+

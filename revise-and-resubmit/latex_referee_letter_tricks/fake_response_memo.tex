@@ -1,0 +1,288 @@
+
+
+\documentclass[12pt]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{xcolor}
+
+%%%%Here is where you call the xr package, which allows you to grab material from "external document" (in this case fake_paper.tex)
+\usepackage{xr} 
+\externaldocument{fake_paper}
+
+\usepackage[backend=biber, natbib=true, style=authoryear, giveninits=true, doi=false, isbn=false,url=false, uniquelist=false, uniquename=false]{biblatex}
+\DefineBibliographyStrings{english}{%
+  references = {\large References cited in this response letter},
+}
+
+%\usepackage[backend=biber, natbib=true, style=authoryear, giveninits=true, doi=false,isbn=false,url=false, uniquelist=false, uniquename=false]{biblatex}
+%\DefineBibliographyStrings{english}{%
+%  references = {\large References cited in this response letter},
+%}
+
+\bibliography{fakebib2}
+
+\renewbibmacro{in:}{}
+\usepackage[pdftex]{graphicx}
+\usepackage{float}
+
+
+%%%%This package allows you to break up the response memo into its various parts (editor letter, response to R1, response to R2, etc...) by changing the heading.  Makes it easy for each ref to see the part of the memo meant for him/her.
+\usepackage{fancyhdr}
+\fancyhf{}
+\pagestyle{fancy}
+\leftmark{}
+
+\usepackage[normalem]{ulem}
+
+%%%%Call the clipboard package, which allows you to copy from one document and paste into this documet
+%%%%So, anytime you change something in the paper, it will automatically change in the response memo (if you have quoted it)
+%%%%Note you need to have the same name for the clipboard as you do in the parent document
+\usepackage{clipboard}
+\openclipboard{example}
+
+
+\usepackage{caption}
+\usepackage{lscape}
+\usepackage{enumerate}
+\usepackage[T1]{fontenc}
+
+%\usepackage{tabulary}
+\usepackage{tabularx}
+\usepackage{booktabs}
+
+\usepackage[parfill]{parskip}
+
+
+\begin{document}
+
+
+%%%Begin the section that responds to the editor
+%\newrefsection
+
+\begin{refsection}
+\rhead{Response to the Editor}
+\lhead{}
+
+\renewcommand\thefigure{Editor.\arabic{figure}}   
+\renewcommand\thetable{Editor.\arabic{figure}}   
+
+
+\noindent {Ilyana Kuziemko\newline
+\noindent Department of Economics \newline
+Princeton University}
+
+\bigskip
+
+
+\noindent RE: Revision of ``Unions and Inequality: Evidence from variation in the lunar and Gregorian calendars''
+
+\bigskip
+
+
+\noindent Dear Prof. XXX,
+
+Thank you for giving us a chance to revise our paper for \textit{The Journal of Very Distinguished Economics.}
+
+\Copy{intro-1}{Before delving into our point-by-point response to your letter, we wanted to summarize some of the major changes to the draft.}
+
+\Copy{intro-2}{First, we have improved considerably on the identification. We have sharpened our original empirical strategy (using variation from holidays in the lunar and Gregorian holidays as a source of union density) by showing robustness to controlling for minor holidays and holidays from the Chinese calendar.}  
+
+\Copy{intro-3}{Second, we have expanded our literature review considerably.}
+
+\Copy{intro-4}{Finally, we have substantially expanded our history of the lunar calendar.}
+
+In what follows, we respond point-by-point to questions and concerns raised by you and the referees (original comments from you and the referees are in \textcolor{blue}{\textit{blue italics}}, our reply in regular font.).
+
+\medskip \noindent
+Sincerely,
+
+\medskip \noindent
+Ilyana Kuziemko (and Bodie Katz)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagebreak
+
+
+\section*{Editor's Comments}
+
+\textcolor{blue}{\textit{The referees and I find much to admire in your creative paper using random year-to-year correspondence in the overlap of the lunar and Gregorian calendar to identify shifts to union density.}}
+
+\vspace{.5cm}
+\textbf{Authors' reply:} 
+
+Thank you for the kind words about our paper.
+\smallskip
+
+\textcolor{blue}{\textit{Nevertheless, the referees have somewhat divergent assessments of whether your paper is a large enough contribution for the JVDE.
+In addition to the referees' concerns, which I would like you to address, I have some additional concerns.}}
+
+\textcolor{blue}{\textit{You should show robustness to considering ``smaller'' holidays, such as Flag Day (June 14th) and Arbor Day (April 30).}}
+
+\medskip
+
+\vspace{.5cm}
+\textbf{Authors' reply:} 
+
+Thank you for this idea.  We now test robustness to including ``smaller holidays,'' as you saw.  Besides Flag Day and Arbor Day, we also include Groundhog Day (February 2) and National Maritime Day (May 22) as well as some holidays from the Chinese calendar.  We flag this robustness check for readers in footnote \ref{minor-holidays} in the revised paper.
+
+%%Note above you can even reference the footnote number from the external document.  just label the footnote in the parent .tex file
+
+We show these results in a new Appendix Table \ref{tab-main-robust}, which we reproduce below for your convenience:
+
+\begin{table}[h]
+\setlength{\tabcolsep}{1pt}
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\caption{Main results, robustness to including minor holidays (Appendix Table \ref{tab-main-robust} in paper)}
+\scriptsize{
+\begin{tabular*}{1.0\hsize}{@{\hskip\tabcolsep\extracolsep\fill}l  cc cc cc cc   }
+\toprule
+\input tables/fake_first_stage_minor.tex
+\bottomrule
+\end{tabular*}
+}
+\raggedright
+\footnotesize{\textit{Notes:} The specifications are identical to those in Table \ref{tab-main} except that here we add controls for minor holidays.}
+\end{table}
+
+\medskip
+
+\textcolor{blue}{\textit{You should provide a comprehensive history of the lunar  calendar (as well as other calendars) in an Appendix.  A short summary in the body of the paper would be useful.}}
+
+\medskip
+
+\vspace{.5cm}
+\textbf{Authors' reply:}. Thank you for this suggestion.  We have now added a new Appendix \ref{app-sec-calendar} to the paper.  As it is quite long, we do not quote it here.  The appendix borrows heavily from \citet{depuydt1997civil} and \citet{mckay2016coligny}.  
+
+\medskip
+
+%https://www.timeanddate.com/holidays/us/
+%End section that responds to the editor
+\vspace{1cm}
+\rhead{Response to the Editor}
+
+\printbibliography
+
+\end{refsection}
+
+\newpage \clearpage
+
+%%%Begin the section that responds to R1
+\begin{refsection}
+
+\rhead{Response to Referee \#1}
+\lhead{}
+
+
+\renewcommand\thefigure{R1.\arabic{figure}}   
+\renewcommand\thetable{R1.\arabic{figure}}   
+
+
+\noindent Dear Referee \#1,
+
+Thank you for your helpful report.  We have done our best to reply to each of your concerns, which we feel has dramatically improved the paper.
+
+\Paste{intro-1}
+
+\Paste{intro-2}
+
+\Paste{intro-3}
+
+\Paste{intro-4}
+
+In what follows, we respond point-by-point to questions and concerns raised in your report (original comments are in \textcolor{blue}{\textit{blue italics}}, our replies in regular font).
+
+\medskip \noindent
+Sincerely,
+
+\medskip \noindent
+Ilyana Kuziemko (and Bodie Katz)
+
+\newpage \clearpage
+
+\textcolor{blue}{\textit{I found the introduction long and meandering.  You should have a concise paragraph very early in the paper that spells our your key contributions.}}
+
+\medskip
+
+\vspace{.5cm}
+\textbf{Authors' reply:} 
+
+\medskip
+
+Thank you for this advice.  We have now have a paragraph (on p. \pageref{intro-page} of the paper) that lays out what we think are our key contributions.  We reproduce it here for your convenience:
+
+\begin{quote}
+\Paste{intro_par}
+\end{quote}
+
+%End section that responds to R1 and print the R1-specific bibliography
+
+\printbibliography
+\end{refsection}
+
+\newpage \clearpage
+
+%%%Begin the section that responds to R2
+
+\begin{refsection}
+
+\rhead{Response to Referee \#2}
+\lhead{}
+
+
+\noindent Dear Referee \#2,
+
+Thank you for your helpful report.  We have done our best to reply to each of your concerns, which we feel has dramatically improved the paper.
+
+\Paste{intro-1}
+
+\Paste{intro-2}
+
+\Paste{intro-3}
+
+\Paste{intro-4}
+
+In what follows, we respond point-by-point to questions and concerns raised in your report (original comments are in \textcolor{blue}{\textit{blue italics}}, our replies in regular font).
+
+\medskip \noindent
+Sincerely,
+
+\medskip \noindent
+Ilyana Kuziemko (and Bodie Katz)
+
+
+\newpage \clearpage
+
+\textcolor{blue}{\textit{The paper would benefit tremendously if you developed a formal model.}}
+
+\medskip
+
+\vspace{.5cm}
+\textbf{Authors' reply:} Thank you for this advice.  We develop a model in a new Appendix \ref{app-sec-model}.  
+
+\medskip
+
+\textcolor{blue}{\textit{The paper gives little credit to past work using similar identification strategies.  Your literature review is woefully incomplete.}}
+
+\medskip
+
+\vspace{.5cm}
+\textbf{Authors' reply:}. Obviously we are not the first researchers to think of using the overlap of holidays from the lunar and Gregorian calendars.  Our revised draft makes clearer how we build off this seminal literature.
+
+At the request of the editor, we also provide a longer history of ancient calendars (see a new Appendix \ref{app-sec-calendar}).  As it is quite long, we do not quote it here.  The appendix borrows heavily from \citet{depuydt1997civil} and \citet{mckay2016coligny}.  
+
+%End section that responds to R2
+
+\bigskip
+
+\printbibliography
+\end{refsection}
+
+
+
+\end{document}
+
+
+

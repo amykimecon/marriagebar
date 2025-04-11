@@ -1,0 +1,1 @@
+\clipboard {intro_par}{In this paper we make three make contributions. First, we extend the sample period used in the seminal work of \citet {piketty2003income}. Second, we apply re-weighting methods as in \citet {dinardo1996labor}. Third, we develop an instrumental-variable strategy based on plausibly exogenous variation in differences between the lunar and Gregorian calendars.}
