@@ -413,6 +413,82 @@ writeLines(c("\\hhline{-----}","$N$ (Counties)", "&", glue("{obs[1]} & {obs[2]} 
 writeLines(c("\\hhline{=====}","\\end{tabular}"), summtex)
 close(summtex)
 
+
+#______________________________________________________
+# Appendix Table: Linkage rates in Linked Census Sample ----
+#______________________________________________________
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
+
+fullcount_nos <- tbl(con, "censusrawall") %>%
+  addvars_indiv() %>%
+  group_by(YEAR) %>%
+  summarize(n_tot = n(),
+            n_treat = sum(ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)),
+            n_teach = sum(ifelse(teacher == 1, 1, 0)),
+            n_sw = sum(ifelse(demgroup == "SW", 1, 0)),
+            n_mw = sum(ifelse(demgroup == "MW", 1, 0)),
+            n_swteachtreat = sum(ifelse(teacher == 1 & demgroup == "SW", 1, 0)),
+            n_mwteachtreat = sum(ifelse(teacher == 1 & demgroup == "MW", 1, 0))
+            ) %>%
+  collect()
+
+linked_nos <- tbl(con, "linkedall") %>%
+  addvars_indiv_linked() %>%
+  group_by(YEAR_base) %>%
+  summarize(link_tot = n(),
+            link_treat = sum(ifelse(STATEICP_base == 47 | STATEICP_base == 51, 1, 0)),
+            link_teach = sum(ifelse(teacher_base == 1, 1, 0)),
+            link_sw = sum(ifelse(demgroup_base == "SW", 1, 0)),
+            link_mw = sum(ifelse(demgroup_base == "MW", 1, 0)),
+            link_swteachtreat = sum(ifelse(teacher_base == 1 & demgroup_base == "SW", 1, 0)),
+            link_mwteachtreat = sum(ifelse(teacher_base == 1 & demgroup_base == "MW", 1, 0))
+  ) %>%
+  collect()
+  
+# joining 
+linkrates <- left_join(fullcount_nos, linked_nos, by = c("YEAR" = "YEAR_base")) %>%
+  mutate(share_tot = link_tot/n_tot,
+         share_treat = link_treat/n_treat,
+         share_teach = link_teach/n_teach,
+         share_sw = link_sw/n_sw,
+         share_mw = link_mw/n_mw,
+         share_swteachtreat = link_swteachtreat/n_swteachtreat,
+         share_mwteachtreat = link_mwteachtreat/n_mwteachtreat) %>%
+  select(c(YEAR, starts_with("n_"), starts_with("share_"))) %>%
+  filter(!is.na(share_tot)) %>%
+  pivot_longer(-YEAR, names_pattern = "(.*)_(.*)", names_to = c("stat", ".value")) %>%
+  arrange(YEAR, desc(stat))
+
+dbDisconnect(con, shutdown = TRUE)
+
+
+linkratetex <- file(glue("./tables/linkrates.tex"), open = "w")
+linknames <- c("All", "Treated States", "Teachers", "Unmarried Women", "Married Women", "Unmarried Women Teachers", "Married Women Teachers")
+baseyears <- seq(1910,1930,10) 
+  
+writeLines(c("\\begin{tabular}{lC{2.1cm}C{2cm}C{2cm}C{2cm}C{2cm}C{2cm}C{2cm}}", 
+             "\\hhline{========}",
+             paste0("& ", glue_collapse(linknames, sep = " & "), " \\\\"),
+             paste0("& (", glue_collapse(1:7, ") & ("), ") \\\\"), "\\hhline{--------}"), linkratetex)
+
+for (i in 1:length(baseyears)){
+  header <- glue("{baseyears[i]}-{baseyears[i]+10} Linked Sample")
+  writeLines(paste0("\\multicolumn{8}{l}{\\underline{\\textbf{", header, "}}}\\\\ [1em]"), linkratetex)
+  
+  shares <- paste0(round(as.numeric(linkrates[2*i-1,3:ncol(linkrates)])*100, 1), "\\%")
+  ns <- formatC(as.numeric(linkrates[2*i, 3:ncol(linkrates)])/1000, big.mark = ",", format = "f", digits = 1)
+  
+  rowlab1 <- glue("\\% {baseyears[i]} Individuals Linked to {baseyears[i] + 10}")
+  rowlab2 <- glue("Number of {baseyears[i]} Individuals (Thous.)")
+  
+  writeLines(c(paste0(rowlab1, " & ", glue_collapse(shares, sep = " & "), " \\\\ [1em]"),
+               paste0(rowlab2, " & ", glue_collapse(ns, sep = " & "), " \\\\ [1em]")), linkratetex)
+  
+}
+
+writeLines(c("\\hhline{========}","\\end{tabular}"), linkratetex)
+close(linkratetex)
+
 # close log ----
 sink()
 

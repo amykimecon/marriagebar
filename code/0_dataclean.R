@@ -210,15 +210,19 @@ linkview <-  tbl(con, "linkedall") %>%
 ##! CHECKED: JUST HAVE TO CONFIRM THE COMMENTS ABOVE WHEN RE-RUN
 
 # group 1: unmarried women teachers in t-10
-link1 <- linkview %>% 
-  filter(teacher_base == 1 & worker_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>% 
+link1_filt <- linkview %>% 
+  filter(teacher_base == 1 & worker_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) 
+
+link1 <- link1_filt %>% 
   summlinks(n = 5) %>% #only requiring that a county has at least 5 unmarried women teachers that are linked from 1920 to 1930 and 1930 to 1940
   matching_join(matchlist)
+
 write_csv(link1, glue("{cleandata}/link1_swt.csv"))
 #!#! CHECKED
 
-link1full <- linkview %>% filter(teacher_base == 1 & demgroup_base == "SW" & RACE_base == 1 & AGE_base <= 40) %>%
-  collect()
+link1_state <- link1_filt %>%
+  summlinks_state()
+write_csv(link1_state, glue("{cleandata}/link1_swt_state.csv"))
 
 # group 1.5: women teachers without children in t-10
 link1point5 <- linkview %>%
@@ -229,12 +233,18 @@ write_csv(link1point5, glue("{cleandata}/link1point5_wtnc.csv"))
 #!#! CHECKED
 
 # group 2: unmarried women not in labor force in pre-period
-link2 <- linkview %>% 
-  filter(worker_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 8 & RACE_base == 1) %>% 
+link2_filt <- linkview %>% 
+  filter(worker_base == 0 & demgroup_base == "SW" & AGE_base <= 40 & AGE_base >= 8 & RACE_base == 1) 
+
+link2 <- link2_filt %>% 
   summlinks() %>%
   matching_join(matchlist)
 write_csv(link2, glue("{cleandata}/link2_swnilf.csv"))
 #!#! CHECKED 
+
+link2_state <- link2_filt %>% 
+  summlinks_state()
+write_csv(link2_state, glue("{cleandata}/link2_swnilf_state.csv"))
 
 # group 2.5: unmarried women in lf but not teaching in pre-period
 link2point5 <- linkview %>% 
@@ -244,12 +254,18 @@ link2point5 <- linkview %>%
 write_csv(link2point5, glue("{cleandata}/link2point5_swnt.csv"))
 
 # group 3: married women not in labor force in pre-period
-link3 <- linkview %>% 
-  filter(LABFORCE_base == 1 & demgroup_base == "MW" & AGE_base <= 50 & AGE_base >= 18 & RACE_base == 1) %>% 
+link3_filt <- linkview %>% 
+  filter(LABFORCE_base == 1 & demgroup_base == "MW" & AGE_base <= 50 & AGE_base >= 18 & RACE_base == 1) 
+
+link3 <- link3_filt %>% 
   summlinks() %>%
   matching_join(matchlist)
 write_csv(link3, glue("{cleandata}/link3_mwnilf.csv"))
 #!#! CHECKED 
+
+link3_state <- link3_filt %>% 
+  summlinks_state()
+write_csv(link3_state, glue("{cleandata}/link3_mwnilf_state.csv"))
 
 # group 3.5: married women in lf but not teachers in pre-period 
 link3point5 <- linkview %>% 
