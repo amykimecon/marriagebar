@@ -6,17 +6,38 @@ sink("./logs/log_4_robustness.txt", append=FALSE)
 print("***************** RUNNING: 4_robustness *****************\n\n")
 
 # initializing main datasets ----
-neighbor   <- countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1)
-matched1   <- countysumm %>% filter(match_weight1 != 0 & mainsamp == 1)
-matched2   <- countysumm %>% filter(match_weight2 != 0 & mainsamp == 1)
-matched3   <- countysumm %>% filter(match_weight3 != 0 & mainsamp == 1) %>% mutate(weight = match_weight3)
+neighbor   <- countysumm %>% filter(neighbor_samp == 1 & mainsampall == 1)
+matched1   <- countysumm %>% filter(match_weight1 != 0 & mainsampall == 1)
+matched2   <- countysumm %>% filter(match_weight2 != 0 & mainsampall == 1)
+matched3   <- countysumm %>% filter(match_weight3 != 0 & mainsampall == 1) %>% mutate(weight = match_weight3)
 
-match_datasets   <- list(matched1, matched2, matched3)
-link1_match_datasets   <- list(link1 %>% filter(match_weight1 != 0 & mainsamp == 1), 
-                               link1 %>% filter(match_weight2 != 0 & mainsamp == 1), 
-                               link1 %>% filter(match_weight3 != 0 & mainsamp == 1))
+matched1_wht   <- countysumm_wht %>% filter(match_weight1 != 0 & mainsampwht == 1)
+matched2_wht   <- countysumm_wht %>% filter(match_weight2 != 0 & mainsampwht == 1)
+matched3_wht   <- countysumm_wht %>% filter(match_weight3 != 0 & mainsampwht == 1) %>% mutate(weight = match_weight3)
 
-match_datanames  <- list("matched1", "matched2", "matched3")
+borders <- read.table(glue("{root}/county_adjacency2010.txt"), sep = "\t", col.names = c("county_name","FIPS","border_name","border_FIPS")) %>%
+  mutate(county_name = ifelse(county_name == "", NA, county_name),
+         FIPS = str_pad(as.character(FIPS), 5, "left", pad = "0"),
+         border_FIPS = str_pad(as.character(border_FIPS), 5, "left", pad = "0")) %>%
+  fill(c(county_name, FIPS), .direction = "down") %>%
+  mutate(state = substr(FIPS, 1, 2),
+         border_state = substr(border_FIPS, 1, 2),
+         border = ifelse(state != border_state, 1, 0),
+         border_ctrl = ifelse(border & border_state %in% c("37", "21"), 1, 0),
+         border_treat = ifelse(border & state %in% c("37", "21"), 1, 0)) 
+
+border_treat <- filter(borders, border_treat == 1)$FIPS
+border_ctrl <- unique(filter(borders, border_ctrl == 1)$FIPS)
+
+countysumm_border <- countysumm %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
+  mutate(TREAT = ifelse(FIPS %in% border_ctrl, 0, 1))
+countysumm_border_wht <- countysumm_wht %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
+  mutate(TREAT = ifelse(FIPS %in% border_ctrl, 0, 1))
+
+match_datasets   <- list(matched1, matched2, matched3, countysumm_border)
+match_datasets_wht   <- list(matched1_wht, matched2_wht, matched3_wht, countysumm_border_wht)
+
+match_datanames  <- list("matched1", "matched2", "matched3", 'border')
 
 #______________________________________________________
 # CHECK ONE: SECRETARIES PLACEBO ----
@@ -39,8 +60,8 @@ did_graph(dataset     = neighbor,
 #______________________________________________________
 
 # OUTCOME: SHARE TEACHERS MW/SW/M 
-for (i in 1:3){
-  did_graph(dataset     = match_datasets[[i]], 
+for (i in 1:4){
+  did_graph(dataset     = match_datasets_wht[[i]], 
             depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
             depvarnames = c("Men", "Married Women", "Single Women"),
             colors      = c(men_col, mw_col, sw_col),
@@ -53,22 +74,59 @@ for (i in 1:3){
   
 }
 
+# OUTCOME: for each sample, P[mwt]
+datalist = list(link1, link2, link3)
+datanames = c("Sample 1: SWT in t-10", "Sample 2: MWNILF in t-10", "Sample 3: SWNILF in t-10")
+coefs = c("married_link", "mwt_link", "mwnt_link", "mwnilf_link")
+coefnames = c("0)P[married]","1) P[Married Teacher]", "2) P[Married Non-Teacher in LF]", "3) P[Married Not in LF]")
 
-# OUTCOME: NET LFP RESULTS FOR LINK1
-for (i in 1:3){
-  did_graph(dataset     = link1_match_datasets[[i]],
-            depvarlist  = c("pct_lf", "pct_mw_cond_inlf", "pct_sw_cond_inlf"),
-            depvarnames = c("LFP in t", "LFP in t | Married in t", "LFP in t | Unmarried in t"),
-            colors      = c("darkgrey", mw_col, sw_col),
-            years       = c(1920, 1940),
-            fig_width    = 6,
-            fig_height   = 4,
-            yvar        = glue("DiD Estimate: Share Unmarried Women Teachers in t-10"),
-            verbose     = FALSE, #set to true to see regression coefficients at the very end of output stream
-            filename    = glue("overall_effects_lfp_{match_datanames[[i]]}"))
-  
+for (dataind in 1:3){
+  models = list(
+    feols(mwt_link ~  Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+          data = datalist[[dataind]] %>% filter(neighbor_samp == 1 & RACE == 1) %>% add_did_dummies()),
+    feols(mwt_link ~  Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+          data = datalist[[dataind]] %>% filter((FIPS %in% border_ctrl | FIPS %in% border_treat) & RACE == 1) %>% add_did_dummies()),
+    feols(mwt_link ~  Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+          data = datalist[[dataind]] %>% filter(match_weight1 != 0 & RACE == 1) %>% add_did_dummies()),
+    feols(mwt_link ~  Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+          data = datalist[[dataind]] %>% filter(match_weight2 != 0 & RACE == 1) %>% add_did_dummies()),
+    feols(mwt_link ~  Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+          data = datalist[[dataind]] %>% filter(match_weight3 != 0 & RACE == 1) %>% add_did_dummies(),
+          weights = ~match_weight3)
+  )
+  means = list(mean(filter(datalist[[dataind]], neighbor_samp == 1 & RACE == 1 & TREAT == 1 & YEAR == 1930)$mwt_link),
+               mean(filter(datalist[[dataind]], (FIPS %in% border_ctrl | FIPS %in% border_treat) & RACE == 1 & TREAT == 1 & YEAR == 1930)$mwt_link),
+               mean(filter(datalist[[dataind]], match_weight1 != 0 & RACE == 1 & TREAT == 1 & YEAR == 1930)$mwt_link),
+               mean(filter(datalist[[dataind]], match_weight2 != 0 & RACE == 1 & TREAT == 1 & YEAR == 1930)$mwt_link),
+               mean(filter(datalist[[dataind]], match_weight3 != 0 & RACE == 1 & TREAT == 1 & YEAR == 1930)$mwt_link))
+  esttex(models, keep = c("TREATx1940"), fitstat = c("n","ar2"), extralines = list("Dep. Var. 1930 Treated Mean" = unlist(means))) %>% print()
 }
 
+# OUTCOME: TABLE 3 (LINKED RESULTS)
+datalist = list(link1, link2, link3)
+datanames = c("Sample 1: SWT in t-10", "Sample 2: MWNILF in t-10", "Sample 3: SWNILF in t-10")
+coefs = c("married_link", "mwt_link", "mwnt_link", "mwnilf_link", "swt_link", "swnt_link", "swnilf_link")
+coefnames = c("0)P[married]","1) P[Married Teacher]", "2) P[Married Non-Teacher in LF]", "3) P[Married Not in LF]",
+              "4)P[unmarried teacher]", "5)P[unmarried nonteacher in LF]", "6)P[unmarried not in lf]")
+
+for (dataind in 1:3){
+  models = list()
+  means = list()
+  i = 1
+  for (coefind in 1:7){
+    df <- datalist[[dataind]] %>% 
+      filter(match_weight2 != 0) %>%
+      #filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
+      filter(RACE == 1) %>%
+      add_did_dummies()
+    model <- feols(as.formula(glue("{coefs[coefind]} ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP")),
+                   data = df)
+    models[[i]] <- model
+    means[[i]] <- mean(filter(df, YEAR == 1930 & TREAT == 1)[[coefs[coefind]]], na.rm=TRUE)
+    i = i + 1 
+  }
+  esttex(models, keep = c("TREATx1940"), fitstat = c("n","ar2"), extralines = list("Dep. Var. 1930 Treated Mean" = unlist(means))) %>% print()
+}
 
 ## MAP OF TREATMENT & CONTROL COUNTIES ----
 
@@ -119,7 +177,7 @@ countysumm_border <- countysumm %>% filter(FIPS %in% border_treat | FIPS %in% bo
 
 graph_treatment(countysumm_border, filename = "treatmap_border")
 
-did_graph(dataset     = countysumm_border %>% filter(mainsamp == 1),
+did_graph(dataset     = countysumm_border %>% filter(mainsampall == 1),
           depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
           depvarnames = c("Men", "Married Women", "Single Women"),
           colors      = c(men_col, mw_col, sw_col),
@@ -130,6 +188,32 @@ did_graph(dataset     = countysumm_border %>% filter(mainsamp == 1),
 
 link1_border <- link1 %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
   mutate(TREAT = ifelse(FIPS %in% border_ctrl, 0, 1))
+
+
+datalist = list(link1, link2, link3)
+datanames = c("Sample 1: SWT in t-10", "Sample 2: MWNILF in t-10", "Sample 3: SWNILF in t-10")
+coefs = c("married_link", "mwt_link", "mwnt_link", "mwnilf_link")
+coefnames = c("0)P[married]","1) P[Married Teacher]", "2) P[Married Non-Teacher in LF]", "3) P[Married Not in LF]")
+
+
+for (dataind in 1:3){
+  models = list()
+  means = list()
+  i = 1
+  for (coefind in 1:4){
+    df <- datalist[[dataind]] %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
+      mutate(TREAT = ifelse(FIPS %in% border_ctrl, 0, 1)) %>%
+      filter(RACE == 1) %>%
+      add_did_dummies()
+    model <- feols(as.formula(glue("{coefs[coefind]} ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP")),
+                   data = df)
+    models[[i]] <- model
+    means[[i]] <- mean(filter(df, YEAR == 1930 & TREAT == 1)[[coefs[coefind]]], na.rm=TRUE)
+    i = i + 1 
+  }
+  esttex(models, keep = c("TREATx1940"), fitstat = c("n","ar2"), extralines = list("Dep. Var. 1930 Treated Mean" = unlist(means))) %>% print()
+}
+
 
 did_graph(dataset     = link1_border %>% filter(mainsamp == 1), 
           depvarlist  = c("pct_lf", "pct_mw_cond_inlf", "pct_sw_cond_inlf"),
@@ -145,7 +229,7 @@ did_graph(dataset     = link1_border %>% filter(mainsamp == 1),
 # CHECK FOUR: SYNTHETIC DID ----
 #______________________________________________________
 # STATE-LEVEL SYNTH DID SETUP
-balanceddata_state <- statesumm %>% 
+balanceddata_state <- statesumm_wht %>% 
   filter(YEAR != 1900 & YEAR < 1950) %>% 
   group_by(STATEICP) %>% 
   summarize(n = n()) %>% 
@@ -180,7 +264,7 @@ for (i in 1:3){
     var_labs[j] <- var
     group_labs[j] <- glue_collapse(treat_labels[[i]])
     # creating panel in correct format
-    state_panel = panel.matrices.new(statesumm %>% filter(STATEICP %in% balanceddata_state$STATEICP & !STATEICP %in% treat_exclude_list[[i]]) %>% 
+    state_panel = panel.matrices.new(statesumm_wht %>% filter(STATEICP %in% balanceddata_state$STATEICP & !STATEICP %in% treat_exclude_list[[i]]) %>% 
                                        mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>% 
                                        filter(YEAR < 1950), 
                                      unit = "STATEICP", time = "YEAR", outcome = var, treatment = "treatment")
@@ -219,7 +303,7 @@ for (i in 1:3){
     ses_sdid_plac[j] <- se_plac
     ses_sdid_jk[j] <- se_jk
     
-    statedid_data <- statesumm %>% mutate(FIPS = STATEICP, 
+    statedid_data <- statesumm_wht %>% mutate(FIPS = STATEICP, 
                                           TREAT = ifelse(STATEICP %in% treat_states, 1, 0)) %>%
       left_join(ctrl_states %>% select(c(STATEICP, weights))) %>%
       mutate(weight = ifelse(TREAT == 1, 0.5, weights/sum(ctrl_states$weights))) %>%
@@ -288,7 +372,7 @@ sdid_cs_graph <- ggplot(data = sdid_graph_data, aes(x = group_num, y = coefs_sdi
   geom_point(size = 5) + labs(x = "", y = "Treat x 1940: Share of Teachers", color = "", shape = "") + theme_minimal() + 
   theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
 
-ggsave(glue("{outfigs}/paper/sdid_shareteach.png"), sdid_cs_graph, width = 8, height = 5)
+ggsave(glue("{outfigs}/paper/sdid_shareteach_wht.png"), sdid_cs_graph, width = 8, height = 5)
 
 
 ## Linked Results ----
@@ -306,17 +390,17 @@ linkreg_means3 <- c()
 i = 1
 for (coefname in c("pct_mw", "pct_mwt", "pct_mwnt", "pct_mwnilf")){
   #link 1
-  state_panel1 = panel.matrices.new(link1state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>% 
+  state_panel1 = panel.matrices.new(link1_state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>% 
                                      mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>% 
                                    filter(YEAR < 1950), 
                                    unit = "STATEICP", time = "YEAR", outcome = coefname, treatment = "treatment")
   synthdid_est_state1 = synthdid_estimate(state_panel1$Y, state_panel1$N0, state_panel1$T0)
   coefs1[[i]] <- synthdid_est_state1
   ses1[[i]] <- sqrt(vcov(synthdid_est_state1, method = "placebo"))
-  linkreg_means1 <- c(linkreg_means1, mean(filter(link1state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
+  linkreg_means1 <- c(linkreg_means1, mean(filter(link1_state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
 
   #link 2
-  state_panel2 = panel.matrices.new(link2state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>%
+  state_panel2 = panel.matrices.new(link2_state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>%
                                       mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>%
                                       filter(YEAR < 1950),
                                     unit = "STATEICP", time = "YEAR", outcome = coefname, treatment = "treatment")
@@ -324,17 +408,17 @@ for (coefname in c("pct_mw", "pct_mwt", "pct_mwnt", "pct_mwnilf")){
   se2 = sqrt(vcov(synthdid_est_state2, method = "placebo"))
   coefs2[[i]] <- synthdid_est_state2
   ses2[[i]] <- se2
-  linkreg_means2 <- c(linkreg_means2, mean(filter(link2state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
+  linkreg_means2 <- c(linkreg_means2, mean(filter(link2_state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
 
   #link 1
-  state_panel3 = panel.matrices.new(link3state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>% 
+  state_panel3 = panel.matrices.new(link3_state %>% filter(STATEICP %in% balanceddata_state$STATEICP) %>% 
                                       mutate(treatment = ifelse(YEAR <= 1930, 0, ifelse(STATEICP %in% treat_states, 1, 0))) %>% 
                                       filter(YEAR < 1950), 
                                     unit = "STATEICP", time = "YEAR", outcome = coefname, treatment = "treatment")
   synthdid_est_state3 = synthdid_estimate(state_panel3$Y, state_panel3$N0, state_panel3$T0)
   coefs3[[i]] <- synthdid_est_state3
   ses3[[i]] <- sqrt(vcov(synthdid_est_state3, method = "placebo"))
-  linkreg_means3 <- c(linkreg_means3, mean(filter(link3state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
+  linkreg_means3 <- c(linkreg_means3, mean(filter(link3_state, YEAR == 1930 & STATEICP %in% treat_states)[[coefname]]))
   
   i = i + 1
 }
@@ -400,30 +484,11 @@ btse_graph <- ggplot(btse_data, aes(x = year_graph,
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
   geom_errorbar(aes(min = y_lb, max = y_ub, width = 0, linewidth = 0.5, alpha = 0.05)) +
   scale_color_manual(values=c(men_col, mw_col, sw_col)) +
-  annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) +
+  annotate("rect", xmin = 1933, xmax = 1938, ymin = -Inf, ymax = Inf, alpha = 0.2) + 
+  geom_text(aes(x = 1935.5, y = -0.07, label = "Marriage Bars \n Removed"), color = "#656565") +
   geom_point(size = 4) + labs(x = "Year", y = "fill", color = "", shape = "") + theme_minimal() + 
-  theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none")
+  theme(legend.position = "bottom") + guides(linewidth = "none", alpha = "none") + labs(y = "DiD Estimate: Share of Teachers")
 ggsave(glue("{outfigs}/paper/shareteach_neighbor_stateclus.png"), btse_graph, width = 8, height = 5)
-
-
-#______________________________________________________
-# CHECK SIX: BLACK TEACHERS ----
-#______________________________________________________
-# redoing analysis with black teachers
-did_graph(dataset     = countysumm_blk %>% filter(neighbor_samp == 1 & mainsamp == 1),
-          depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
-          depvarnames = c("Men", "Married Women", "Single Women"),
-          colors      = c(men_col, mw_col, sw_col),
-          yvar        = "DiD Estimate: Share of Black Teachers",
-          filename    = glue("shareteach_neighbor_blackteach"))  %>% print()
-
-# redoing analysis with all teacher (all races)
-did_graph(dataset     = countysumm_all %>% filter(neighbor_samp == 1 & mainsamp == 1),
-          depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
-          depvarnames = c("Men", "Married Women", "Single Women"),
-          colors      = c(men_col, mw_col, sw_col),
-          yvar        = "DiD Estimate: Share of All Teachers",
-          filename    = glue("shareteach_neighbor_allteach"))  %>% print()
 
 # close log ----
 sink()

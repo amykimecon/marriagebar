@@ -13,8 +13,8 @@ addvars_indiv <- function(dataset){
                                  SEX == 2 & NCHILD == 0 ~ "WNC", #woman without children
                                  TRUE ~ "WC"), #woman with children
            worker = ifelse(YEAR == 1900, 
-                           ifelse(OCC1950 != 999 & AGE >= 18 & AGE <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
-                           ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), #otherwise, those in LABFORCE 
+                           ifelse(OCC1950 != 999 & AGE >= 16 & AGE <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
+                           ifelse(LABFORCE == 2 & AGE >= 16 & AGE <= 64, 1, 0)), #otherwise, those in LABFORCE 
            teacher = ifelse(YEAR == 1900,
                             ifelse(OCC1950 == 93 & worker == 1, 1, 0), #in 1900, no CLASSWKR
                             ifelse(OCC1950 == 93 & CLASSWKR == 2 & worker == 1, 1, 0)),
@@ -60,43 +60,50 @@ summ_gen <- function(dataset){
               WHITEPOP        = sum(ifelse(RACE == 1, 1, 0)), #white population
               BLACKPOP        = sum(ifelse(RACE == 2, 1, 0)), #black pop
               NTEACH          = sum(ifelse(teacher == 1, 1, 0)),
+              NMW = sum(ifelse(demgroup == "MW" & AGE >= 16, 1, 0)),
               NWHITETEACH     = sum(ifelse(teacher==1 & RACE==1, 1, 0)), #number of white teachers
               NWHITEWORK      = sum(ifelse(worker == 1 & RACE == 1, 1, 0)), #number of white workers
-              NWHITEMW        = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white married women
-              NWHITESW        = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white unmarried women
+              NWHITEMW        = sum(ifelse(demgroup == "MW" & RACE == 1 & AGE >= 16 & AGE <= 64, 1, 0)), # number of white married women
+              NWHITESW        = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 16 & AGE <= 64, 1, 0)), # number of white unmarried women
               NBLACKTEACH     = sum(ifelse(teacher==1 & RACE== 2, 1, 0)), #number of white teachers
               NBLACKWORK      = sum(ifelse(worker == 1 & RACE == 2, 1, 0)), #number of white workers
-              NBLACKMW        = sum(ifelse(demgroup == "MW" & RACE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white married women
-              NBLACKSW        = sum(ifelse(demgroup == "SW" & RACE == 2 & AGE >= 18 & AGE <= 64, 1, 0)), # number of white unmarried women
+              NBLACKMW        = sum(ifelse(demgroup == "MW" & RACE == 2 & AGE >= 16 & AGE <= 64, 1, 0)), # number of white married women
+              NBLACKSW        = sum(ifelse(demgroup == "SW" & RACE == 2 & AGE >= 16 & AGE <= 64, 1, 0)), # number of white unmarried women
               NWHITESW_YOUNG  = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE >= 18 & AGE <= 25, 1, 0)), # number of white unmarried women 18-25
               NWHITESW_MID    = sum(ifelse(demgroup == "SW" & RACE == 1 & AGE > 25 & AGE <= 35, 1, 0)), # number of white unmarried women 26-35
               URBAN           = sum(ifelse(URBAN == 2, 1, 0))/n(), #percent of county living in urban area
               PCT_WHITE       = sum(ifelse(RACE == 1, 1, 0))/n(), # percent of county that is white
+              SCHOOLPOP = sum(ifelse(AGE <= 18 & AGE >= 6, 1, 0)),
+              BLACKSCHOOLPOP = sum(ifelse(RACE == 1 & AGE <= 18 & AGE >= 6, 1, 0)),
               WHITESCHOOLPOP  = sum(ifelse(RACE == 1 & AGE <= 18 & AGE >= 6, 1, 0)), #white schoolage population
-              LFP             = sum(worker)/sum(ifelse(AGE >= 18 & AGE <= 64, 1, 0)), #share of prime age population that is in LF
-              LFP_M           = sum(ifelse(worker != 0 & demgroup == "M",  1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "M",  1, 0)), #lfp for men
-              LFP_SW          = sum(ifelse(worker != 0 & demgroup == "SW", 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW", 1, 0)), #lfp for single women
-              LFP_WSW         = sum(ifelse(worker != 0 & demgroup == "SW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW" & RACE == 1, 1, 0)), #lfp for white single women
-              LFP_BSW         = sum(ifelse(worker != 0 & demgroup == "SW" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "SW" & RACE == 2, 1, 0)), #lfp for black single women
-              LFP_MW          = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW", 1, 0)), #lfp for married women
-              LFP_WMW         = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW" & RACE == 1, 1, 0)), #lfp for white married women
-              LFP_BMW         = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 18 & AGE <= 64 & demgroup == "MW" & RACE == 2, 1, 0)), #lfp for black married women
+              LFP             = sum(ifelse(worker == 1 & AGE >= 16 & AGE <= 64, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64, 1, 0)), #share of prime age population that is in LF
+              LFP_M           = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "M",  1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "M",  1, 0)), #lfp for men
+              LFP_SW          = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "SW", 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "SW", 1, 0)), #lfp for single women
+              LFP_WSW         = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "SW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "SW" & RACE == 1, 1, 0)), #lfp for white single women
+              LFP_BSW         = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "SW" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "SW" & RACE == 2, 1, 0)), #lfp for black single women
+              LFP_MW          = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "MW", 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "MW", 1, 0)), #lfp for married women
+              LFP_WMW         = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "MW" & RACE == 1, 1, 0)), #lfp for white married women
+              LFP_BMW         = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "MW" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "MW" & RACE == 2, 1, 0)), #lfp for black married women
               PCT_LF_MW       = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are MW
               PCT_LF_WMW      = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are white MW
               PCT_LF_BMW      = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 2, 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are black MW
+              UNEMP_RATE      = sum(ifelse(EMPSTAT == 2 & AGE >= 16 & LABFORCE == 2, 1, 0))/sum(ifelse(AGE >= 16 & LABFORCE == 2, 1, 0)),
               PCT_UNDER20     = sum(ifelse(AGE < 20, 1, 0))/n(), #share of pop in each age group
               PCT_20TO39      = sum(ifelse(AGE >= 20 & AGE < 40, 1, 0))/n(), #share of pop in each age group
               PCT_40TO59      = sum(ifelse(AGE >= 40 & AGE < 60, 1, 0))/n(), #share of pop in each age group
               PCT_OVER59      = sum(ifelse(AGE >= 60, 1, 0))/n(), #share of pop in each age group
               AGE             = mean(AGE),
               NCHILD          = mean(ifelse(demgroup == "MW", NCHILD, NA), na.rm=TRUE), #avg number of children for married women
-              PCT_MARR        = sum(ifelse(AGE >= 18 & SEX == 2 & MARST %in% c(1,2), 1, 0))/sum(ifelse(AGE >= 18 & SEX == 2, 1, 0)), #share adult women married
-              PCT_MARR_COHORT = sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2 & MARST %in% c(1,2), 1, 0)) / 
-                sum(ifelse(AGE >= 18 & AGE <= 40 & SEX == 2, 1, 0)), #share adult women aged 18-40 married
+              PCT_MARR        = sum(ifelse(AGE >= 16 & SEX == 2 & MARST %in% c(1,2), 1, 0))/sum(ifelse(AGE >= 16 & SEX == 2, 1, 0)), #share adult women married
+              PCT_MARR_COHORT = sum(ifelse(AGE >= 16 & AGE <= 40 & SEX == 2 & MARST %in% c(1,2), 1, 0)) / 
+                sum(ifelse(AGE >= 16 & AGE <= 40 & SEX == 2, 1, 0)), #share adult women aged 16-40 married
               PCT_LIT         = sum(ifelse(LIT == 4, 1, 0))/sum(ifelse(LIT != 0 & !is.na(LIT), 1, 0)), #share literate (out of applicable respondents -- 1870-1930 census this is everyone age 10+)
               N_SWT           = sum(ifelse(RACE == 1 & teacher == 1 & demgroup == "SW" & AGE <= 40, 1, 0)),
               N_MWNT          = sum(ifelse(RACE == 1 & teacher == 0 & demgroup == "MW" & AGE <= 50, 1, 0)),
-              N_MWNILF        = sum(ifelse(RACE == 1 & worker == 0 & demgroup == "MW" & AGE <= 50, 1, 0))
+              N_MWNILF        = sum(ifelse(RACE == 1 & worker == 0 & demgroup == "MW" & AGE <= 50, 1, 0)),
+              PCT_CHILD_SCHOOL= sum(ifelse(AGE <= 18 & AGE >= 6 & SCHOOL == 2, 1, 0))/sum(ifelse(AGE <= 18 & AGE >= 6 & SCHOOL > 0, 1, 0)),
+              PCT_GIRLS_SCHOOL= sum(ifelse(AGE <= 18 & AGE >= 6 & SEX == 2 & SCHOOL == 2, 1, 0))/sum(ifelse(AGE <= 18 & AGE >= 6 & SEX == 2 & SCHOOL > 0, 1, 0)),
+              PCT_GIRLS_HS    = sum(ifelse(AGE <= 18 & AGE >= 12 & SEX == 2 & SCHOOL == 2, 1, 0))/sum(ifelse(AGE <= 18 & AGE >= 12 & SEX == 2 & SCHOOL > 0, 1, 0))
     )
   return(outdata)
 }
@@ -149,21 +156,30 @@ mainsamp <- function(dataset, balanced = TRUE, n = 10, grp = "white", verbose = 
     dataset <- dataset %>% mergefips()
   }
   
-  # identifying counties that are observed in all years (1910, 20, 30, 40, 50)
-  balanceddata <- dataset %>% 
-    filter(YEAR != 1900) %>% 
-    group_by(FIPS) %>% 
-    summarize(n = n()) %>% 
-    filter(n == 5)
-  
   # filter to FIPS with at least n white teachers in 1930 and 40
   if(grp == "white"){
+    # identifying counties that have at least one teacher in all years (1910, 20, 30, 40, 50)
+    balanceddata <- dataset %>% 
+      filter(YEAR != 1900 & NWHITETEACH > 0) %>% 
+      group_by(FIPS) %>% 
+      summarize(n = n()) %>% 
+      filter(n == 5)
     fips1940 <- filter(dataset, YEAR == 1940 & NWHITETEACH >= n)$FIPS
     fips1930 <- filter(dataset, YEAR == 1930 & NWHITETEACH >= n)$FIPS
   }else if(grp == "black"){
+    balanceddata <- dataset %>% 
+      filter(YEAR != 1900 & NBLACKTEACH > 0) %>% 
+      group_by(FIPS) %>% 
+      summarize(n = n()) %>% 
+      filter(n == 5)
     fips1940 <- filter(dataset, YEAR == 1940 & NBLACKTEACH >= n)$FIPS
     fips1930 <- filter(dataset, YEAR == 1930 & NBLACKTEACH >= n)$FIPS
   }else{
+    balanceddata <- dataset %>% 
+      filter(YEAR != 1900 & NTEACH > 0) %>% 
+      group_by(FIPS) %>% 
+      summarize(n = n()) %>% 
+      filter(n == 5)
     fips1940 <- filter(dataset, YEAR == 1940 & NTEACH >= n)$FIPS
     fips1930 <- filter(dataset, YEAR == 1930 & NTEACH >= n)$FIPS
   }
@@ -209,6 +225,13 @@ mergefips <- function(dataset){
 
   return(outdata)
 } #!#! CHECKED
+
+add_tva_ind <- function(dataset){
+  tva <- read_csv(glue("{root}/tva_code/icp_codes_with_tva.csv"))
+  x <- dataset %>% left_join(tva %>% select(stateicp, countycode, tva), by = c("STATEICP" = "stateicp", "COUNTYICP" = "countycode")) %>%
+    mutate(tva = ifelse(is.na(tva), 0, tva))
+  return(x)
+}
 
 # merging a dataset with STATEICP and COUNTYICP variables with retail sales data
 retailsales <- function(dataset){
@@ -276,7 +299,7 @@ retailsales <- function(dataset){
                                   TRUE ~ COUNTYICP
                                   )) %>%
     #rldf3929 = growth in retail sales from 1929 to 1939
-    left_join(retailsales %>% dplyr::select(STATE, NDMTCODE, RLDF3929, RRTSAP29, RRTSAP39), 
+    left_join(retailsales %>% dplyr::select(STATE, NDMTCODE, RLDF3929, RRTSAP29, RRTSAP33, RRTSAP39, RLDF3329, RLDF3933), 
               by = c("STATEICP"="STATE","COUNTYTEMP"="NDMTCODE")) %>% 
     dplyr::select(-COUNTYTEMP)
 } #!#! CHECKED
@@ -288,11 +311,11 @@ retailsales <- function(dataset){
 lf_summ_demgroup <- function(dataset, outvars = c("lfp", "pctlf"), wide = TRUE){
   outdata <- dataset %>% 
     group_by(YEAR, demgroup) %>%
-    summarize(pop = sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)), #population of demgroup x year
-              numlf= sum(ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0)), #lf size of demgroup x year
-              numteach = sum(ifelse(OCC1950 == 93 & CLASSWKR == 2 & LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0)), #num teachers
-              lfp = sum(ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0))/sum(ifelse(AGE >= 18 & AGE <= 64, PERWT, 0)), #share of group in lf
-              teachshare = sum(ifelse(OCC1950 == 93 & CLASSWKR == 2 & LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0))/sum(ifelse(LABFORCE == 2 & AGE >= 18 & AGE <= 64, PERWT, 0)) #share of workers that are teachers in group
+    summarize(pop = sum(ifelse(AGE >= 16 & AGE <= 64, PERWT, 0)), #population of demgroup x year
+              numlf= sum(ifelse(LABFORCE == 2 & AGE >= 16 & AGE <= 64, PERWT, 0)), #lf size of demgroup x year
+              numteach = sum(ifelse(OCC1950 == 93 & CLASSWKR == 2 & LABFORCE == 2 & AGE >= 16 & AGE <= 64, PERWT, 0)), #num teachers
+              lfp = sum(ifelse(LABFORCE == 2 & AGE >= 16 & AGE <= 64, PERWT, 0))/sum(ifelse(AGE >= 16 & AGE <= 64, PERWT, 0)), #share of group in lf
+              teachshare = sum(ifelse(OCC1950 == 93 & CLASSWKR == 2 & LABFORCE == 2 & AGE >= 16 & AGE <= 64, PERWT, 0))/sum(ifelse(LABFORCE == 2 & AGE >= 16 & AGE <= 64, PERWT, 0)) #share of workers that are teachers in group
                 ) %>%
     group_by(YEAR) %>%
     mutate(pctlf = numlf/sum(numlf),# share of lf in demgroup
@@ -324,9 +347,9 @@ addvars_indiv_linked <- function(dataset){
                                       TRUE ~ "MW"),
            marst_link     = ifelse(MARST_link == 1 | MARST_link == 2, 1, 0), 
            worker_base    = ifelse(YEAR_base == 1900, 
-                                ifelse(OCC1950_base != 999 & AGE_base >= 18 & AGE_base <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
-                                ifelse(LABFORCE_base == 2  & AGE_base >= 18 & AGE_base <= 64, 1, 0)), #otherwise, those in LABFORCE 
-           worker_link    = ifelse(LABFORCE_link == 2 & AGE_link >= 18 & AGE_link <= 64, 1, 0),
+                                ifelse(OCC1950_base != 999 & AGE_base >= 16 & AGE_base <= 64, 1, 0), #in 1900, no LABFORCE so use those with occupation
+                                ifelse(LABFORCE_base == 2  & AGE_base >= 16 & AGE_base <= 64, 1, 0)), #otherwise, those in LABFORCE 
+           worker_link    = ifelse(LABFORCE_link == 2 & AGE_link >= 16 & AGE_link <= 64, 1, 0),
            teacher_base   = ifelse(YEAR_base == 1900,
                                  ifelse(OCC1950_base == 93 & worker_base == 1, 1, 0), #in 1900, no CLASSWKR
                                  ifelse(OCC1950_base == 93 & CLASSWKR_base == 2 & worker_base == 1, 1, 0)),
@@ -490,6 +513,54 @@ summlinks_sec <- function(dataset, n = 10){
   return(outdata)
 } #!#! CHECKED
 
+# takes filtered duckdb linked dataset, summarizes county level stuff, merges to cleaned individual level stuff
+indiv_link_clean <- function(dataset, matches = NA, n = 10){
+  link_ct <- dataset %>% summlinks(n) %>% left_join(matches %>% group_by(FIPS, match_weight1, match_weight2, match_weight3) %>% summarize(), 
+                                                      by = "FIPS")
+  
+  link_clean <- dataset %>% 
+    mutate(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, YEAR = YEAR_link, RACE = RACE_base, URBAN = URBAN_base, AGE = AGE_base) %>%
+    select(STATEICP, COUNTYICP, YEAR, demgroup_base, demgroup_link, teacher_link, worker_link, RACE, URBAN,AGE,
+           OCCSCORE_link, NCHILD_link, move, move_state) %>%
+    collect() %>% 
+    left_join(link_ct %>% select(STATEICP, COUNTYICP, YEAR_base, YEAR, mainsamp, neighbor_samp, neighbor_sampNC, neighbor_sampKY,
+                                 FIPS, SOUTH, TREAT, nlink, match_weight1, match_weight2, match_weight3),
+              by = c("STATEICP", "COUNTYICP", "YEAR")
+              ) %>%
+    mutate(
+      married_link = ifelse(demgroup_link == "MW", 1, 0),
+      mwt_link = ifelse(teacher_link & demgroup_link == "MW", 1, 0),
+      mwnt_link = ifelse(teacher_link == 0 & worker_link == 1 & demgroup_link == "MW", 1, 0),
+      mwnilf_link = ifelse(worker_link == 0 & demgroup_link == "MW", 1, 0),
+      unmarried_link = ifelse(demgroup_link == "SW", 1, 0),
+      swt_link = ifelse(teacher_link & demgroup_link == "SW", 1, 0),
+      swnt_link = ifelse(teacher_link == 0 & worker_link == 1 & demgroup_link == "SW", 1, 0),
+      swnilf_link = ifelse(worker_link == 0 & demgroup_link == "SW", 1, 0)) 
+  
+  return(link_clean)
+}
+
+# same as above for secretaries
+indiv_link_clean_sec <- function(dataset, matches, n = 10){
+  link_ct <- dataset %>% summlinks_sec(n) %>% left_join(matches %>% group_by(FIPS, match_weight1, match_weight2, match_weight3) %>% summarize(), 
+                                                        by = "FIPS")
+  link_clean <- dataset %>% 
+    mutate(STATEICP = STATEICP_base, COUNTYICP = COUNTYICP_base, YEAR = YEAR_link, RACE = RACE_base, AGE = AGE_base) %>%
+    select(STATEICP, COUNTYICP, YEAR, demgroup_base, demgroup_link, secretary_link, worker_link, RACE, AGE) %>%
+    collect() %>% 
+    left_join(link_ct %>% select(STATEICP, COUNTYICP, YEAR_base, YEAR, mainsamp, neighbor_samp, neighbor_sampNC, neighbor_sampKY,
+                                 FIPS, SOUTH, TREAT, nlink, match_weight1, match_weight2, match_weight3),
+              by = c("STATEICP", "COUNTYICP", "YEAR")
+    ) %>%
+    mutate(
+      married_link = ifelse(demgroup_link == "MW", 1, 0),
+      mws_link = ifelse(secretary_link & demgroup_link == "MW", 1, 0),
+      mwns_link = ifelse(secretary_link == 0 & worker_link == 1 & demgroup_link == "MW", 1, 0),
+      mwnilf_link = ifelse(worker_link == 0 & demgroup_link == "MW", 1, 0)) 
+  
+  return(link_clean)
+}
+
 # Takes year x county-level LINKED dataset and returns vector of FIPS of counties in main LINKED sample 
 #   (only keeping balanced panel of counties with at least n filtered & linked people in 1930 and 1940 and non-missing FIPS)
 mainlinksamp <- function(dataset, balanced = TRUE, n = 10, verbose = FALSE){
@@ -541,14 +612,14 @@ matching <- function(longdata, varnames, distance = "robust_mahalanobis", method
   }
   
   # fips codes of main sample
-  mainsampfips = mainsamp(longdata)
+  mainsampfips = mainsamp(longdata, grp = 'all')
   
   # create lists of names of variables for matching (varnames in 1930 & growth from 1920 to 1930, and retail sales if retail=TRUE)
   filter_varnames = c(glue("{varnames}_1930"),glue("{varnames}_growth1930"))
   
   # add on retail variable names if matching on retail
   if(retail){
-    filter_varnames <- c(filter_varnames, "RRTSAP39", "RLDF3929") #39 level and growth 29-39
+    filter_varnames <- c(filter_varnames, "RRTSAP29", "RLDF3329", "RLDF3933") #39 level and growth 29-39
   }
   
   # prepping data for matching: restrict to main sample, 
@@ -663,11 +734,11 @@ did_graph_data <- function(dataset, depvar, controls = "",
     # for control group
     did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + factor(FIPS) {controls}"),  
                        data = regdata %>% filter(TREAT == 0), weights = weight)
-    vcov_ctrl    = vcovCL(did_reg_ctrl, cluster = regdata[[clus]], type = "HC1")
+    vcov_ctrl    = vcovCL(did_reg_ctrl, cluster = filter(regdata, TREAT == 0)[[clus]], type = "HC1")
     # for treated group
     did_reg_treat <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + factor(FIPS) {controls}"), 
                         data = regdata %>% filter(TREAT == 1), weights = weight)
-    vcov_treat    = vcovCL(did_reg_treat, cluster = regdata[[clus]], type = "HC1")
+    vcov_treat    = vcovCL(did_reg_treat, cluster = filter(regdata, TREAT == 1)[[clus]], type = "HC1")
     # make dataframe for output to return 
     if (table){ # for stargazer 
       return(list(did_reg_ctrl, vcov_ctrl, did_reg_treat, vcov_treat))

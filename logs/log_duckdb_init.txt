@@ -1,12 +1,23 @@
-[1] "\n\n*********** CENSUS TREE LINKING ************\n\n"
-Create or replace CensusTree linking file for link year 1920...: 15.338 sec elapsed
-Merge CensusTree linking file to base year 1910...: 155.987 sec elapsed
-Merge CensusTree linking file to link year 1920...: 800.602 sec elapsed
-Create or replace CensusTree linking file for link year 1930...: 29.288 sec elapsed
-Merge CensusTree linking file to base year 1920...: 533.13 sec elapsed
-Merge CensusTree linking file to link year 1930...: 1375.056 sec elapsed
-Create or replace CensusTree linking file for link year 1940...: 38.811 sec elapsed
-Merge CensusTree linking file to base year 1930...: 729.901 sec elapsed
-Merge CensusTree linking file to link year 1940...: 2355.672 sec elapsed
-[1] 204775274
-Concatenating linked datasets...: 829.111 sec elapsed
+[1] "*********** Existing tables in database ************"
+                name
+1  allyears_raw_samp
+2      censusraw1910
+3      censusraw1920
+4      censusraw1930
+5      censusraw1940
+6      censusraw1950
+7       censusrawall
+8         linked1920
+9         linked1930
+10        linked1940
+11         linkedall
+[1] 49144581
+Create or replace table allyears_raw_samp...: 77.414 sec elapsed
+[1] "\n\n*********** IPUMS CENSUS FILES ************\n\n"
+Create or replace table censusraw1910...: 83.524 sec elapsed
+Create temp spouse database for censusraw1910...: 8.701 sec elapsed
+Link spouses for censusraw1910...: 88.046 sec elapsed
+Create or replace table censusraw1920...: 97.742 sec elapsed
+Create temp spouse database for censusraw1920...: 8.415 sec elapsed
+Link spouses for censusraw1920...: 183.855 sec elapsed
+Create or replace table censusraw1930...: 114.152 sec elapsed

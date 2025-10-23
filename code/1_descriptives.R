@@ -27,7 +27,20 @@ test_base <- allyears_raw_samp %>%
                                     demgroup=="Men"             & coll_above==1 ~ "Men, College",
                                     TRUE ~ "Men, Less than college"))
 
+#_________________________________________________
+# STATS ON BLACK WOMEN ----
+#_________________________________________________
+countysumm_all %>% filter(neighbor_samp == 1 & YEAR == 1930) %>% group_by(1) %>% summarize(nteach = sum(num_Teacher), meanteach = mean(num_Teacher))
+countysumm %>% filter(neighbor_samp == 1 & YEAR == 1930) %>% group_by(1) %>% summarize(nteach = sum(num_Teacher), meanteach = mean(num_Teacher))
+countysumm_blk %>% filter(neighbor_samp  == 1 & YEAR == 1930) %>% group_by(1) %>% summarize(nteach = sum(num_Teacher,na.rm=TRUE), meanteach = mean(ifelse(is.na(num_Teacher), 0, num_Teacher)))
 
+nteach <- countysumm %>% filter(TREAT == 1) %>% mutate(num_Teacher_white = num_Teacher) %>% select(FIPS, YEAR, AB, num_Teacher_white)  %>%
+  left_join(countysumm_blk %>% filter(TREAT == 1) %>% mutate(num_Teacher_blk = num_Teacher) %>% select(FIPS, YEAR, AB, num_Teacher_blk), by = c("FIPS","YEAR","AB"))
+
+ggplot(nteach %>%   pivot_longer(c(num_Teacher_white,num_Teacher_blk), names_to = 'var', values_to = "num_teacher") %>%
+         mutate(num_teacher = ifelse(is.na(num_teacher), 0, num_teacher)) %>% filter(num_teacher < 100), aes(x = num_teacher, color = var, fill = var)) + geom_density(alpha = 0.3) + facet_wrap(~YEAR)
+
+nrow(filter(nteach))
 #___________________________________________________
 ## CHECK 0: % LF who are college-educated MW? ----
 #___________________________________________________
@@ -212,43 +225,44 @@ fig1b_demogtrends_teachers <- ggplot(data = samp_byyear,
   xlab("Year") + ylab("Fraction of US Teachers") + labs(fill = "") + 
   scale_fill_manual(values=c(men_col, mw_col, sw_col)) + 
   theme_minimal() + theme(legend.position = "bottom")
-# 
-# #_________________________________________________
-# # MAP OF TREATMENT & CONTROL COUNTIES ----
-# #_________________________________________________
-# ## neighbor ----
-# graph_treatment(countysumm %>% filter(neighbor_samp == 1 & mainsamp == 1), 
-#                 filename = "treatmap_neighbor") + 
-#                 ggtitle("Neighbor Sample")
-# 
-# ## match 1 ----
-# graph_treatment(countysumm %>% filter(match_weight1 != 0 & mainsamp == 1), 
-#                 filename = "treatmap_matched1") + 
-#                 ggtitle("Matched Sample 1")
-# 
-# ## match 2 ----
-# graph_treatment(countysumm %>% filter(match_weight2 != 0 & mainsamp == 1), 
-#                 filename = "treatmap_matched2") + 
-#                 ggtitle("Matched Sample 2")
-# 
-# ## match 3 ----
-# graph_treatment(countysumm %>% 
-#                   filter(match_weight3 != 0 & mainsamp == 1) %>%
-#                   mutate(weights = match_weight3),
-#                 filename = "treatmap_matched3", full = TRUE) +
-#                 ggtitle("Matched Sample 3")
+
+#_________________________________________________
+# MAP OF TREATMENT & CONTROL COUNTIES ----
+#_________________________________________________
+## neighbor ----
+graph_treatment(countysumm %>% filter(neighbor_samp == 1 & mainsampall == 1),
+                filename = "treatmap_neighbor") +
+                ggtitle("Neighbor Sample")
+
+## match 1 ----
+graph_treatment(countysumm %>% filter(match_weight1 != 0 & mainsampall == 1),
+                filename = "treatmap_matched1") +
+                ggtitle("Matched Sample 1")
+
+## match 2 ----
+graph_treatment(countysumm %>% filter(match_weight2 != 0 & mainsampall == 1),
+                filename = "treatmap_matched2") +
+                ggtitle("Matched Sample 2")
+
+## match 3 ----
+graph_treatment(countysumm %>%
+                  filter(match_weight3 != 0 & mainsampall == 1) %>%
+                  mutate(weights = match_weight3),
+                filename = "treatmap_matched3", full = TRUE) +
+                ggtitle("Matched Sample 3")
 
 #_________________________________________________
 # MATCHING TEST FOR TREATMENT AND CONTROL: BOXPLOTS
 #_________________________________________________
 #varnames <- c("URBAN","LFP", "PCT_LIT")
 varnames <-  c("URBAN","LFP", "LFP_MW", "POP", "AGE", "PCT_LIT", "PCT_WHITE", "pct_sw_Teacher", "pct_mw_Teacher", "NCHILD","PCT_MARR")
+#varnames <-  c("URBAN","LFP", "LFP_MW", "POP", "AGE", "PCT_WHITE", "pct_sw_Teacher", "pct_mw_Teacher", "NCHILD","PCT_MARR")
 
-countysummwide <- countysumm %>% filter(mainsamp==1)%>%
-  pivot_wider(id_cols = c(match_weight1, match_weight2, match_weight3, STATEICP, COUNTYICP, FIPS, mainsamp, TREAT, neighbor_samp),
+countysummwide <- countysumm %>% filter(mainsampall==1)%>%
+  pivot_wider(id_cols = c(match_weight1, match_weight2, match_weight3, STATEICP, COUNTYICP, FIPS, mainsampall, TREAT, neighbor_samp),
                                              names_from  = YEAR, values_from = all_of(c(varnames))) %>%
   retailsales() %>% #merging with retail sales
-  mutate(across(all_of(c(glue("{varnames}_1930"),"RRTSAP39")), scale)) #standardizing variables
+  mutate(across(all_of(c(glue("{varnames}_1930"),"RLDF3329", "RLDF3933")), scale)) #standardizing variables
   
 boxplotdata <- countysummwide %>% filter(TREAT != 1) %>% 
   pivot_longer(starts_with("match_weight"), names_to = "sample", names_prefix = "match_weight", values_to = "weight") %>%
@@ -257,12 +271,12 @@ boxplotdata <- countysummwide %>% filter(TREAT != 1) %>%
   bind_rows(countysummwide %>% filter(TREAT == 1) %>% mutate(sample = "Treated", weight = 1)) %>% #adding treated units
   bind_rows(countysummwide %>% filter(neighbor_samp == 1 & TREAT != 1) %>% mutate(sample = "Neighbor", weight = 1)) %>% #adding neighbor sample
   mutate(sample = factor(sample, levels = c("All Untreated", 3, 2, 1, "Neighbor", "Treated"), labels = c("All Untreated", "Control 3", "Control 2", "Control 1",  "Neighbor","Treated"))) %>%
-  select(c(all_of(glue("{varnames}_1930")), RRTSAP39, FIPS, sample, weight)) %>%
-  pivot_longer(all_of(c(glue("{varnames}_1930"),"RRTSAP39")), names_to = "var", values_to = "value") %>%
-  mutate(var = factor(var, levels = c("NCHILD_1930","PCT_MARR_1930","pct_mw_Teacher_1930","pct_sw_Teacher_1930","RRTSAP39","LFP_MW_1930", "LFP_1930",
+  select(c(all_of(glue("{varnames}_1930")), RLDF3329, RLDF3933, FIPS, sample, weight)) %>%
+  pivot_longer(all_of(c(glue("{varnames}_1930"),"RLDF3329", "RLDF3933")), names_to = "var", values_to = "value") %>%
+  mutate(var = factor(var, levels = c("NCHILD_1930","PCT_MARR_1930","pct_mw_Teacher_1930","pct_sw_Teacher_1930","RLDF3933","RLDF3329", "LFP_MW_1930", "LFP_1930",
     "PCT_LIT_1930", "PCT_WHITE_1930", "AGE_1930", "URBAN_1930","POP_1930"), 
     labels = c("Number of Children", "Share Married", "Share Teachers Marr. Women", "Share Teachers Unmarr. Women",
-               "Retail Sales per Capita (1939)", "LFP of Married Women", "Labor Force Participation", "Share Literate", "Share White", "Mean Age", "Share Urban", "Population")))
+               "Retail Sales per Capita Growth (1933-39)", "Retail Sales per Capita Growth (1929-33)", "LFP of Married Women", "Labor Force Participation", "Share Literate", "Share White", "Mean Age", "Share Urban", "Population")))
 
 # boxplot
 ggplot(data = boxplotdata, aes(x = var, y = value, weight = weight)) + 
@@ -301,7 +315,7 @@ ggplot(data = meandiffsdata, aes(x = var, y = absmeandiff)) +
 #______________________________________________________________________
 county_means_all <- countysumm %>% 
   group_by(YEAR, TREAT) %>%
-  filter(mainsamp == 1) %>%
+  filter(mainsampall == 1) %>%
   summarise(across(c(pct_mw_Teacher, pct_mw_Secretary), function(.x) mean(.x, na.rm=TRUE))) %>%
   mutate(fig_label = ifelse(TREAT == 1, glue("Treated Mean: {round(pct_mw_Teacher,3)}"),
                             glue("Untreated Mean: {round(pct_mw_Teacher,3)}")),
@@ -310,23 +324,58 @@ county_means_all <- countysumm %>%
          TREAT = ifelse(TREAT == 1, "Marriage Bar Removed (Treated)", "Marriage Bar Not Removed (Untreated)"),
   )
 
-## paper ----
-ggplot(filter(countysumm, mainsamp == 1) %>% 
-         mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed (Treated)", "Marriage Bar Not Removed (Untreated)")),
-       aes(x = pct_mw_Teacher, color = factor(TREAT), fill = factor(TREAT))) + 
-  geom_histogram(aes(y=after_stat(density)), position = "identity", alpha = 0.3, binwidth = 0.01, linewidth = 0.2) + 
-  #geom_density(alpha = 0.2) +
-  geom_vline(data = county_means_all, 
-             aes(xintercept = pct_mw_Teacher, color = factor(TREAT)), 
-             linewidth = 0.6,linetype = "dashed") + 
-  geom_text(data = county_means_all, aes(x = xpos, y = ypos, label = fig_label), size = 3) +
-  scale_color_manual(values=c(control_col, treat_col)) +
-  scale_fill_manual(values=c(control_col, treat_col), guide = "none") +
-  facet_wrap(~YEAR) + labs(y = "Density", x = "Married Women Teachers as Fraction of All Teachers in County", color = "") + 
-  theme_minimal() + 
-  theme(legend.position = "bottom", axis.text = element_text(size = 12), text = element_text(size = 14))
+county_means_wht <- countysumm_wht %>% 
+  group_by(YEAR, TREAT) %>%
+  filter(mainsampall == 1) %>%
+  summarise(across(c(pct_mw_Teacher, pct_mw_Secretary), function(.x) mean(.x, na.rm=TRUE))) %>%
+  mutate(fig_label = ifelse(TREAT == 1, glue("Treated Mean: {round(pct_mw_Teacher,3)}"),
+                            glue("Untreated Mean: {round(pct_mw_Teacher,3)}")),
+         xpos = ifelse(YEAR == 1950, 0.17, 0.5),
+         ypos = ifelse(TREAT == 1, 8, 11),
+         TREAT = ifelse(TREAT == 1, "Marriage Bar Removed (Treated)", "Marriage Bar Not Removed (Untreated)"),
+  )
 
-ggsave(filename = glue("{outfigs}/paper/fig2_marteach_dist.png"), width = 8, height = 5)
+
+county_means_blk <- countysumm_blk %>% 
+  group_by(YEAR, TREAT) %>%
+  filter(mainsampall == 1) %>%
+  summarise(across(c(pct_mw_Teacher, pct_mw_Secretary), function(.x) mean(.x, na.rm=TRUE))) %>%
+  mutate(fig_label = ifelse(TREAT == 1, glue("Treated Mean: {round(pct_mw_Teacher,3)}"),
+                            glue("Untreated Mean: {round(pct_mw_Teacher,3)}")),
+         xpos = ifelse(YEAR == 1950, 0.17, 0.5),
+         ypos = ifelse(TREAT == 1, 8, 11),
+         TREAT = ifelse(TREAT == 1, "Marriage Bar Removed (Treated)", "Marriage Bar Not Removed (Untreated)"),
+  )
+
+# mu = mean(filter(countysumm, YEAR == 1930 & TREAT == 1)$pct_mw_Teacher)-mean(filter(countysumm, YEAR == 1930 & TREAT == 0)$pct_mw_Teacher, na.rm=TRUE)
+# for (yr in seq(1910, 1950, 10)){
+#   print(t.test(filter(countysumm, YEAR == yr & TREAT == 1)$pct_mw_Teacher, filter(countysumm, YEAR == yr & TREAT == 0)$pct_mw_Teacher, alternative = "greater", mu = mu))
+# }
+
+## paper ----
+suff = c('all', 'wht', 'blk')
+dfs = list(countysumm, countysumm_wht, countysumm_blk)
+means = list(county_means_all, county_means_wht, county_means_blk)
+for (i in 1:3){
+  grp <- ggplot(filter(dfs[[i]], mainsampall == 1) %>% 
+           mutate(TREAT = ifelse(TREAT == 1, "Marriage Bar Removed (Treated)", "Marriage Bar Not Removed (Untreated)")),
+         aes(x = pct_mw_Teacher, color = factor(TREAT), fill = factor(TREAT))) + 
+    geom_histogram(aes(y=after_stat(density)), position = "identity", alpha = 0.3, binwidth = 0.01, linewidth = 0.2) + 
+    #geom_density(alpha = 0.2) +
+    geom_vline(data = means[[i]], 
+               aes(xintercept = pct_mw_Teacher, color = factor(TREAT)), 
+               linewidth = 0.6,linetype = "dashed") + 
+    geom_text(data = means[[i]], aes(x = xpos, y = ypos, label = fig_label), size = 3) +
+    scale_color_manual(values=c(control_col, treat_col)) +
+    scale_fill_manual(values=c(control_col, treat_col), guide = "none") +
+    facet_wrap(~YEAR) + labs(y = "Density", x = "Married Women Teachers as Fraction of All Teachers in County", color = "") + 
+    theme_minimal() + 
+    theme(legend.position = "bottom", axis.text = element_text(size = 12), text = element_text(size = 14))
+  
+  print(grp)
+  ggsave(grp,filename = glue("{outfigs}/paper/fig2_marteach_dist_{suff[i]}.png"), width = 8, height = 5)
+}
+
 
 ## slides (teachers by year) ----
 for (yr in seq(1910,1950,10)){
@@ -352,27 +401,28 @@ for (yr in seq(1910,1950,10)){
 countysumm_stats <- countysumm %>%
   #filter(mainsamp == 1) %>% #main sample (all counties)
   mutate(POP_THOUS            = POP/1000, 
-         WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
-         STUDENT_PER_TEACH    = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA),
+         SCHOOLPOP_THOUS = SCHOOLPOP/1000, 
+         STUDENT_PER_TEACH    = ifelse(SCHOOLPOP != 0, SCHOOLPOP/num_Teacher, NA),
          summgroup            = "All") %>%
   rbind(countysumm %>% filter(SOUTH == 1) %>% #mainsamp == 1 & SOUTH == 1) %>%  # southern counties only
           mutate(POP_THOUS            = POP/1000, 
-                 WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
-                 STUDENT_PER_TEACH    = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), 
+                 SCHOOLPOP_THOUS = SCHOOLPOP/1000, 
+                 STUDENT_PER_TEACH    = ifelse(SCHOOLPOP != 0, SCHOOLPOP/num_Teacher, NA),
                  summgroup            = "South")) %>%
   rbind(countysumm %>% filter(neighbor_samp == 1) %>% #mainsamp == 1 & neighbor_samp == 1) %>% #neighboring & treated counties (separately)
           mutate(POP_THOUS            = POP/1000, 
-                 WHITESCHOOLPOP_THOUS = WHITESCHOOLPOP/1000, 
-                 STUDENT_PER_TEACH    = ifelse(WHITESCHOOLPOP != 0, WHITESCHOOLPOP/num_Teacher, NA), 
+                 SCHOOLPOP_THOUS = SCHOOLPOP/1000, 
+                 STUDENT_PER_TEACH    = ifelse(SCHOOLPOP != 0, SCHOOLPOP/num_Teacher, NA),
                  summgroup            = ifelse(TREAT == 1, "Treated", "Neighb. Sth."))) %>%
   mutate(summgroup = factor(summgroup, levels = c("All", "South", "Treated", "Neighb. Sth.")))
 
-varnames_1930 = c("POP_THOUS","WHITESCHOOLPOP_THOUS", "URBAN", 
-                  "LFP_MW", "LFP_WMW", "NCHILD", 
+varnames_1930 = c("POP_THOUS","SCHOOLPOP_THOUS", "URBAN", 
+                  "LFP_MW", "LFP_WMW", "NCHILD", "UNEMP_RATE",
                   "STUDENT_PER_TEACH","pct_m_Teacher", 
                   "pct_sw_Teacher", "pct_mw_Teacher")
-varlabs_1930 = c("Population (Thous.)", "White School-Age Pop. (Thous.)", "Share Urban", 
+varlabs_1930 = c("Population (Thous.)", "School-Age Pop. (Thous.)", "Share Urban", 
                  "LFP of Married Women", "LFP of White Married Women", "Num. Children of Marr. Wom.", 
+                 "Unemployment Rate",
                  "Students/Teachers", "Share Men", 
                  "Share Single Women", "Share Married Women")
 
@@ -383,34 +433,42 @@ summ_stats <- countysumm_stats %>%
   summarize(OBS = n(),
             across(all_of(varnames_1930), .fns = c(~mean(.x, na.rm=TRUE), #mean
                                                    ~sd(.x, na.rm=TRUE)/sqrt(OBS))))
+# pvals
+pvals = list()
+grpa <- countysumm_stats %>% filter(summgroup == "Treated" & YEAR == 1930)
+grpb <- countysumm_stats %>% filter(summgroup == "Neighb. Sth." & YEAR == 1930)
+for (i in 1:length(varnames_1930)){
+  var = varnames_1930[i]
+  pvals[[i]] <- t.test(grpa[[var]], grpb[[var]])$p.value
+}
 
 summ_stats_out <- as.data.frame(t(summ_stats))
 
 summtex <- file(glue("./tables/summstats.tex"), open = "w")
 names <- summ_stats_out[1,]
 
-writeLines(c("\\begin{tabular}{lC{2cm}C{2cm}C{2.3cm}C{2cm}}", 
-             "\\hhline{=====}",
-             "&", glue("{names[1]} & {names[2]} & {names[3]} & {names[4]}\\\\"),
-             "& (1) & (2) & (3) & (4) \\\\", "\\hhline{-----}"), summtex)
+writeLines(c("\\begin{tabular}{lC{2cm}C{2cm}C{2.3cm}C{2cm}C{2cm}}", 
+             "\\toprule",
+             "&", glue("{names[1]} & {names[2]} & {names[3]} & {names[4]} & p-value \\\\"),
+             "& (1) & (2) & (3) & (4) & (5) \\\\", "\\midrule"), summtex)
 for (i in 1:length(c(varlabs_1930))){
   means <- round(as.numeric(summ_stats_out[2*i+1,]), 3)
   sds <- paste0("(", round(as.numeric(summ_stats_out[2*i + 2,]), 3), ")")
   # panel A header
   if (varlabs_1930[i] == "Population (Thous.)"){
-    writeLines(c("\\multicolumn{5}{l}{\\underline{\\textbf{Panel A: General County Statistics}}}\\\\ [1em]"), summtex)
+    writeLines(c("\\multicolumn{6}{l}{\\underline{\\textbf{Panel A: General County Statistics}}}\\\\ [1em]"), summtex)
   }
   # panel B header
   if (varlabs_1930[i] == "Students/Teachers"){
-    writeLines(c("[1em] \\multicolumn{5}{l}{\\underline{\\textbf{Panel B: County Statistics on White Teachers}}}\\\\ [1em]"), summtex)
+    writeLines(c("[1em] \\multicolumn{6}{l}{\\underline{\\textbf{Panel B: County Statistics on White Teachers}}}\\\\ [1em]"), summtex)
   }
-  writeLines(c(paste(c(varlabs_1930)[i], "&", glue("{means[1]} & {means[2]} & {means[3]} & {means[4]}\\\\")),
-               "&", glue("{sds[1]} & {sds[2]} & {sds[3]} & {sds[4]}\\\\")), summtex)
+  writeLines(c(paste(c(varlabs_1930)[i], "&", glue("{means[1]} & {means[2]} & {means[3]} & {means[4]} & {round(pvals[[i]],3)} \\\\")),
+               "&", glue("{sds[1]} & {sds[2]} & {sds[3]} & {sds[4]} & \\\\")), summtex)
 }
 
 obs <- round(as.numeric(summ_stats_out[2,]), 0)
-writeLines(c("\\hhline{-----}","$N$ (Counties)", "&", glue("{obs[1]} & {obs[2]} & {obs[3]} & {obs[4]}\\\\")), summtex)
-writeLines(c("\\hhline{=====}","\\end{tabular}"), summtex)
+writeLines(c("\\midrule","$N$ (Counties)", "&", glue("{obs[1]} & {obs[2]} & {obs[3]} & {obs[4]} & \\\\")), summtex)
+writeLines(c("\\bottomrule","\\end{tabular}"), summtex)
 close(summtex)
 
 
@@ -422,9 +480,12 @@ con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
 fullcount_nos <- tbl(con, "censusrawall") %>%
   addvars_indiv() %>%
   group_by(YEAR) %>%
-  summarize(n_tot = n(),
+  summarize(#n_tot = n(),
             n_treat = sum(ifelse(STATEICP == 47 | STATEICP == 51, 1, 0)),
-            n_teach = sum(ifelse(teacher == 1, 1, 0)),
+            n_ctrl = sum(ifelse(STATEICP %in% c(40, 48, 54, 56), 1, 0)),
+            #n_teach = sum(ifelse(teacher == 1, 1, 0)),
+            n_wht = sum(ifelse(RACE == 1 & demgroup != "M", 1, 0)),
+            n_blk = sum(ifelse(RACE == 2& demgroup != "M", 1, 0)),
             n_sw = sum(ifelse(demgroup == "SW", 1, 0)),
             n_mw = sum(ifelse(demgroup == "MW", 1, 0)),
             n_swteachtreat = sum(ifelse(teacher == 1 & demgroup == "SW", 1, 0)),
@@ -434,9 +495,14 @@ fullcount_nos <- tbl(con, "censusrawall") %>%
 
 linked_nos <- tbl(con, "linkedall") %>%
   addvars_indiv_linked() %>%
+  filter(SEX_base == SEX_link & RACE_base == RACE_link &  #only keeping links with consistent sex and race (drops 1.2% of links)
+           AGE_base <= AGE_link - 5 & AGE_base >= AGE_link - 15) %>% #and consistent age (age in base year 5-15 years less than age in link year) -- drops an additional 2.2% of links
   group_by(YEAR_base) %>%
-  summarize(link_tot = n(),
+  summarize(#link_tot = n(),
             link_treat = sum(ifelse(STATEICP_base == 47 | STATEICP_base == 51, 1, 0)),
+            link_ctrl = sum(ifelse(STATEICP_base %in% c(40, 48, 54, 56), 1, 0)),
+            link_wht = sum(ifelse(RACE_base == 1 & demgroup_base != "M", 1, 0)),
+            link_blk = sum(ifelse(RACE_base == 2 & demgroup_base != "M", 1, 0)),
             link_teach = sum(ifelse(teacher_base == 1, 1, 0)),
             link_sw = sum(ifelse(demgroup_base == "SW", 1, 0)),
             link_mw = sum(ifelse(demgroup_base == "MW", 1, 0)),
@@ -447,15 +513,18 @@ linked_nos <- tbl(con, "linkedall") %>%
   
 # joining 
 linkrates <- left_join(fullcount_nos, linked_nos, by = c("YEAR" = "YEAR_base")) %>%
-  mutate(share_tot = link_tot/n_tot,
+  mutate(#share_tot = link_tot/n_tot,
          share_treat = link_treat/n_treat,
-         share_teach = link_teach/n_teach,
+         share_ctrl = link_ctrl/n_ctrl,
+         #share_teach = link_teach/n_teach,
+         share_wht = link_wht/n_wht,
+         share_blk = link_blk/n_blk,
          share_sw = link_sw/n_sw,
          share_mw = link_mw/n_mw,
          share_swteachtreat = link_swteachtreat/n_swteachtreat,
          share_mwteachtreat = link_mwteachtreat/n_mwteachtreat) %>%
   select(c(YEAR, starts_with("n_"), starts_with("share_"))) %>%
-  filter(!is.na(share_tot)) %>%
+  filter(YEAR < 1940) %>%
   pivot_longer(-YEAR, names_pattern = "(.*)_(.*)", names_to = c("stat", ".value")) %>%
   arrange(YEAR, desc(stat))
 
@@ -463,17 +532,18 @@ dbDisconnect(con, shutdown = TRUE)
 
 
 linkratetex <- file(glue("./tables/linkrates.tex"), open = "w")
-linknames <- c("All", "Treated States", "Teachers", "Unmarried Women", "Married Women", "Unmarried Women Teachers", "Married Women Teachers")
+#linknames <- c("All", "Treated States", "Teachers", "Unmarried Women", "Married Women", "Unmarried Women Teachers", "Married Women Teachers")
+linknames <- c("Treated States", "Control States", "White Women", "Black Women", "Unmarried Women", "Married Women", "Unmarried Women Teachers", "Married Women Teachers")
 baseyears <- seq(1910,1930,10) 
   
-writeLines(c("\\begin{tabular}{lC{2.1cm}C{2cm}C{2cm}C{2cm}C{2cm}C{2cm}C{2cm}}", 
-             "\\hhline{========}",
+writeLines(c("\\begin{tabular}{lC{1.9cm}C{1.9cm}C{1.9cm}C{1.9cm}C{1.9cm}C{1.9cm}C{1.9cm}C{1.9cm}}", 
+             "\\toprule",
              paste0("& ", glue_collapse(linknames, sep = " & "), " \\\\"),
-             paste0("& (", glue_collapse(1:7, ") & ("), ") \\\\"), "\\hhline{--------}"), linkratetex)
+             paste0("& (", glue_collapse(1:8, ") & ("), ") \\\\"), "\\midrule"), linkratetex)
 
 for (i in 1:length(baseyears)){
   header <- glue("{baseyears[i]}-{baseyears[i]+10} Linked Sample")
-  writeLines(paste0("\\multicolumn{8}{l}{\\underline{\\textbf{", header, "}}}\\\\ [1em]"), linkratetex)
+  writeLines(paste0("\\multicolumn{9}{l}{\\underline{\\textbf{", header, "}}}\\\\ [1em]"), linkratetex)
   
   shares <- paste0(round(as.numeric(linkrates[2*i-1,3:ncol(linkrates)])*100, 1), "\\%")
   ns <- formatC(as.numeric(linkrates[2*i, 3:ncol(linkrates)])/1000, big.mark = ",", format = "f", digits = 1)
@@ -486,8 +556,27 @@ for (i in 1:length(baseyears)){
   
 }
 
-writeLines(c("\\hhline{========}","\\end{tabular}"), linkratetex)
+writeLines(c("\\bottomrule","\\end{tabular}"), linkratetex)
 close(linkratetex)
+
+#______________________________________________________
+# Appendix: Great Depression and New Deal Analysis ----
+#______________________________________________________
+exclude_st = c("CA", "CO", "OR", "TX", "WA", 
+               "ND", "WY", "UT", "NM", "NV", 
+               "SD", "MT", "ID", "AZ", "AK", 
+               "HI", "KS", "NE", "OK",
+               "MN", "AR", "MO", "IA", "LA")
+
+nq = 5
+df <- countysumm %>% filter(YEAR == 1940 & neighbor_samp == 1) %>% 
+  mutate(fips = FIPS, weights = as.character(cut(RLDF3329, 
+                                                 quantile(RLDF3329, probs = seq(0,1,1/nq), na.rm=TRUE)))) %>%
+  select(fips, weights) %>% filter(!is.na(fips))
+
+samp = c("KY","NC","VA","WV","SC","TN")
+plot_usmap(data=df, values = "weights", include = samp,#exclude = exclude_st, 
+           regions = "counties") + scale_fill_manual(values = colorRampPalette(c('white',control_col))(nq))
 
 # close log ----
 sink()
