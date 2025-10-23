@@ -1,0 +1,5 @@
+[0] Config.pm:304> INFO - This is Biber 2.14
+[0] Config.pm:307> INFO - Logfile is 'fakebib.bib.blg'
+[89] biber-darwin:322> INFO - === Sun Apr 18, 2021, 17:01:54
+[266] Utils.pm:320> ERROR - Cannot find 'fakebib.bib.bcf'!
+[266] Biber.pm:132> INFO - ERRORS: 1

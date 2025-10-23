@@ -1,0 +1,225 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.1 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{1}
+  \datalist[entry]{nyt/global//global/global}
+    \entry{depuydt1997civil}{book}{}
+      \name{author}{1}{}{%
+        {{hash=dfd0bf7593435be98043822c6aa31166}{%
+           family={Depuydt},
+           familyi={D\bibinitperiod},
+           given={Leo},
+           giveni={L\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Peeters Publishers}%
+      }
+      \strng{namehash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{fullhash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{bibnamehash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{authorbibnamehash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{authornamehash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{authorfullhash}{dfd0bf7593435be98043822c6aa31166}
+      \field{sortinit}{D}
+      \field{sortinithash}{c438b3d5d027251ba63f5ed538d98af5}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Civil calendar and Lunar calendar in Ancient Egypt}
+      \field{volume}{77}
+      \field{year}{1997}
+    \endentry
+    \entry{mckay2016coligny}{article}{}
+      \name{author}{1}{}{%
+        {{hash=7ddb2abe0a60666b970393f22137e95d}{%
+           family={McKay},
+           familyi={M\bibinitperiod},
+           given={Helen\bibnamedelima T},
+           giveni={H\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Pers{é}e-Portail des revues scientifiques en SHS}%
+      }
+      \strng{namehash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{fullhash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{bibnamehash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{authorbibnamehash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{authornamehash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{authorfullhash}{7ddb2abe0a60666b970393f22137e95d}
+      \field{sortinit}{M}
+      \field{sortinithash}{2e5c2f51f7fa2d957f3206819bf86dc3}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{{É}tudes celtiques}
+      \field{number}{1}
+      \field{title}{The Coligny calendar as a metonic lunar calendar}
+      \field{volume}{42}
+      \field{year}{2016}
+      \field{pages}{95\bibrangedash 121}
+      \range{pages}{27}
+    \endentry
+  \enddatalist
+\endrefsection
+
+\refsection{2}
+  \datalist[entry]{nyt/global//global/global}
+    \entry{dinardo1996labor}{article}{}
+      \name{author}{3}{}{%
+        {{hash=fd181f4907967a69be096ed4605f8946}{%
+           family={DiNardo},
+           familyi={D\bibinitperiod},
+           given={John},
+           giveni={J\bibinitperiod}}}%
+        {{hash=a7b71756f3a3c79229d749a8f1630a0a}{%
+           family={Fortin},
+           familyi={F\bibinitperiod},
+           given={Nicole\bibnamedelima M},
+           giveni={N\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=261b3be4ecb61f279cdbd85e8fcdcc32}{%
+           family={Lemieux},
+           familyi={L\bibinitperiod},
+           given={Thomas},
+           giveni={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{d5e15888119773f722668e4884265545}
+      \strng{fullhash}{d5e15888119773f722668e4884265545}
+      \strng{bibnamehash}{d5e15888119773f722668e4884265545}
+      \strng{authorbibnamehash}{d5e15888119773f722668e4884265545}
+      \strng{authornamehash}{d5e15888119773f722668e4884265545}
+      \strng{authorfullhash}{d5e15888119773f722668e4884265545}
+      \field{sortinit}{D}
+      \field{sortinithash}{c438b3d5d027251ba63f5ed538d98af5}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Econometrica}
+      \field{number}{5}
+      \field{title}{Labor Market Institutions and the Distribution of Wages, 1973-1992: A Semiparametric Approach}
+      \field{volume}{64}
+      \field{year}{1996}
+      \field{pages}{1001\bibrangedash 1044}
+      \range{pages}{44}
+    \endentry
+    \entry{piketty2003income}{article}{}
+      \name{author}{2}{}{%
+        {{hash=125a3a980ec7ff459f2e77e8e82118b6}{%
+           family={Piketty},
+           familyi={P\bibinitperiod},
+           given={Thomas},
+           giveni={T\bibinitperiod}}}%
+        {{hash=f040f5aac2c176810fed8b44b9c401a4}{%
+           family={Saez},
+           familyi={S\bibinitperiod},
+           given={Emmanuel},
+           giveni={E\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Oxford University Press}%
+      }
+      \strng{namehash}{6206db697a44ca8d7ed22ecd633660bd}
+      \strng{fullhash}{6206db697a44ca8d7ed22ecd633660bd}
+      \strng{bibnamehash}{6206db697a44ca8d7ed22ecd633660bd}
+      \strng{authorbibnamehash}{6206db697a44ca8d7ed22ecd633660bd}
+      \strng{authornamehash}{6206db697a44ca8d7ed22ecd633660bd}
+      \strng{authorfullhash}{6206db697a44ca8d7ed22ecd633660bd}
+      \field{sortinit}{P}
+      \field{sortinithash}{bb5b15f2db90f7aef79bb9e83defefcb}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{The Quarterly journal of economics}
+      \field{number}{1}
+      \field{title}{Income inequality in the United States, 1913--1998}
+      \field{volume}{118}
+      \field{year}{2003}
+      \field{pages}{1\bibrangedash 41}
+      \range{pages}{41}
+    \endentry
+  \enddatalist
+\endrefsection
+
+\refsection{3}
+  \datalist[entry]{nyt/global//global/global}
+    \entry{depuydt1997civil}{book}{}
+      \name{author}{1}{}{%
+        {{hash=dfd0bf7593435be98043822c6aa31166}{%
+           family={Depuydt},
+           familyi={D\bibinitperiod},
+           given={Leo},
+           giveni={L\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Peeters Publishers}%
+      }
+      \strng{namehash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{fullhash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{bibnamehash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{authorbibnamehash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{authornamehash}{dfd0bf7593435be98043822c6aa31166}
+      \strng{authorfullhash}{dfd0bf7593435be98043822c6aa31166}
+      \field{sortinit}{D}
+      \field{sortinithash}{c438b3d5d027251ba63f5ed538d98af5}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Civil calendar and Lunar calendar in Ancient Egypt}
+      \field{volume}{77}
+      \field{year}{1997}
+    \endentry
+    \entry{mckay2016coligny}{article}{}
+      \name{author}{1}{}{%
+        {{hash=7ddb2abe0a60666b970393f22137e95d}{%
+           family={McKay},
+           familyi={M\bibinitperiod},
+           given={Helen\bibnamedelima T},
+           giveni={H\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Pers{é}e-Portail des revues scientifiques en SHS}%
+      }
+      \strng{namehash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{fullhash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{bibnamehash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{authorbibnamehash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{authornamehash}{7ddb2abe0a60666b970393f22137e95d}
+      \strng{authorfullhash}{7ddb2abe0a60666b970393f22137e95d}
+      \field{sortinit}{M}
+      \field{sortinithash}{2e5c2f51f7fa2d957f3206819bf86dc3}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{{É}tudes celtiques}
+      \field{number}{1}
+      \field{title}{The Coligny calendar as a metonic lunar calendar}
+      \field{volume}{42}
+      \field{year}{2016}
+      \field{pages}{95\bibrangedash 121}
+      \range{pages}{27}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

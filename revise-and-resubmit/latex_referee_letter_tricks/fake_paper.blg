@@ -1,0 +1,30 @@
+[0] Config.pm:304> INFO - This is Biber 2.14
+[0] Config.pm:307> INFO - Logfile is 'fake_paper.blg'
+[94] biber-darwin:322> INFO - === Thu Apr 22, 2021, 15:31:03
+[114] Biber.pm:415> INFO - Reading 'fake_paper.bcf'
+[295] Biber.pm:943> INFO - Found 0 citekeys in bib section 0
+[296] Biber.pm:943> INFO - Found 4 citekeys in bib section 1
+[296] Biber.pm:943> INFO - Found 2 citekeys in bib section 0
+[346] Biber.pm:4256> INFO - Processing section 0
+[347] Utils.pm:75> INFO - Globbing data source 'fakebib2.bib'
+[347] Utils.pm:91> INFO - Globbed data source 'fakebib2.bib' to fakebib2.bib
+[371] Biber.pm:4455> INFO - Looking for bibtex format file 'fakebib2.bib' for section 0
+[375] bibtex.pm:1653> INFO - LaTeX decoding ...
+[478] bibtex.pm:1471> INFO - Found BibTeX data source 'fakebib2.bib'
+[512] Utils.pm:304> WARN - BibTeX subsystem: /var/folders/2z/_q_fhr3x5v10vz372q8w1r7r0000gp/T/biber_tmp_JP3A/fakebib2.bib_2480.utf8, line 315, warning: 7 characters of junk seen at toplevel
+[512] Utils.pm:304> WARN - BibTeX subsystem: /var/folders/2z/_q_fhr3x5v10vz372q8w1r7r0000gp/T/biber_tmp_JP3A/fakebib2.bib_2480.utf8, line 412, warning: 1 characters of junk seen at toplevel
+[524] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[524] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[524] Biber.pm:4084> INFO - Sorting list 'nyt/global//global/global' of type 'entry' with template 'nyt' and locale 'en-US'
+[525] Biber.pm:4090> INFO - No sort tailoring available for locale 'en-US'
+[529] Biber.pm:4256> INFO - Processing section 1
+[530] Utils.pm:75> INFO - Globbing data source 'fakebib2.bib'
+[530] Utils.pm:91> INFO - Globbed data source 'fakebib2.bib' to fakebib2.bib
+[530] Biber.pm:4455> INFO - Looking for bibtex format file 'fakebib2.bib' for section 1
+[568] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[568] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[569] Biber.pm:4084> INFO - Sorting list 'nyt/global//global/global' of type 'entry' with template 'nyt' and locale 'en-US'
+[569] Biber.pm:4090> INFO - No sort tailoring available for locale 'en-US'
+[574] bbl.pm:652> INFO - Writing 'fake_paper.bbl' with encoding 'UTF-8'
+[578] bbl.pm:755> INFO - Output to fake_paper.bbl
+[578] Biber.pm:128> INFO - WARNINGS: 2
