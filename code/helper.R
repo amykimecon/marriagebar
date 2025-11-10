@@ -78,12 +78,15 @@ summ_gen <- function(dataset){
               WHITESCHOOLPOP  = sum(ifelse(RACE == 1 & AGE <= 18 & AGE >= 6, 1, 0)), #white schoolage population
               LFP             = sum(ifelse(worker == 1 & AGE >= 16 & AGE <= 64, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64, 1, 0)), #share of prime age population that is in LF
               LFP_M           = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "M",  1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "M",  1, 0)), #lfp for men
+              LFP_W = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup != "M",  1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup != "M",  1, 0)),
               LFP_SW          = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "SW", 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "SW", 1, 0)), #lfp for single women
               LFP_WSW         = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "SW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "SW" & RACE == 1, 1, 0)), #lfp for white single women
               LFP_BSW         = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "SW" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "SW" & RACE == 2, 1, 0)), #lfp for black single women
               LFP_MW          = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "MW", 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "MW", 1, 0)), #lfp for married women
               LFP_WMW         = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "MW" & RACE == 1, 1, 0)), #lfp for white married women
               LFP_BMW         = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup == "MW" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup == "MW" & RACE == 2, 1, 0)), #lfp for black married women
+              LFP_WW = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup != "M" & RACE == 1, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup != "M" & RACE == 1, 1, 0)), #lfp for white women
+              LFP_BW = sum(ifelse(worker != 0 & AGE >= 16 & AGE <= 64& demgroup != "M" & RACE == 2, 1, 0))/sum(ifelse(AGE >= 16 & AGE <= 64 & demgroup != "M" & RACE == 2, 1, 0)), #lfp for black women
               PCT_LF_MW       = sum(ifelse(worker != 0 & demgroup == "MW", 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are MW
               PCT_LF_WMW      = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 1, 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are white MW
               PCT_LF_BMW      = sum(ifelse(worker != 0 & demgroup == "MW" & RACE == 2, 1, 0))/sum(ifelse(worker != 0, 1, 0)), #share of workers that are black MW
@@ -732,7 +735,7 @@ did_graph_data <- function(dataset, depvar, controls = "",
   if (septreat){ # if septreat==TRUE, run regs separately by treatment group
     yearvars     <- glue("Year{years}")
     # for control group
-    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + factor(FIPS) {controls}"),  
+    did_reg_ctrl <- lm(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + factor(FIPS) +  {controls}"),  
                        data = regdata %>% filter(TREAT == 0), weights = weight)
     vcov_ctrl    = vcovCL(did_reg_ctrl, cluster = filter(regdata, TREAT == 0)[[clus]], type = "HC1")
     # for treated group

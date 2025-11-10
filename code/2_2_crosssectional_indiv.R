@@ -31,7 +31,7 @@ fulldata_samp <- teach_samp_indiv %>% filter(AGE >= 16 & AGE <= 65) #%>% collect
 women_samp <- fulldata_samp %>% filter(demgroup != "M") %>% collect() %>% addvars_county()
 teacher_samp <- fulldata_samp %>% filter(teacher == 1) %>% collect() %>% addvars_county()
 
-## APP TABLE B2: INDIV W MODS
+## APP TABLE B2: INDIV W MODS (10/24/25)
 t <- teacher_samp %>% 
   left_join(countysumm %>% select(STATEICP, COUNTYICP, YEAR, mainsampall, mainsampwht, mainsampblk,
                      share_manuf, share_ag, unemp_rate, POP), 
@@ -72,31 +72,111 @@ models = list(
 
 esttex(models, keep = c("TREATx1940"), fitstat = c("n","ar2"))
 
-## LFP 
+## LFP AND OCCSCORE RESULTS (TABLE 6, 10/24/25)
 w <- women_samp %>% 
   left_join(countysumm %>% select(STATEICP, COUNTYICP, YEAR, mainsampall, mainsampwht, mainsampblk,
-                                  share_manuf, share_ag, unemp_rate, POP), 
+                                  share_manuf, share_ag, unemp_rate, POP, bordertreat, borderctrl),  
             by = c('STATEICP', 'COUNTYICP', 'YEAR')) %>% add_did_dummies() %>% 
   group_by(YEAR, STATEICP, COUNTYICP) %>% mutate(nw = n(), 
                                                  nonwhite = ifelse(RACE != 1, 1,0),
                                                  urb = ifelse(URBAN == 2, 1, 0)) %>%
   filter(mainsampall == 1)
 
-mw <- women_samp %>% 
-  filter(demgroup == "MW") %>%
-  left_join(countysumm %>% select(STATEICP, COUNTYICP, YEAR, mainsampall, mainsampwht, mainsampblk,
-                                  share_manuf, share_ag, unemp_rate, POP), 
-            by = c('STATEICP', 'COUNTYICP', 'YEAR')) %>% add_did_dummies() %>% 
-  group_by(YEAR, STATEICP, COUNTYICP) %>% mutate(nw = n(), 
-                                                 nonwhite = ifelse(RACE != 1, 1,0),
-                                                 urb = ifelse(URBAN == 2, 1, 0)) %>%
-  filter(mainsampall == 1)
+#mw <- w %>% filter(demgroup == "MW") 
 
-a1 <- feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
-      data =  w%>% add_tva_ind() %>% filter(tva == 0), weights = ~1/nw)
+ww <- w %>% filter(nonwhite == 0) %>% filter(mainsampwht == 1) %>%   
+  group_by(YEAR, STATEICP, COUNTYICP) %>% mutate(nw = n())
 
-a2 <- feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
-            data =  mw, weights = ~1/nw)
+bw <- w %>% filter(nonwhite == 1)%>% filter(mainsampblk == 1) %>%
+  group_by(YEAR, STATEICP, COUNTYICP) %>% mutate(nw = n())
+  
+#wmw <- mw %>% filter(nonwhite == 0)%>% filter(mainsampwht == 1)
+
+#bmw <- mw %>% filter(nonwhite == 1)%>% filter(mainsampblk == 1)
+
+
+## stargazer table (neighbor sample only) ----
+models         <- list()
+ses            <- list()
+sharereg_means <- c() #dep var mean in 1930
+# prepare table inputs
+i = 1
+for (df in list(w)){#, wmw, bmw)){
+  models = list(
+    # raw
+    feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP + AGE,
+          data =  df),
+    
+    # with inv pop weights (county level)
+    feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP + AGE,
+          data =  df, weights = ~1/nw),
+    
+    # interaction for married
+    feols(worker ~ factor(mw) +  factor(mw)*Year1910+factor(mw)*Year1920+factor(mw)*Year1940+factor(mw)*Year1950 + factor(mw)*TREATx1910+factor(mw)*TREATx1920+factor(mw)*TREATx1940+factor(mw)*TREATx1950 | STATEICP^COUNTYICP + AGE, 
+          data =  df %>% mutate(mw = ifelse(demgroup == "MW", 1, 0))),
+    
+    # interaction for black 
+    feols(worker ~ factor(nonwhite) +  factor(nonwhite)*Year1910+factor(nonwhite)*Year1920+factor(nonwhite)*Year1940+factor(nonwhite)*Year1950 + factor(nonwhite)*TREATx1910+factor(nonwhite)*TREATx1920+factor(nonwhite)*TREATx1940+factor(nonwhite)*TREATx1950 | STATEICP^COUNTYICP + AGE, 
+          data =  df),
+    
+    # interaction for urban
+    feols(worker ~ factor(urb) +  factor(urb)*Year1910+factor(urb)*Year1920+factor(urb)*Year1940+factor(urb)*Year1950 + factor(urb)*TREATx1910+factor(urb)*TREATx1920+factor(urb)*TREATx1940+factor(urb)*TREATx1950 | STATEICP^COUNTYICP + AGE, 
+          data = df),
+    
+    # with county level controls for industry share, unemp rate, log pop
+    feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950  + share_manuf + share_ag + log(POP) + unemp_rate| STATEICP^COUNTYICP + AGE,
+          data =  df),
+    
+    # excl tva
+    feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP + AGE,
+          data =  df %>% add_tva_ind() %>% filter(tva == 0)),
+    
+    # border counties
+    feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP + AGE,
+          data =  df %>% filter(bordertreat == 1 | borderctrl == 1))
+    
+  )
+  # out_did_lfp   <- feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
+  #                           data =  df%>% filter(bordertreat == 1 | borderctrl == 1))
+  # print(out_did_lfp)
+  # 
+  # out_did_lfp   <- feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
+  #                        data =  df %>% add_tva_ind() %>% filter(tva == 0))
+  # print(out_did_lfp)
+  # 
+  # # out_did_occscore <- feols(OCCSCORE ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
+  # #                           data =  df, weights = ~1/nw)
+  # # print(out_did_occscore)
+  esttex(models, keep = c("TREATx1940"), fitstat = c("n","ar2"))
+  
+}
+# 
+# # gen table
+# stargazer(models, se=ses, keep = c("TREATx1940", "TREATx1950"), #omit = c("Constant","cluster*", "factor*"), 
+#           out = glue("./tables/mwregs.tex"),
+#           float = FALSE,
+#           keep.stat = c('n','adj.rsq'),
+#           dep.var.caption = "Dependent Variable:",
+#           column.labels = c("Share Teach Mar. Wom.", "MW Teach/100 MW"),
+#           column.separate = c(1,1,1,1,1),
+#           covariate.labels = c("Treated $\\times$ 1940 ($\\gamma_{1940}^{DD}$)",
+#                                "Treated $\\times$ 1950 ($\\gamma_{1950}^{DD}$)"),
+#           add.lines = list(c("Dep. Var. 1930 Treated Mean", formatC(sharereg_means))),
+#           table.layout = "=lc#-t-as=")
+# 
+# a1 <- feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
+#             data =  w, weights = ~1/nw)
+# 
+# a2 <- feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
+#       data =  w %>% add_tva_ind() %>% filter(tva == 0) , weights = ~1/nw)
+# a2 
+# 
+# a3 <- feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
+#             data =  w%>% filter(bordertreat == 1 | borderctrl == 1), weights = ~1/nw)
+# a3
+
+# a2 <- feols(worker ~ Year1910+Year1920+Year1940+Year1950 + TREATx1910+TREATx1920+TREATx1940+TREATx1950 | STATEICP^COUNTYICP,
+#             data =  mw, weights = ~1/nw)
 
 # # overall effects
 # women <- fulldata_analysis %>% filter(demgroup!="M")

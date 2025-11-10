@@ -27,6 +27,11 @@ test_base <- allyears_raw_samp %>%
                                     demgroup=="Men"             & coll_above==1 ~ "Men, College",
                                     TRUE ~ "Men, Less than college"))
 
+# share of women that are teachers
+con <- dbConnect(duckdb(), dbdir = glue("{root}/db.duckdb"), read_only=TRUE)
+dbGetQuery(con, "SELECT COUNT(*) FROM censusrawall WHERE OCC1950 = 93 AND SEX = 2 AND AGE >= 16 AND AGE <= 64 AND YEAR = 1930")/dbGetQuery(con, "SELECT COUNT(*) FROM censusrawall WHERE SEX = 2 AND AGE >= 16 AND AGE <= 64 AND YEAR = 1930")
+
+
 #_________________________________________________
 # STATS ON BLACK WOMEN ----
 #_________________________________________________

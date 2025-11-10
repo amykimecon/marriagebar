@@ -58,7 +58,7 @@ stargazer(models, se=ses, keep = c("TREATx1940", "TREATx1950"), #omit = c("Const
 #______________________________________________________
 # RESULT 2: MECHANISMS FOR MARRIED WOMEN ----
 #______________________________________________________
-
+### PAPER TABLE 3 (10/23/25)
 ## writing regression output key info to df
 datalist = list(link1, link2, link3)
 datanames = c("Sample 1: SWT in t-10", "Sample 2: MWNILF in t-10", "Sample 3: SWNILF in t-10")
@@ -71,7 +71,7 @@ for (dataind in 1:3){
   means = list()
   i = 1
   for (coefind in 1:4){
-    model <- feols(as.formula(glue("{coefs[coefind]} ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP")),
+    model <- feols(as.formula(glue("{coefs[coefind]} ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP + AGE")),
                    data = datalist[[dataind]] %>%
                      filter(neighbor_samp == 1 & RACE == 1) %>%
                      add_did_dummies())
@@ -99,7 +99,7 @@ for (dataind in 1:2){
   means = list()
   i = 1
   for (coefind in 1:4){
-    models[[i]] <- feols(as.formula(glue("{coefs[coefind]} ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP")),
+    models[[i]] <- feols(as.formula(glue("{coefs[coefind]} ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP + AGE")),
                    data = datalist[[dataind]] %>%
                      filter(neighbor_samp == 1 & RACE == 1) %>%
                      add_did_dummies())
@@ -110,40 +110,39 @@ for (dataind in 1:2){
 
 }
 
-## APPENDIX TABLE 2: EXPLORING RESULTS FOR SAMPLES 2 + 3 -> P[MWNT]
+## APPENDIX TABLE B6: EXPLORING RESULTS FOR SAMPLES 2 + 3 -> P[MWNT]
 datalist = list(link2,
                 link3)
 
 for (dataind in 1:2){
   df = datalist[[dataind]]%>% filter(neighbor_samp == 1 & RACE == 1) %>%
     add_did_dummies() %>%
-    left_join(countysumm_wht %>% retailsales() %>% select(YEAR, STATEICP, COUNTYICP, share_manuf, share_ag, UNEMP_RATE, unemp_rate, POP, RRTSAP29, RRTSAP39),
+    left_join(countysumm_wht %>% retailsales() %>% select(YEAR, STATEICP, COUNTYICP, share_manuf, share_ag, UNEMP_RATE, unemp_rate, POP, RRTSAP29, RRTSAP39, bordertreat, borderctrl),
               by = c("YEAR","STATEICP","COUNTYICP")) %>%
     mutate(rrtsap = case_when(YEAR == 1930 ~ RRTSAP29,
                               YEAR == 1940 ~ RRTSAP39,
                               TRUE ~ NA_real_)) %>%
     add_tva_ind()
   
-  models = list(feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+  models = list(feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP + AGE,
                       data = df),
-                feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+                feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP+ AGE,
                       weights = ~1/nlink,
                       data = df),
-                feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 + share_manuf + share_ag + POP | STATEICP^COUNTYICP,
+                feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 + share_manuf + share_ag + POP | STATEICP^COUNTYICP+ AGE,
                             data = df),
-                feols(mwnt_link ~ Year1940+TREATx1940 + unemp_rate + rrtsap | STATEICP^COUNTYICP,
+                feols(mwnt_link ~ Year1940+TREATx1940 + unemp_rate + rrtsap | STATEICP^COUNTYICP+ AGE,
                       data = df %>% filter(YEAR >= 1930)),
-                feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+                feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP+ AGE,
                       data = df %>% filter(tva == 0)),
-                feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
-                      data = df %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl)),
-                feols(mwnt_link ~ factor(URBAN) + Year1940*factor(URBAN)+TREATx1940*factor(URBAN) | STATEICP^COUNTYICP,
+                feols(mwnt_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP+ AGE,
+                      data = df %>% filter(bordertreat == 1 | borderctrl == 1)),
+                feols(mwnt_link ~ factor(URBAN) + Year1940*factor(URBAN)+TREATx1940*factor(URBAN) | STATEICP^COUNTYICP+ AGE,
                       data = df ),
                 feols(mwnt_link ~ AGE + Year1940*AGE+TREATx1940*AGE | STATEICP^COUNTYICP,
                       data = df)
   )
   esttex(models, keep = c("TREATx1940"), fitstat = c("n","ar2")) %>% print()
-  
 }
 
 # 1. unweighted (same as col 3 of table 3), 2. inv weighted, 3. industry + pop controls, 4. unemp controls (note that sample smaller bc no EMPSTAT in 1920 census),
@@ -226,7 +225,8 @@ stargazer(models, se=ses, keep = c("TREATx1940", "TREATx1950"),#omit = c("Consta
 #______________________________________________________
 
 ## writing regression output key info to df
-datalist = list(link1, link3, link3point5)
+## link1 results: table 5, link3 and link3point5 results: table b7
+datalist = list(link1, link3, link3point5) 
 datanames = c("Sample 1: SWT in t-10", "Sample 3: SWNILF in t-10", "Sample 5: SWNT in t-10")
 coefs = c("unmarried_link", "swt_link", "swnt_link", "swnilf_link")
 coefnames = c("0) P[Unmarried]", "1) P[Unmarried Teacher]", "2) P[Unmarried Non-Teacher in LF]", "3) P[Unmarried Not in LF]")
@@ -234,17 +234,18 @@ coefnames = c("0) P[Unmarried]", "1) P[Unmarried Teacher]", "2) P[Unmarried Non-
 
 # prepare data 
 for (dataind in 1:3){
+  tempdf = datalist[[dataind]] %>%
+    left_join(countysumm_wht %>% select(YEAR, STATEICP, COUNTYICP, share_manuf, share_ag, unemp_rate, POP, bordertreat, borderctrl),
+              by = c("YEAR","STATEICP","COUNTYICP")) %>%
+    filter(neighbor_samp == 1 & RACE == 1) %>%
+    #add_tva_ind() %>% filter(tva == 0) %>%
+    add_did_dummies()
   models = list()
   means = list()
   i = 1
   for (coefind in 1:4){
-    models[[i]] <- feols(as.formula(glue("{coefs[coefind]} ~ Year1920+Year1940+TREATx1920+TREATx1940 +unemp_rate| STATEICP^COUNTYICP")),
-                         data = datalist[[dataind]] %>%
-                           left_join(countysumm_wht %>% select(YEAR, STATEICP, COUNTYICP, share_manuf, share_ag, unemp_rate, POP),
-                                     by = c("YEAR","STATEICP","COUNTYICP")) %>%
-                           filter(neighbor_samp == 1 & RACE == 1) %>%
-                           #add_tva_ind() %>% filter(tva == 0) %>%
-                           add_did_dummies())
+    models[[i]] <- feols(as.formula(glue("{coefs[coefind]} ~ Year1920+Year1940+TREATx1920+TREATx1940| STATEICP^COUNTYICP + AGE")),
+                         data = tempdf)
     means[[i]] <- mean(filter(datalist[[dataind]], YEAR == 1930 & TREAT == 1)[[coefs[coefind]]], na.rm=TRUE)
     i = i + 1 
   }
@@ -255,21 +256,21 @@ for (dataind in 1:3){
 #______________________________________________________
 # RESULT 5: NET EFFECTS ----
 #______________________________________________________
-netdf <- link2 %>% filter(neighbor_samp == 1 & RACE == 1) %>% add_did_dummies()
+netdf <- link1 %>% filter(neighbor_samp == 1 & RACE == 1) %>% add_did_dummies()
 models = list(
-  feols(ch ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+  feols(ch ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP + AGE,
         data = netdf %>% mutate(ch = ifelse(NCHILD_link > 0, 1, 0))),
-  feols(OCCSCORE_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+  feols(OCCSCORE_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP+ AGE,
         data = netdf),
-  feols(OCCSCORE_link ~ married_link + married_link*Year1920+married_link*Year1940+married_link*TREATx1920+married_link*TREATx1940 | STATEICP^COUNTYICP,
+  feols(OCCSCORE_link ~ married_link + married_link*Year1920+married_link*Year1940+married_link*TREATx1920+married_link*TREATx1940 | STATEICP^COUNTYICP+ AGE,
         data = netdf),
-  feols(worker_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+  feols(worker_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP+ AGE,
         data = netdf),
-  feols(worker_link ~ married_link + married_link*Year1920+married_link*Year1940+married_link*TREATx1920+married_link*TREATx1940 | STATEICP^COUNTYICP,
+  feols(worker_link ~ married_link + married_link*Year1920+married_link*Year1940+married_link*TREATx1920+married_link*TREATx1940 | STATEICP^COUNTYICP+ AGE,
         data = netdf),
-  feols(move_state ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP,
+  feols(move_state ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP+ AGE,
         data = netdf),
-  feols(move_state ~ married_link + married_link*Year1920+married_link*Year1940+married_link*TREATx1920+married_link*TREATx1940 | STATEICP^COUNTYICP,
+  feols(move_state ~ married_link + married_link*Year1920+married_link*Year1940+married_link*TREATx1920+married_link*TREATx1940 | STATEICP^COUNTYICP+ AGE,
         data = netdf)
   )
 
@@ -297,4 +298,31 @@ did_graph(dataset     = neighbor_wht,
 
 # close log ----
 sink()
+
+
+## 10/23/25: LFP RESULTS FOR LINKED SAMPLE
+## writing regression output key info to df
+datalist = list(link1, link2, link3)
+datanames = c("Sample 1: SWT in t-10", "Sample 2: MWNILF in t-10", "Sample 3: SWNILF in t-10")
+coefs = c("worker_link")
+coefnames = c("P[working]")
+
+models = list()
+means = list()
+for (dataind in 1:3){
+  model <- feols(as.formula(glue("worker_link ~ Year1920+Year1940+TREATx1920+TREATx1940 | STATEICP^COUNTYICP")),
+                   data = datalist[[dataind]] %>%
+                     filter(neighbor_samp == 1 & RACE == 1) %>%
+                     add_did_dummies())
+  print(esttex(model))
+  models[[dataind]] <- model
+  means[[dataind]] <- mean(filter(datalist[[dataind]], YEAR == 1930 & TREAT == 1 & RACE == 1)[["worker_link"]], na.rm=TRUE)
+
+  # n = nrow(filter(datalist[[dataind]], neighbor_samp == 1 & RACE == 1 & YEAR == 1930 & TREAT == 1))
+  # print(glue("n in treat x 1930 x white: {n}"))
+  # est = models[[2]]$coeftable['TREATx1940','Estimate']
+  # print(glue("estimate: {est}"))
+  # print(glue("effect size: {est * n}"))
+}
+esttex(models, keep = c("TREATx1940"), fitstat = c("n","ar2"), extralines = list("Dep. Var. 1930 Treated Mean" = unlist(means))) %>% print()
 

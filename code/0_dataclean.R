@@ -222,10 +222,12 @@ write_csv(statesumm_wht, glue("{cleandata}/statesumm_wht.csv"))
 
 # black teachers only
 countysumm_blk <- countysummblk_raw %>%
-  matching_join(matchlist = matchlist)
+  matching_join(matchlist = matchlist) %>%
   mutate(mainsampblk = ifelse(FIPS %in% mainsampblk_list, 1, 0),
          mainsampwht = ifelse(FIPS %in% mainsampwht_list, 1, 0),
          mainsampall = ifelse(FIPS %in% mainsamp_list, 1, 0),
+         bordertreat = ifelse(FIPS %in% border_treat, 1, 0),
+         borderctrl = ifelse(FIPS %in% border_ctrl, 1, 0),
          pct_Teacher_mw        = num_mw_Teacher/NBLACKMW, #percentage of white married women that are teachers
          pct_Teacher_mw_100   = pct_Teacher_mw*100,
          teacher_ratio = BLACKSCHOOLPOP/num_Teacher)
@@ -237,6 +239,8 @@ countysumm_wht <- countysummwht_raw %>%
   mutate(mainsampblk = ifelse(FIPS %in% mainsampblk_list, 1, 0),
          mainsampwht = ifelse(FIPS %in% mainsampwht_list, 1, 0),
          mainsampall = ifelse(FIPS %in% mainsamp_list, 1, 0),
+         bordertreat = ifelse(FIPS %in% border_treat, 1, 0),
+         borderctrl = ifelse(FIPS %in% border_ctrl, 1, 0),
          pct_Teacher_mw        = num_mw_Teacher/NWHITEMW, #percentage of white married women that are teachers
          pct_Teacher_mw_100   = pct_Teacher_mw*100,
          teacher_ratio = WHITESCHOOLPOP/num_Teacher)
