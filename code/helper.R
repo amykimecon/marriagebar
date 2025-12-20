@@ -802,7 +802,7 @@ did_graph_data <- function(dataset, depvar, controls = "",
 #   and pointspan, i.e. total width of all dots for a given year, default is 2
 did_graph <- function(dataset, depvarlist, depvarnames, colors, controls = "", pointtypes = NA,
                       years = c(1910, 1920, 1940, 1950), yearomit = 1930, 
-                      verbose = FALSE, yvar = "Coef on Treat X Year", clus = "STATEICP",
+                      verbose = FALSE, yvar = "Coef on Treat X Year", clus = "FIPS",
                       ymax = NA, ymin = NA, fig_width = 8, fig_height = 5,
                       slides = FALSE, steps = FALSE, pointspan = 2, 
                       septreat = FALSE, filename = NA){
