@@ -1,0 +1,28 @@
+
+\begin{table}[htbp]
+   \caption{Sample 1: Women who were unmarried and teaching in t-10}
+   \centering
+   \begin{tabular}{lcccc}
+      \tabularnewline \midrule \midrule
+      Dependent Variables:                           & P[Unmarried in t] & P[Unmarried Teacher in t] & P[Unmarried Non-Teacher in LF in t] & P[Unmarried Not in LF in t]\\  
+      Model:                                         & (1)               & (2)                       & (3)                                 & (4)\\  
+      \midrule
+      \emph{Variables}\\
+      Treated $\times$ 1940 ($\gamma_{1940}^{DD}$)   & 0.0165            & -0.0114                   & 0.0191$^{***}$                      & 0.0089\\   
+                                                     & (0.0112)          & (0.0114)                  & (0.0063)                            & (0.0063)\\   
+      Dep. Var. 1930 Treated Mean                    & 0.4109            & 0.2417                    & 0.0874                              & 0.0817\\  
+      \midrule
+      \emph{Fixed-effects}\\
+      STATEICP-COUNTYICP                             & Yes               & Yes                       & Yes                                 & Yes\\  
+      AGE                                            & Yes               & Yes                       & Yes                                 & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations                                   & 59,542            & 59,542                    & 59,542                              & 59,542\\  
+      Adjusted R$^2$                                 & 0.15787           & 0.12784                   & 0.01006                             & 0.02396\\  
+      \midrule \midrule
+      \multicolumn{5}{l}{\emph{Clustered (STATEICP-COUNTYICP) standard-errors in parentheses}}\\
+      \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+
+

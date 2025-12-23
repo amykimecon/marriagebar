@@ -18,7 +18,7 @@ require(tidyverse)
 
 # toggles ----
 verbose = TRUE # toggle true to see figures and tables outputted as code runs
-save = FALSE # toggle true to save figures and tables to output folders
+save = TRUE # toggle true to save figures and tables to output folders
 
 # set colors ----
 mw_col  = "#8751A4"
