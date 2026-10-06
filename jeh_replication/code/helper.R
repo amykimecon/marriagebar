@@ -137,7 +137,10 @@ did_data_indiv_linked <- function(dataset, depvar){
   # run reg: include year and county FE + interaction terms
   did_reg <- feols(as.formula(glue("{depvar} ~ {glue_collapse(yearvars, sep = '+')} + 
                        {glue_collapse(interact_vars, sep = '+')} | STATEICP^COUNTYICP + AGE")),
-                   data = regdata)
+                   data = regdata,
+                   vcov = ~STATEICP^COUNTYICP,
+                   ssc = ssc(adj = TRUE, fixef.K = "nested", cluster.adj = TRUE,
+                             cluster.df = "min", t.df = "min"))
   
   # return model
   return(did_reg)

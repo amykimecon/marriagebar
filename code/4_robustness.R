@@ -14,25 +14,27 @@ matched3   <- countysumm %>% filter(match_weight3 != 0 & mainsampall == 1) %>% m
 matched1_wht   <- countysumm_wht %>% filter(match_weight1 != 0 & mainsampwht == 1)
 matched2_wht   <- countysumm_wht %>% filter(match_weight2 != 0 & mainsampwht == 1)
 matched3_wht   <- countysumm_wht %>% filter(match_weight3 != 0 & mainsampwht == 1) %>% mutate(weight = match_weight3)
+# 
+# borders <- read.table(glue("{root}/county_adjacency2010.txt"), sep = "\t", col.names = c("county_name","FIPS","border_name","border_FIPS")) %>%
+#   mutate(county_name = ifelse(county_name == "", NA, county_name),
+#          FIPS = str_pad(as.character(FIPS), 5, "left", pad = "0"),
+#          border_FIPS = str_pad(as.character(border_FIPS), 5, "left", pad = "0")) %>%
+#   fill(c(county_name, FIPS), .direction = "down") %>%
+#   mutate(state = substr(FIPS, 1, 2),
+#          border_state = substr(border_FIPS, 1, 2),
+#          border = ifelse(state != border_state, 1, 0),
+#          border_ctrl = ifelse(border & border_state %in% c("37", "21"), 1, 0),
+#          border_treat = ifelse(border & state %in% c("37", "21"), 1, 0)) 
+# 
+# border_treat <- filter(borders, border_treat == 1)$FIPS
+# border_ctrl <- unique(filter(borders, border_ctrl == 1)$FIPS)
 
-borders <- read.table(glue("{root}/county_adjacency2010.txt"), sep = "\t", col.names = c("county_name","FIPS","border_name","border_FIPS")) %>%
-  mutate(county_name = ifelse(county_name == "", NA, county_name),
-         FIPS = str_pad(as.character(FIPS), 5, "left", pad = "0"),
-         border_FIPS = str_pad(as.character(border_FIPS), 5, "left", pad = "0")) %>%
-  fill(c(county_name, FIPS), .direction = "down") %>%
-  mutate(state = substr(FIPS, 1, 2),
-         border_state = substr(border_FIPS, 1, 2),
-         border = ifelse(state != border_state, 1, 0),
-         border_ctrl = ifelse(border & border_state %in% c("37", "21"), 1, 0),
-         border_treat = ifelse(border & state %in% c("37", "21"), 1, 0)) 
-
-border_treat <- filter(borders, border_treat == 1)$FIPS
-border_ctrl <- unique(filter(borders, border_ctrl == 1)$FIPS)
-
-countysumm_border <- countysumm %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
-  mutate(TREAT = ifelse(FIPS %in% border_ctrl, 0, 1))
-countysumm_border_wht <- countysumm_wht %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
-  mutate(TREAT = ifelse(FIPS %in% border_ctrl, 0, 1))
+# countysumm_border <- countysumm %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
+#   mutate(TREAT = ifelse(FIPS %in% border_ctrl, 0, 1))
+# countysumm_border_wht <- countysumm_wht %>% filter(FIPS %in% border_treat | FIPS %in% border_ctrl) %>%
+#   mutate(TREAT = ifelse(FIPS %in% border_ctrl, 0, 1))
+countysumm_border <- countysumm %>% filter(bordertreat | borderctrl)
+countysumm_border_wht <- countysumm_wht %>% filter(bordertreat | borderctrl)
 
 match_datasets   <- list(matched1, matched2, matched3, countysumm_border)
 match_datasets_wht   <- list(matched1_wht, matched2_wht, matched3_wht, countysumm_border_wht)

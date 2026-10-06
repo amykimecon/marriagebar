@@ -1,10 +1,15 @@
-### figures.R: REPLICATION OF MAIN FIGURES 1-3 FROM ``The Effects of Prohibiting Marriage Bars: The Case of U.S. Teachers'' 
+### figures.R: REPLICATION OF MAIN FIGURES 1-3 FROM ``The Effects of Prohibiting Marriage Bars: The Case of U.S. Teachers''
 ### UPDATED: DECEMBER 2025
 ### AUTHORS: AMY KIM (kimamy@princeton.edu) AND CAROLYN TSAO (carolyntsao@microsoft.com)
+
+cat("\n================================================================\n")
+cat(" FIGURES\n")
+cat("================================================================\n")
 
 #________________________________________________________________________________________________________
 # FIGURE 1: DENSITY PLOTS OF THE COUNTY-LEVEL FRACTION OF WHITE TEACHERS WHO ARE MARRIED WOMEN, 1910-1950 ----
 #________________________________________________________________________________________________________
+cat("\nFigure 1: Distribution of married women teacher share by treatment group, 1910-1950...\n")
 # filtering county-level dataset to main sample (balanced panel with at least 10 white teachers in 1930 and 1940)
 fig1_samp <- countysumm_wht %>% filter(mainsampwht == 1)
 
@@ -39,12 +44,14 @@ if (verbose){
 
 if (save){
   ggsave(fig1_plot, filename = "output/fig1_pctmwteacher_dist.png", width = 8, height = 5)
+  cat("  -> fig1_pctmwteacher_dist.png\n")
 }
 
 #________________________________________________________________________________________________________
 # FIGURE 2: EFFECTS OF PROHIBITIONS ON GENDER COMPOSITION OF ALL TEACHERS ----
 #________________________________________________________________________________________________________
-fig2_plot = did_graph_county(dataset     = neighbor, 
+cat("\nFigure 2: DiD event-study estimates for gender composition of all teachers...\n")
+fig2_plot = did_graph_county(dataset     = neighbor,
           depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
           depvarnames = c("Men", "Married Women", "Single Women"),
           colors      = c(men_col, mw_col, sw_col),
@@ -55,12 +62,17 @@ if (verbose){
 
 if (save){
   ggsave(fig2_plot, filename = "output/fig2_shareteach.png", width = 8, height = 5)
+  cat("  -> fig2_shareteach.png\n")
 }
+
 #________________________________________________________________________________________________________
 # FIGURE 3: EFFECTS OF PROHIBITIONS ON GENDER COMPOSITION OF WHITE/BLACK TEACHERS ----
 #________________________________________________________________________________________________________
+cat("\nFigure 3: DiD event-study estimates by race (white and Black teachers)...\n")
+
 # WHITE TEACHERS
-fig3a_plot_wht = did_graph_county(dataset     = neighbor_wht, 
+cat("  Figure 3a: White teachers...\n")
+fig3a_plot_wht = did_graph_county(dataset     = neighbor_wht,
                                   depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
                                   depvarnames = c("Men", "Married Women", "Single Women"),
                                   colors      = c(men_col, mw_col, sw_col),
@@ -73,10 +85,12 @@ if (verbose){
 
 if (save){
   ggsave(fig3a_plot_wht, filename = "output/fig3a_shareteach_wht.png", width = 8, height = 5)
+  cat("  -> fig3a_shareteach_wht.png\n")
 }
 
 # BLACK TEACHERS
-fig3b_plot_blk = did_graph_county(dataset     = neighbor_blk, 
+cat("  Figure 3b: Black teachers...\n")
+fig3b_plot_blk = did_graph_county(dataset     = neighbor_blk,
                                   depvarlist  = c("pct_m_Teacher", "pct_mw_Teacher", "pct_sw_Teacher"), 
                                   depvarnames = c("Men", "Married Women", "Single Women"),
                                   colors      = c(men_col, mw_col, sw_col),
@@ -88,5 +102,10 @@ if (verbose){
 
 if (save){
   ggsave(fig3b_plot_blk, filename = "output/fig3b_shareteach_blk.png", width = 8, height = 5)
+  cat("  -> fig3b_shareteach_blk.png\n")
 }
+
+cat("\n----------------------------------------------------------------\n")
+cat(" Figures complete.\n")
+cat("----------------------------------------------------------------\n")
 
